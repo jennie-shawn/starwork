@@ -1,0 +1,26 @@
+{
+  "profile": "en",
+  "version": "0.1",
+  "languageName": "English",
+  "cliPrompts": {
+    "language": "Would you like to use Chinese or English?",
+    "projectMode": "Are you managing one project locally, or using a main repository with multiple satellite projects?",
+    "workMode": "Would you like simple outputs/references, or Matter Mode?"
+  },
+  "capabilityNames": {
+    "starter-outputs": "Starter Outputs",
+    "matter-mode": "Matter Mode",
+    "decisions": "High-Impact Decisions",
+    "local-identity": "Local Identity",
+    "local-lessons": "Local Lessons",
+    "main-repo-sync": "Main Repository Sync",
+    "skill-mount": "Shared Skill Mounts"
+  },
+  "folderLabels": {
+    "references": "References",
+    "outputs": "Outputs",
+    "drafts": "Drafts",
+    "final": "Final Outputs",
+    "matters": "Matters"
+  }
+}

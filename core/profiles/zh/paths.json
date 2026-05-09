@@ -1,0 +1,21 @@
+{
+  "profile": "zh",
+  "version": "0.1",
+  "roles": {
+    "agent.entry_rules": "AGENTS.md",
+    "system.context.project_status": "_系统/上下文/project-status.md",
+    "system.context.decisions": "_系统/上下文/decisions.md",
+    "system.tasks.current_work": "_系统/任务/current-work.md",
+    "work.starter.references": "references/",
+    "work.starter.outputs_drafts": "outputs/drafts/",
+    "work.starter.outputs_final": "outputs/final/",
+    "work.matters.registry": "matters/registry.md",
+    "identity.local": "identity/",
+    "lessons.local": "lessons/"
+  },
+  "legacyAliases": {
+    "system.context.project_status": [
+      "_系统/上下文/current-projects.md"
+    ]
+  }
+}
