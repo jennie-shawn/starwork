@@ -1,11 +1,11 @@
 # Core Kits
 
-Kits are user-copyable workspace packages assembled from presets.
+Kits 是由 presets 组装出来、可供用户复制使用的工作区模板包。
 
-They are not the source of truth. The source of truth is:
+它们不是协议事实源。事实源是：
 
 ```text
 baseline/ + profiles/ + capabilities/ + presets/
 ```
 
-In v0.1, kits may be assembled manually. Later, `starwork init` should generate them from presets.
+在 v0.1 阶段，kits 可以手工组装。后续 `starwork init` 应根据 presets 生成 kits。

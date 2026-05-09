@@ -1,49 +1,49 @@
 # StarWork Core
 
-StarWork Core is the workspace protocol for AI-assisted projects.
+StarWork Core 是面向 AI 协作项目的工作区协议。
 
-Core v0.1 defines:
+Core v0.1 定义：
 
-- what an Agent reads first
-- where project status and current work live
-- how process materials stay separate from formal sources of truth
-- how lightweight `references/outputs` workspaces and Matter-based workspaces coexist
-- how CLI, adapters, packs, and templates can build on the same protocol
+- Agent 开始工作前先读什么
+- 项目状态和当前工作分别放在哪里
+- 过程材料如何与正式事实源分离
+- 轻量的 `references/outputs` 工作区如何与 Matter 工作区并存
+- CLI、Adapters、Packs 和模板如何基于同一套协议工作
 
-## Repository Model
+## 仓库维护模型
 
-Core is maintained as one baseline plus composable profiles and capabilities:
+Core 用“一套基线 + 可组合的 profile 和 capability”来维护：
 
 ```text
 product/core/
-├── baseline/       # shared semantics every Core workspace follows
-├── profiles/       # language/path mappings such as zh and en
-├── capabilities/   # optional capabilities such as Starter Mode and Matter Mode
-├── presets/        # recipes for user-facing workspace states
-└── kits/           # copyable starter kits assembled from presets
+├── baseline/       # 每个 Core 工作区都必须遵守的共同语义
+├── profiles/       # 语言、路径和模板映射，例如 zh 与 en
+├── capabilities/   # 可选能力，例如 Starter Mode 和 Matter Mode
+├── presets/        # 面向用户状态的组合配方
+└── kits/           # 由 preset 组装出来的可复制模板包
 ```
 
-## Maintenance Rule
+## 维护规则
 
-- Change shared rules in `baseline/`.
-- Change path, template language, CLI prompts, and user-facing labels in `profiles/`.
-- Change optional behavior in `capabilities/`.
-- Change user-facing combinations in `presets/`.
-- Treat `kits/` as generated or assembled outputs, not the source of truth.
+- 共同规则改 `baseline/`。
+- 路径、模板语言、CLI 提问和用户可见名称改 `profiles/`。
+- 可选行为改 `capabilities/`。
+- 面向用户的组合状态改 `presets/`。
+- `kits/` 是生成或组装结果，不是协议事实源。
 
-## Hub + Satellite Model
+## Hub + Satellite 模型
 
-The multi-project model is represented by `main-repo-sync`, not by separate `shared-identity` and `shared-lessons` toggles.
+多项目模式由 `main-repo-sync` 表达，不拆成 `shared-identity` 和 `shared-lessons` 这类局部开关。
 
-In this model:
+在这个模型里：
 
-- the hub owns reusable rules, identity, lessons, knowledge, shared skills, project registry metadata, cross-project messages, and writeback review
-- satellite workspaces own project status, current work, process materials, project decisions, and formal project source of truth
-- snapshots, read-only links, `.core-sync.json`, and review queues define the sync boundary
-- the hub reads satellite status; it does not copy the status body into the registry
+- Hub 维护可复用规则、身份、教训、知识、共享 skills、项目注册元数据、跨项目联络和回写审核。
+- Satellite 工作区维护自己的项目状态、当前工作、过程材料、项目决策和正式事实源。
+- 快照、只读链接、`.core-sync.json` 和审核队列共同定义同步边界。
+- Hub 可以读取 Satellite 状态，但不会把状态正文复制进 registry。
 
-## v0.1 Scope
+## v0.1 范围
 
-Core v0.1 is intentionally small. It freezes the minimum workspace semantics before CLI, packs, and adapters add automation.
+Core v0.1 故意保持小。它先冻结最小工作区语义，再让 CLI、Packs 和 Adapters 在其上增加自动化。
 
-Core does not contain content-creator-specific workflow logic. That belongs in `product/packs/content-creator/`.
+Core 不包含自媒体内容创作者的专属工作流逻辑。那部分属于 `product/packs/content-creator/`。

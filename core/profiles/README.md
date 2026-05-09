@@ -1,18 +1,18 @@
 # Profiles
 
-Profiles map canonical Core roles to concrete paths and template language.
+Profiles 把 Core 标准角色映射到具体路径和模板语言。
 
-Profiles must not change Core semantics.
+Profiles 不能改变 Core 语义。
 
-A profile is more than the `_system` path. It includes:
+Profile 不只是把 `_system` 翻译成另一种路径。它包括：
 
-- path mapping
-- template language
-- user-facing capability names
-- CLI prompt language
-- kit folder labels and explanatory text
+- 路径映射
+- 模板语言
+- 用户可见的能力名称
+- CLI 提问语言
+- kit 文件夹标签和解释文案
 
-## Included in v0.1
+## v0.1 包含
 
-- `zh/`: Chinese workspace paths and templates
-- `en/`: English workspace paths and templates
+- `zh/`：中文工作区路径和模板
+- `en/`：英文工作区路径和模板

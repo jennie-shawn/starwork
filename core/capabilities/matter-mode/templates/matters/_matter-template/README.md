@@ -1,17 +1,17 @@
-# Matter Title
+# 事项标题
 
-## Goal
+## 目标
 
-TBD.
+待填写。
 
-## Scope
+## 范围
 
-TBD.
+待填写。
 
-## Out of Scope
+## 不在范围内
 
-TBD.
+待填写。
 
-## Formal Source Promotion Target
+## 正式事实源晋升目标
 
-TBD.
+待填写。

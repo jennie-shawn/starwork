@@ -1,5 +1,5 @@
 # Drafts
 
-Put AI-generated drafts here before user confirmation.
+这里放用户确认前的 AI 生成草稿。
 
-Drafts are not the formal source of truth.
+草稿不是正式事实源。

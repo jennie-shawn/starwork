@@ -1,5 +1,5 @@
 # Identity
 
-Put project-local identity, preferences, and durable background here.
+这里放项目本地身份、偏好和长期稳定背景。
 
-This directory is read-only by default unless the user explicitly asks to update it.
+除非用户明确要求更新，否则本目录默认只读。

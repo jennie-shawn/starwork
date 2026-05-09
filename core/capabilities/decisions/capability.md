@@ -1,26 +1,26 @@
 # Capability: decisions v0.1
 
-The Decisions capability adds a high-impact decision log.
+`decisions` 能力为工作区增加高影响决策记录。
 
-## Rule
+## 规则
 
-`decisions.md` is optional. It is not a meeting note, task log, or draft history.
+`decisions.md` 是可选文件。它不是会议纪要、任务日志，也不是草稿历史。
 
-Write a decision only when:
+只有同时满足以下条件时，才写入一条决策：
 
-1. The judgment is confirmed.
-2. It affects future work beyond a single local draft.
-3. A future Agent would need it to avoid repeating the same debate or mistake.
+1. 这个判断已经被确认。
+2. 它会影响未来工作，而不只是影响某个局部草稿。
+3. 未来 Agent 需要读到它，才能避免重复争论或重走旧路。
 
-## Examples
+## 示例
 
-Good:
+适合写入：
 
-- Core v0.1 supports Starter Mode and Matter Mode.
-- `matters/` is an optional capability, not a baseline requirement.
+- Core v0.1 支持 Starter Mode 和 Matter Mode。
+- `matters/` 是可选能力，不是 baseline 必需项。
 
-Not good:
+不适合写入：
 
-- Today we discussed three options.
-- This draft uses version B.
-- Need to ask the user tomorrow.
+- 今天讨论了三个方案。
+- 这个草稿使用 B 版本。
+- 明天需要问用户。

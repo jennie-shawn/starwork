@@ -19,6 +19,7 @@ Preset: `zh-shared-matter`
 
 本 kit 预期包含：
 
+- `_系统/主库同步/`：主库与卫星项目关系的可见说明
 - `_系统/上下文/current-projects.md`：当前主库兼容的项目状态事实源
 - `_系统/任务/current-work.md`：当前工作入口
 - `_系统/跨项目/`：跨项目联络单的本地收发记录
@@ -33,3 +34,5 @@ Preset: `zh-shared-matter`
 项目特定事实进入项目自己的正式事实源，不写回主库正式目录。
 
 `project-status.md` 是 StarWork Core 可选的新命名；本 kit 为兼容当前主库读取机制，先把项目状态正文放在 `current-projects.md`，不要同时维护两份状态正文。
+
+注意：`.core-sync.json`、`.internal/`、`.obsidian/` 是隐藏路径，很多文件管理器默认看不到。人类理解主库关系时，优先读 `_系统/主库同步/README.md`。

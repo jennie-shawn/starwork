@@ -1,25 +1,25 @@
 # File Boundaries v0.1
 
-## Required Baseline Files
+## 必需基线文件
 
-| File role | Write here | Do not write here |
+| 文件角色 | 应该写这里 | 不应该写这里 |
 |---|---|---|
-| `agent.entry_rules` | How Agents should work in this workspace. | Project status, task history, draft content. |
-| `system.context.project_status` | Goal, stage, focus, risks, formal source locations. | Single-session notes, draft bodies, detailed matter progress. |
-| `system.tasks.current_work` | Current task, active matter, blockers, waiting questions. | Long-term background, complete designs, project history. |
+| `agent.entry_rules` | Agent 在这个工作区应该如何工作。 | 项目状态、任务历史、草稿正文。 |
+| `system.context.project_status` | 目标、阶段、重点、风险、正式事实源位置。 | 单次会话笔记、草稿正文、详细事项进度。 |
+| `system.tasks.current_work` | 当前任务、活跃事项、阻塞点、等待确认的问题。 | 长期背景、完整设计稿、项目历史。 |
 
-## Optional Capability Files
+## 可选能力文件
 
-| Capability | Boundary |
+| 能力 | 边界 |
 |---|---|
-| `decisions` | Only high-impact confirmed decisions that affect future work. |
-| `starter-outputs` | `references/` is read-only source material; `outputs/drafts/` is unapproved AI work; `outputs/final/` is user-approved output. |
-| `matter-mode` | `matters/` is process workspace; mature content must be promoted to the project formal source of truth. |
-| `local-identity` | Project-local identity reference, changed only with user confirmation. |
-| `local-lessons` | Project-local reusable lessons, not ordinary retrospectives. |
-| `main-repo-sync` | Hub resources enter a satellite workspace through snapshots, read-only links, metadata, and review queues; hub registry never stores project progress body text. |
-| `skill-mount` | Shared skills are symlinked from the main repository, not copied into independent forks. |
+| `decisions` | 只记录会影响后续工作的高影响、已确认决策。 |
+| `starter-outputs` | `references/` 是只读原始资料；`outputs/drafts/` 是未确认 AI 草稿；`outputs/final/` 是用户确认成果。 |
+| `matter-mode` | `matters/` 是过程工作区；成熟内容必须晋升到项目正式事实源。 |
+| `local-identity` | 项目本地身份参考，只能在用户确认后修改。 |
+| `local-lessons` | 项目本地可复用教训，不是普通复盘流水。 |
+| `main-repo-sync` | Hub 资源通过快照、只读链接、元数据和审核队列进入卫星项目；Hub registry 不存项目进度正文。 |
+| `skill-mount` | 共享 skills 从主库软链接挂载，不复制成独立分叉。 |
 
-## Formal Source Rule
+## 正式事实源规则
 
-Every workspace must declare where formal source-of-truth content belongs. Core does not require that directory to be named `product/`.
+每个工作区都必须声明正式事实源放在哪里。Core 不要求该目录一定叫 `product/`。

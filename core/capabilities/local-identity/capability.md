@@ -1,15 +1,15 @@
 # Capability: local-identity v0.1
 
-Local Identity stores user, team, or project identity directly inside the workspace.
+`local-identity` 把用户、团队或项目身份信息直接存放在当前工作区内。
 
-## Adds
+## 新增
 
 ```text
 identity/
 ```
 
-## Rules
+## 规则
 
-- Treat identity as high-stability reference material.
-- Do not rewrite identity content without explicit user confirmation.
-- Do not use identity files as task logs or project status files.
+- 将身份信息视为高稳定性参考材料。
+- 没有用户明确确认，不要改写身份内容。
+- 不要把身份文件当成任务日志或项目状态文件。

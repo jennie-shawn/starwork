@@ -1,17 +1,17 @@
 # Presets
 
-Presets are recipes for assembling a user-facing Core workspace.
+Presets 是组装面向用户的 Core 工作区的配方。
 
-A preset selects:
+一个 preset 会选择：
 
-- one profile
-- zero or more capabilities
-- a default formal source of truth
-- optional main-repository sync expectations
+- 一个 profile
+- 零个或多个 capabilities
+- 默认正式事实源
+- 可选的主库同步预期
 
-Presets are intended for CLI and kit generation.
+Presets 主要供 CLI 和 kit 生成使用。
 
-## Included in v0.1
+## v0.1 包含
 
 - `zh-local-starter.yaml`
 - `zh-local-matter.yaml`

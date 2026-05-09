@@ -1,5 +1,5 @@
 # Lessons
 
-Put reusable project lessons here.
+这里放项目内可复用教训。
 
-A useful lesson should change future behavior, not merely summarize what happened.
+真正有用的教训应该能改变未来行为，而不只是总结发生了什么。

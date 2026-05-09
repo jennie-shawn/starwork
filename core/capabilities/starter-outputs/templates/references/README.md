@@ -1,5 +1,5 @@
 # References
 
-Put source materials here.
+这里放原始资料。
 
-This directory is read-only by default. Do not rewrite original source material unless the user explicitly asks.
+本目录默认只读。除非用户明确要求，不要改写原始资料。

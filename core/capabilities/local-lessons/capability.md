@@ -1,15 +1,15 @@
 # Capability: local-lessons v0.1
 
-Local Lessons stores reusable lessons directly inside the project workspace.
+`local-lessons` 把可复用教训直接存放在当前项目工作区内。
 
-## Adds
+## 新增
 
 ```text
 lessons/
 ```
 
-## Rules
+## 规则
 
-- A lesson must be reusable.
-- A lesson should come from a real error, correction, or repeated pattern.
-- Do not use lessons as ordinary meeting notes or project progress logs.
+- 教训必须可复用。
+- 教训应来自真实错误、修正或反复出现的模式。
+- 不要把 lessons 当成普通会议笔记或项目进度流水。

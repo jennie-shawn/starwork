@@ -1,15 +1,15 @@
 # Capability: matter-mode v0.1
 
-Matter Mode is the long-running work tracking mode.
+Matter Mode 是用于长期工作追踪的模式。
 
-## Adds
+## 新增
 
 ```text
 matters/registry.md
 matters/<matter-id>/
 ```
 
-## Matter Structure
+## 事项结构
 
 ```text
 matters/<matter-id>/
@@ -20,21 +20,21 @@ matters/<matter-id>/
 └── handoff.md
 ```
 
-## Rules
+## 规则
 
-- `matters/registry.md` is an index, not a progress log.
-- A matter directory is a process workspace, not the final source of truth.
-- Mature drafts must be promoted into the project formal source of truth.
-- Creating, pausing, and archiving matters should be handled by a matter maintenance rule or skill.
+- `matters/registry.md` 是索引，不是进度日志。
+- 单个 matter 目录是过程工作区，不是最终事实源。
+- 成熟草稿必须晋升到项目正式事实源。
+- 创建、暂停和归档 matter 应由事项维护规则或 skill 处理。
 
-## Skill Requirement
+## Skill 要求
 
-Matter Mode should be paired with `matter-workspace`.
+Matter Mode 应配套 `matter-workspace` 使用。
 
-In the current main repository, the reference skill lives at:
+在当前主库中，参考 skill 位于：
 
 ```text
 /Users/shuxinding/digital-twin-core/skills/matter-workspace/
 ```
 
-When CLI supports Matter Mode, it should install or symlink the skill rather than copying it into an independent fork.
+当 CLI 支持 Matter Mode 时，应安装或软链接该 skill，而不是复制成一个独立分叉。

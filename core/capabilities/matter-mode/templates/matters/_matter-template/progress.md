@@ -1,5 +1,5 @@
 # Progress
 
-- Created: TBD
+- Created: 待填写
 - Status: active
-- Next step: TBD
+- Next step: 待填写

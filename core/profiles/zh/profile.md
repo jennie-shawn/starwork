@@ -1,14 +1,14 @@
 # zh Profile v0.1
 
-The `zh` profile maps Core roles to Chinese workspace paths.
+`zh` profile 把 Core 角色映射到中文工作区路径。
 
-It is suitable for Chinese users and existing Chinese StarWork satellite projects.
+它适合中文用户，以及已经在运行的中文 StarWork 卫星项目。
 
-The profile includes Chinese paths, Chinese templates, Chinese CLI prompts, and Chinese kit language.
+这个 profile 包含中文路径、中文模板、中文 CLI 提问和中文 kit 文案。
 
-## Role Mapping
+## 角色映射
 
-| Canonical role | Path |
+| 标准角色 | 路径 |
 |---|---|
 | `agent.entry_rules` | `AGENTS.md` |
 | `system.context.project_status` | `_系统/上下文/project-status.md` |

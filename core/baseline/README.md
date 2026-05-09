@@ -1,12 +1,12 @@
 # Baseline
 
-`baseline/` is the source of truth for Core semantics.
+`baseline/` 是 Core 共同语义的事实源。
 
-It defines what every StarWork Core workspace must mean, regardless of language, user type, or enabled capabilities.
+无论用户使用哪种语言、哪种路径、启用哪些能力，每个 StarWork Core 工作区都必须遵守这里定义的含义。
 
-## Files
+## 文件
 
-- `spec.md`: baseline definition and required behavior
-- `roles.md`: canonical roles
-- `file-boundaries.md`: where each kind of content belongs
-- `health-check.md`: rules for future CLI `doctor`
+- `spec.md`：基线定义和必需行为
+- `roles.md`：标准角色
+- `file-boundaries.md`：不同内容应该写到哪里
+- `health-check.md`：未来 CLI `doctor` 的检查规则

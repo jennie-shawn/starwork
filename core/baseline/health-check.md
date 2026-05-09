@@ -1,27 +1,27 @@
 # Core Health Check v0.1
 
-A workspace is Core v0.1 healthy when:
+一个工作区满足以下条件时，可视为 Core v0.1 健康：
 
-- `agent.entry_rules` exists.
-- `system.context.project_status` exists.
-- `system.tasks.current_work` exists.
-- The formal source of truth is declared in the entry rules or project status.
-- Optional capability files, if present, follow their file boundaries.
-- Satellite workspaces using `main-repo-sync` include `.core-sync.json`.
+- `agent.entry_rules` 存在。
+- `system.context.project_status` 存在。
+- `system.tasks.current_work` 存在。
+- 入口规则或项目状态中声明了正式事实源。
+- 已启用的可选能力文件遵守自身边界。
+- 使用 `main-repo-sync` 的卫星项目包含 `.core-sync.json`。
 
-## Warnings
+## 警告项
 
-A checker should warn when:
+检查器遇到以下情况应给出警告：
 
-- `current-work.md` contains long project history.
-- the project status file contains task-level progress, whether it is named `project-status.md` or `current-projects.md`.
-- `decisions.md` contains meeting notes or local draft choices.
-- `references/` is modified as if it were generated output.
-- Matter drafts are treated as final source-of-truth content.
-- A satellite workspace edits main-repository snapshots or symlinked skills without confirmation.
+- `current-work.md` 包含大段项目历史。
+- 项目状态文件包含任务级流水，不论文件名是 `project-status.md` 还是 `current-projects.md`。
+- `decisions.md` 写入会议纪要或局部草稿选择。
+- `references/` 被当成生成成果来改写。
+- Matter 草稿被当成正式事实源。
+- 卫星项目在未确认情况下修改主库快照或软链接 skill。
 
-## Compatibility
+## 兼容性
 
-`system.context.project_status` is a role, not a mandatory filename.
+`system.context.project_status` 是角色，不是强制文件名。
 
-For current hub-managed Chinese workspaces, `_系统/上下文/current-projects.md` remains the live compatibility fact source. StarWork Core may use `project-status.md` in simpler new kits, but checkers and adapters must not assume that filename is universal.
+对当前由 Hub 管理的中文工作区，`_系统/上下文/current-projects.md` 仍然是兼容事实源。StarWork Core 可以在更简单的新 kit 中使用 `project-status.md`，但检查器和 adapter 不能假设所有工作区都使用这个文件名。

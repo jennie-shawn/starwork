@@ -1,5 +1,5 @@
 # Notes
 
-Use this file for discussion notes, research notes, and process judgments.
+这里记录讨论笔记、调研笔记和过程判断。
 
-Do not use it as the formal source of truth.
+不要把它当成正式事实源。
