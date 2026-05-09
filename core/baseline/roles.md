@@ -4,20 +4,20 @@
 
 | 标准角色 | 是否必需 | 说明 |
 |---|---:|---|
-| `agent.entry_rules` | Yes | 所有 Agent 进入项目时必须读取的工作规则。 |
-| `system.context.project_status` | Yes | 变化较慢的项目状态。 |
-| `system.tasks.current_work` | Yes | 当前工作、阻塞点和下一次交接入口。 |
-| `system.context.decisions` | No | 高影响决策记录。 |
-| `work.starter.references` | No | Starter Mode 中默认只读的原始资料。 |
-| `work.starter.outputs_drafts` | No | 等待用户审阅的 AI 草稿。 |
-| `work.starter.outputs_final` | No | 用户确认后的成果。 |
-| `work.matters.registry` | No | Matter Mode 的事项索引。 |
-| `identity.local` | No | 项目本地身份参考。 |
-| `lessons.local` | No | 项目本地可复用教训。 |
-| `main_repo.sync_metadata` | No | 卫星项目与主库同步的元数据。 |
-| `main_repo.knowledge_link` | No | 只读共享知识链接。 |
-| `main_repo.internal_protocols` | No | 从主库复制的内部协议快照。 |
-| `main_repo.skill_mounts` | No | 通过软链接挂载的共享 skills。 |
+| `agent.entry_rules` | 是 | 所有 Agent 进入项目时必须读取的工作规则。 |
+| `system.context.project_status` | 是 | 变化较慢的项目状态。 |
+| `system.tasks.current_work` | 是 | 当前工作、阻塞点和下一次交接入口。 |
+| `system.context.decisions` | 否 | 高影响决策记录。 |
+| `work.starter.references` | 否 | Starter Mode 中默认只读的原始资料。 |
+| `work.starter.outputs_drafts` | 否 | 等待用户审阅的 AI 草稿。 |
+| `work.starter.outputs_final` | 否 | 用户确认后的成果。 |
+| `work.matters.registry` | 否 | Matter Mode 的事项索引。 |
+| `identity.local` | 否 | 项目本地身份参考。 |
+| `lessons.local` | 否 | 项目本地可复用教训。 |
+| `main_repo.sync_metadata` | 否 | 卫星项目与主库同步的元数据。 |
+| `main_repo.knowledge_link` | 否 | 只读共享知识链接。 |
+| `main_repo.internal_protocols` | 否 | 从主库复制的内部协议快照。 |
+| `main_repo.skill_mounts` | 否 | 通过软链接挂载的共享 skills。 |
 
 ## 规则
 

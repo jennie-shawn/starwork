@@ -26,7 +26,7 @@ Hub 维护跨项目可复用资源：
 
 - `identity/`
 - `lessons/`
-- `.internal/` protocols
+- `.internal/` 协议
 - `knowledge/`
 - 共享 skills
 - 项目注册表

@@ -2,6 +2,8 @@
 
 StarWork Core 是面向 AI 协作项目的工作区协议。
 
+先读：[StarWork Core v0.1 协议总览](./core-v0.1-protocol.md)。
+
 Core v0.1 定义：
 
 - Agent 开始工作前先读什么
