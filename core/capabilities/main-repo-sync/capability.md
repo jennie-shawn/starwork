@@ -89,7 +89,7 @@ Hub 的 `projects/registry.json` 存放项目发现与同步元数据：
 - 路径
 - 状态
 - 创建日期
-- 最近同步时间
+- last_sync 时间
 - Core 版本
 - 同步模式
 - 共享资源

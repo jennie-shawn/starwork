@@ -1,0 +1,13 @@
+{
+  "name": "starwork-product",
+  "version": "0.1.0",
+  "private": true,
+  "type": "commonjs",
+  "bin": {
+    "starwork": "cli/bin/starwork.js"
+  },
+  "scripts": {
+    "starwork": "node cli/bin/starwork.js",
+    "test": "node --test cli/test/*.test.js"
+  }
+}

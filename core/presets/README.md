@@ -16,4 +16,5 @@ Presets 主要供 CLI 和 kit 生成使用。
 - `zh-local-starter.yaml`
 - `zh-local-matter.yaml`
 - `zh-shared-matter.yaml`
+- `zh-hub.yaml`
 - `en-local-starter.yaml`

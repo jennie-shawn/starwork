@@ -1,0 +1,26 @@
+# StarWork 多项目中枢规则
+
+## 开始前先读
+
+1. `_系统/上下文/project-status.md`
+2. `_系统/任务/current-work.md`
+3. `projects/registry.json`
+
+## 中枢职责
+
+- 维护跨项目共享身份、教训、知识和 skills。
+- 维护项目注册表和跨项目联络机制。
+- 审核候选回写内容。
+
+## 写入边界
+
+- 项目注册信息写入 `projects/registry.json`。
+- 跨项目联络写入 `projects/coordination/`。
+- 候选共享内容先写入 `.incoming/`。
+- 具体项目的进度正文留在各自项目内，不复制进中枢。
+
+## 需要确认
+
+- 修改身份、教训、共享知识或正式 skill。
+- 合并 `.incoming/` 中的候选内容。
+- 创建、暂停或归档项目注册。

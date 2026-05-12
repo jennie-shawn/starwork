@@ -2,7 +2,7 @@
 
 这里存放 StarWork CLI 源码、命令设计和命令级文档。
 
-## v0.1 Boundary
+## v0.1 边界
 
 v0.1 只覆盖最小可用安装和适配能力：
 
@@ -20,3 +20,13 @@ v0.1 只覆盖最小可用安装和适配能力：
 - 安装和更新时不覆盖用户已有内容
 
 CLI 不在 v0.1 阶段处理账号、授权、消息平台 gateway 或复杂商业系统。
+
+## 命令规格
+
+- [`starwork init` SPEC](./init-spec.md)
+
+## 本地运行
+
+```bash
+node cli/bin/starwork.js init --type single-light --pack general --dry-run
+```
