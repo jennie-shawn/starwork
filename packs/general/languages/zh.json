@@ -1,0 +1,19 @@
+{
+  "language": "zh",
+  "name": "通用工作 Pack",
+  "paths": {
+    "references": "参考资料/",
+    "drafts": "输出/草稿/",
+    "final": "输出/确认成果/"
+  },
+  "overrides": {
+    "formal_source": "输出/确认成果/",
+    "business_work_area": "输出/草稿/"
+  },
+  "rules": [
+    { "slot": "pack.overview", "from": "rules/zh/overview.md" },
+    { "slot": "pack.workflow", "from": "rules/zh/workflow.md" }
+  ],
+  "templates": [],
+  "seed": []
+}

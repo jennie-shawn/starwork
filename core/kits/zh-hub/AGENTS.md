@@ -2,9 +2,9 @@
 
 ## 开始前先读
 
-1. `_系统/上下文/project-status.md`
-2. `_系统/任务/current-work.md`
-3. `projects/registry.json`
+1. `_系统/上下文/项目状态.md`
+2. `_系统/任务/当前工作.md`
+3. `项目/registry.json`
 
 ## 中枢职责
 
@@ -14,8 +14,8 @@
 
 ## 写入边界
 
-- 项目注册信息写入 `projects/registry.json`。
-- 跨项目联络写入 `projects/coordination/`。
+- 项目注册信息写入 `项目/registry.json`。
+- 跨项目联络写入 `项目/联络/`。
 - 候选共享内容先写入 `.incoming/`。
 - 具体项目的进度正文留在各自项目内，不复制进中枢。
 

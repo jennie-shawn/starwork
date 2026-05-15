@@ -44,4 +44,4 @@ Core v0.1 不定义：
 - CLI 命令实现
 - 特定 Agent Runtime 行为
 - 强制性的机器可读 manifest
-- 所有用户都必须拥有的 `matters/` 目录
+- 所有用户都必须拥有事项目录

@@ -1,0 +1,27 @@
+{
+  "language": "zh",
+  "name": "多项目中枢管理 Pack",
+  "paths": {
+    "projects": "项目/",
+    "coordination": "项目/联络/",
+    "incoming": ".incoming/",
+    "identity": "identity/",
+    "lessons": "lessons/",
+    "knowledge": "知识/",
+    "skills": "skills/"
+  },
+  "overrides": {
+    "formal_source": "项目/",
+    "business_work_area": "项目/联络/"
+  },
+  "rules": [
+    { "slot": "pack.overview", "from": "rules/zh/overview.md" },
+    { "slot": "pack.workflow", "from": "rules/zh/workflow.md" }
+  ],
+  "templates": [],
+  "seed": [
+    { "from": "seed/zh/项目/registry.json", "to": "项目/registry.json", "on_conflict": "create_new" },
+    { "from": "seed/zh/项目/联络/README.md", "to": "项目/联络/README.md", "on_conflict": "create_new" },
+    { "from": "seed/zh/.incoming/README.md", "to": ".incoming/README.md", "on_conflict": "create_new" }
+  ]
+}

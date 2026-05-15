@@ -7,13 +7,13 @@ Preset: `zh-hub`
 ## 包含
 
 - `AGENTS.md`
-- `_系统/上下文/project-status.md`
-- `_系统/任务/current-work.md`
+- `_系统/上下文/项目状态.md`
+- `_系统/任务/当前工作.md`
 - `identity/`
 - `lessons/`
-- `knowledge/`
+- `知识/`
 - `skills/`
-- `projects/`
+- `项目/`
 - `.incoming/`
 
 ## 不包含

@@ -11,10 +11,12 @@
 | 标准角色 | 路径 |
 |---|---|
 | `agent.entry_rules` | `AGENTS.md` |
-| `system.context.project_status` | `_系统/上下文/project-status.md` |
-| `system.context.decisions` | `_系统/上下文/decisions.md` |
-| `system.tasks.current_work` | `_系统/任务/current-work.md` |
-| `work.starter.references` | `references/` |
-| `work.starter.outputs_drafts` | `outputs/drafts/` |
-| `work.starter.outputs_final` | `outputs/final/` |
-| `work.matters.registry` | `matters/registry.md` |
+| `system.context.project_status` | `_系统/上下文/项目状态.md` |
+| `system.context.decisions` | `_系统/上下文/决策.md` |
+| `system.tasks.current_work` | `_系统/任务/当前工作.md` |
+| `identity.local` | `_系统/身份/` |
+| `lessons.local` | `_系统/教训/` |
+| `work.starter.references` | `参考资料/` |
+| `work.starter.outputs_drafts` | `输出/草稿/` |
+| `work.starter.outputs_final` | `输出/确认成果/` |
+| `work.matters.registry` | `事项/注册表.md` |

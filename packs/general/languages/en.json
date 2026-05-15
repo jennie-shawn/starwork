@@ -1,0 +1,19 @@
+{
+  "language": "en",
+  "name": "General Work Pack",
+  "paths": {
+    "references": "references/",
+    "drafts": "outputs/drafts/",
+    "final": "outputs/final/"
+  },
+  "overrides": {
+    "formal_source": "outputs/final/",
+    "business_work_area": "outputs/drafts/"
+  },
+  "rules": [
+    { "slot": "pack.overview", "from": "rules/en/overview.md" },
+    { "slot": "pack.workflow", "from": "rules/en/workflow.md" }
+  ],
+  "templates": [],
+  "seed": []
+}

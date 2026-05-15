@@ -3,9 +3,8 @@ name: 中文多项目管理中枢
 core: "0.1"
 profile: zh
 capabilities:
-  - decisions
   - skill-mount
-formal_source_default: projects/
+formal_source_default: 项目/
 description: >
   面向需要建立主库 / 中枢的用户。中枢维护共享身份、教训、
   知识、skills、项目注册表和跨项目联络机制；不直接创建卫星项目。

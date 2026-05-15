@@ -9,3 +9,7 @@ baseline/ + profiles/ + capabilities/ + presets/
 ```
 
 在 v0.1 阶段，kits 可以手工组装。后续 `starwork init` 应根据 presets 生成 kits。
+
+## 结构参考
+
+- [Kit Structure Reference](./kit-structure-reference.md)

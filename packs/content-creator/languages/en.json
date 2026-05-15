@@ -1,0 +1,40 @@
+{
+  "language": "en",
+  "name": "Content Creator Pack",
+  "paths": {
+    "account_profile": "account-profile/",
+    "ideas": "ideas/",
+    "materials": "materials/",
+    "analysis": "content-teardown/",
+    "calendar": "content-calendar/",
+    "drafts": "drafts-and-scripts/",
+    "published": "published/",
+    "review": "analytics-review/",
+    "feedback": "audience-feedback/",
+    "commercial": "commercial-leads/",
+    "style": "style-guide/"
+  },
+  "overrides": {
+    "formal_source": "published/",
+    "business_work_area": "drafts-and-scripts/"
+  },
+  "rules": [
+    { "slot": "pack.overview", "from": "rules/en/overview.md" },
+    { "slot": "pack.workflow", "from": "rules/en/workflow.md" },
+    { "slot": "pack.file_boundaries", "from": "rules/en/file-boundaries.md" },
+    { "slot": "pack.review", "from": "rules/en/review.md" }
+  ],
+  "templates": [
+    { "id": "content-brief", "from": "templates/en/content-brief.md", "description": "Single content brief template" },
+    { "id": "publish-record", "from": "templates/en/publish-record.md", "description": "Publishing record template" },
+    { "id": "weekly-review", "from": "templates/en/weekly-review.md", "description": "Weekly review template" }
+  ],
+  "seed": [
+    { "from": "seed/en/account-profile/README.md", "to": "account-profile/README.md", "on_conflict": "create_new" },
+    { "from": "seed/en/ideas/README.md", "to": "ideas/README.md", "on_conflict": "create_new" },
+    { "from": "seed/en/materials/README.md", "to": "materials/README.md", "on_conflict": "create_new" },
+    { "from": "seed/en/drafts-and-scripts/README.md", "to": "drafts-and-scripts/README.md", "on_conflict": "create_new" },
+    { "from": "seed/en/published/README.md", "to": "published/README.md", "on_conflict": "create_new" },
+    { "from": "seed/en/analytics-review/README.md", "to": "analytics-review/README.md", "on_conflict": "create_new" }
+  ]
+}

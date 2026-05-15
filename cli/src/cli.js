@@ -66,7 +66,8 @@ async function init(argv) {
   }
 
   const packId = options.pack || await choosePack(workspaceType, workspaceConfig, options);
-  const pack = loadPack(packId);
+  const language = options.language || getKitLanguage(workspaceConfig.kit);
+  const pack = loadPack(packId, language);
   validatePack(pack, workspaceType);
 
   const workspaceName = options.name || path.basename(targetDir);
@@ -123,6 +124,8 @@ function parseArgs(argv) {
       options.name = readValue(argv, ++i, arg);
     } else if (arg === "--formal-source") {
       options.formalSource = readValue(argv, ++i, arg);
+    } else if (arg === "--language") {
+      options.language = readValue(argv, ++i, arg);
     } else if (arg === "--target") {
       options.target = readValue(argv, ++i, arg);
     } else if (arg === "--help" || arg === "-h") {
@@ -271,7 +274,7 @@ function buildInitPlan({ targetDir, workspaceName, workspaceType, workspaceConfi
         installed_at: new Date().toISOString()
       }
     ],
-    language: "zh",
+    language: pack.language || "zh",
     paths: {
       formal_source: formalSource,
       business_work_area: pack.overrides?.business_work_area || formalSource
@@ -292,7 +295,7 @@ function buildInitPlan({ targetDir, workspaceName, workspaceType, workspaceConfi
   };
 }
 
-function loadPack(packIdOrPath) {
+function loadPack(packIdOrPath, language = "zh") {
   const packPath = path.isAbsolute(packIdOrPath) || packIdOrPath.startsWith(".")
     ? path.resolve(packIdOrPath)
     : path.join(PRODUCT_ROOT, "packs", packIdOrPath);
@@ -300,14 +303,53 @@ function loadPack(packIdOrPath) {
   if (!fs.existsSync(jsonPath)) {
     throw new Error(`找不到 Pack 声明：${jsonPath}`);
   }
-  const pack = JSON.parse(fs.readFileSync(jsonPath, "utf8"));
+  const basePack = JSON.parse(fs.readFileSync(jsonPath, "utf8"));
+  const languagePack = loadPackLanguage(packPath, language);
+  const pack = mergePackLanguage(basePack, languagePack, language);
   pack.__dir = packPath;
   return pack;
+}
+
+function loadPackLanguage(packPath, language) {
+  const languagesDir = path.join(packPath, "languages");
+  if (!fs.existsSync(languagesDir)) {
+    return null;
+  }
+  const languagePath = path.join(languagesDir, `${language}.json`);
+  if (!fs.existsSync(languagePath)) {
+    throw new Error(`Pack 缺少语言配置：${path.relative(PRODUCT_ROOT, languagePath)}`);
+  }
+  return JSON.parse(fs.readFileSync(languagePath, "utf8"));
+}
+
+function mergePackLanguage(basePack, languagePack, requestedLanguage) {
+  if (!languagePack) {
+    return {
+      ...basePack,
+      language: requestedLanguage
+    };
+  }
+  return {
+    ...basePack,
+    language: languagePack.language || requestedLanguage,
+    name: languagePack.name || basePack.name || basePack.id,
+    paths: languagePack.paths || basePack.paths || {},
+    overrides: {
+      ...(basePack.overrides || {}),
+      ...(languagePack.overrides || {})
+    },
+    rules: languagePack.rules || basePack.rules || [],
+    templates: languagePack.templates || basePack.templates || [],
+    seed: languagePack.seed || basePack.seed || []
+  };
 }
 
 function validatePack(pack, workspaceType) {
   if (!pack.supports_workspace_types?.includes(workspaceType)) {
     throw new Error(`Pack ${pack.id} 不支持工作区类型 ${workspaceType}。`);
+  }
+  if (!pack.paths || Object.keys(pack.paths).length === 0) {
+    throw new Error(`Pack ${pack.id} 缺少语言化路径配置。`);
   }
 }
 
@@ -401,7 +443,7 @@ function printPlan(plan, dryRun) {
   console.log("");
   console.log(`工作区类型：${plan.workspaceLabel} (${plan.workspaceType})`);
   console.log(`Kit：${plan.kit}`);
-  console.log(`Pack：${PACK_LABELS[plan.pack.id] || plan.pack.name || plan.pack.id} (${plan.pack.id})`);
+  console.log(`Pack：${plan.pack.name || PACK_LABELS[plan.pack.id] || plan.pack.id} (${plan.pack.id})`);
   console.log(`工作台名称：${plan.workspaceName}`);
   console.log(`正式成果位置：${plan.formalSource}`);
   console.log("");
@@ -451,8 +493,14 @@ function findWorkspaceRoot(startDir) {
 }
 
 function getKitDefaultFormalSource(kit) {
-  if (kit === "zh-hub") return "projects/";
+  if (kit === "zh-hub") return "项目/";
+  if (kit.startsWith("zh-")) return "输出/确认成果/";
   return "outputs/final/";
+}
+
+function getKitLanguage(kit) {
+  if (kit.startsWith("en-")) return "en";
+  return "zh";
 }
 
 function printHelp() {
@@ -466,6 +514,7 @@ Options:
   --pack <general|content-creator|hub-management|path>
   --name <name>
   --formal-source <path>
+  --language <zh|en>
   --target <path>
   --dry-run
   --yes, -y

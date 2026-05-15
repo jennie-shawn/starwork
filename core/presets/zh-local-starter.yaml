@@ -6,7 +6,7 @@ capabilities:
   - starter-outputs
   - local-identity
   - local-lessons
-formal_source_default: outputs/final/
+formal_source_default: 输出/确认成果/
 description: >
   面向学员和轻量单项目用户。使用中文路径、本地身份/教训，以及
-  references/outputs 工作流；不默认启用 Matter Mode。
+  参考资料/输出工作流；不默认启用事项模式。

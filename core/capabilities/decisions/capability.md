@@ -4,7 +4,7 @@
 
 ## 规则
 
-`decisions.md` 是可选文件。它不是会议纪要、任务日志，也不是草稿历史。
+决策记录文件是可选文件。中文 profile 默认映射为 `_系统/上下文/决策.md`，英文 profile 可映射为 `decisions.md`。它不是会议纪要、任务日志，也不是草稿历史。
 
 只有同时满足以下条件时，才写入一条决策：
 
@@ -17,7 +17,7 @@
 适合写入：
 
 - Core v0.1 支持 Starter Mode 和 Matter Mode。
-- `matters/` 是可选能力，不是 baseline 必需项。
+- Matter Mode 是可选能力，不是 baseline 必需项。
 
 不适合写入：
 

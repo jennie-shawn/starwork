@@ -2,7 +2,16 @@
 
 这里存放 StarWork 场景工作流包。
 
-首个 Pack 是 `content-creator/`，面向自媒体内容创作者。
+Pack 由语言无关的业务角色声明和语言相关的落地配置组成：
+
+```text
+pack.json
+languages/zh.json
+languages/en.json
+rules/<language>/
+templates/<language>/
+seed/<language>/
+```
 
 ## 规格
 

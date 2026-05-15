@@ -7,7 +7,7 @@ Capabilities 是 Core 的可选能力，可以通过 presets 组合。
 ## v0.1 包含
 
 - `starter-outputs`：`references/` + `outputs/`
-- `matter-mode`：`matters/` 与事项维护要求
+- `matter-mode`：事项工作区与事项维护要求
 - `decisions`：高影响决策记录
 - `local-identity`：项目本地身份
 - `local-lessons`：项目本地教训

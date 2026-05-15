@@ -8,16 +8,16 @@ Preset: `zh-local-starter`
 
 - 中文路径 profile
 - `AGENTS.md`
-- `_系统/上下文/project-status.md`
-- `_系统/任务/current-work.md`
-- `references/`
-- `outputs/drafts/`
-- `outputs/final/`
-- 本地 `identity/`
-- 本地 `lessons/`
+- `_系统/上下文/项目状态.md`
+- `_系统/任务/当前工作.md`
+- `_系统/身份/`
+- `_系统/教训/`
+- `参考资料/`
+- `输出/草稿/`
+- `输出/确认成果/`
 
 ## 不默认包含
 
-- `matters/`
-- `decisions.md`
+- `事项/`
+- `_系统/上下文/决策.md`
 - 主库同步能力

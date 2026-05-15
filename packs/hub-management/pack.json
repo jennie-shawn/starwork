@@ -1,51 +1,28 @@
 {
   "schema": "starwork.pack.v0.1",
   "id": "hub-management",
-  "name": "多项目中枢管理 Pack",
   "version": "0.1.0",
   "compatible_core": "0.1",
   "supports_workspace_types": ["hub"],
   "requires_capabilities": [],
-  "paths": {
-    "projects": "projects/",
-    "coordination": "projects/coordination/",
-    "incoming": ".incoming/",
-    "identity": "identity/",
-    "lessons": "lessons/",
-    "knowledge": "knowledge/",
-    "skills": "skills/"
+  "roles": {
+    "projects": { "kind": "registry" },
+    "coordination": { "kind": "coordination" },
+    "incoming": { "kind": "review_queue" },
+    "identity": { "kind": "shared_source" },
+    "lessons": { "kind": "shared_source" },
+    "knowledge": { "kind": "shared_source" },
+    "skills": { "kind": "shared_source" }
   },
   "flow": ["projects", "coordination", "incoming"],
-  "overrides": {
-    "formal_source": "projects/",
-    "business_work_area": "projects/coordination/"
-  },
   "rules": [
-    {
-      "slot": "pack.overview",
-      "from": "rules/overview.md"
-    },
-    {
-      "slot": "pack.workflow",
-      "from": "rules/workflow.md"
-    }
+    { "id": "overview", "slot": "pack.overview" },
+    { "id": "workflow", "slot": "pack.workflow" }
   ],
   "templates": [],
   "seed": [
-    {
-      "from": "seed/projects/registry.json",
-      "to": "projects/registry.json",
-      "on_conflict": "create_new"
-    },
-    {
-      "from": "seed/projects/coordination/README.md",
-      "to": "projects/coordination/README.md",
-      "on_conflict": "create_new"
-    },
-    {
-      "from": "seed/.incoming/README.md",
-      "to": ".incoming/README.md",
-      "on_conflict": "create_new"
-    }
+    { "id": "project-registry", "role": "projects" },
+    { "id": "coordination-readme", "role": "coordination" },
+    { "id": "incoming-readme", "role": "incoming" }
   ]
 }

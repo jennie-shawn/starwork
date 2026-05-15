@@ -4,25 +4,31 @@ Matter Mode 是用于长期工作追踪的模式。
 
 ## 新增
 
+中文 profile 默认映射为：
+
 ```text
-matters/registry.md
-matters/<matter-id>/
+事项/注册表.md
+事项/<matter-id>/
 ```
+
+英文 profile 可映射为 `matters/registry.md` 和 `matters/<matter-id>/`。
 
 ## 事项结构
 
+中文 profile 默认结构为：
+
 ```text
-matters/<matter-id>/
+事项/<matter-id>/
 ├── README.md
-├── progress.md
-├── notes.md
-├── drafts/
-└── handoff.md
+├── 进度.md
+├── 笔记.md
+├── 草稿/
+└── 交接.md
 ```
 
 ## 规则
 
-- `matters/registry.md` 是索引，不是进度日志。
+- 事项注册表是索引，不是进度日志。
 - 单个 matter 目录是过程工作区，不是最终事实源。
 - 成熟草稿必须晋升到项目正式事实源。
 - 创建、暂停和归档 matter 应由事项维护规则或 skill 处理。

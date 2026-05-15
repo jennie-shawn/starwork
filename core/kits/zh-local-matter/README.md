@@ -7,12 +7,16 @@ Preset: `zh-local-matter`
 ## 包含
 
 - 中文路径 profile
-- Starter Outputs
-- Matter Mode
-- Decisions
-- 本地 `identity/`
-- 本地 `lessons/`
+- 轻量输出模式
+- 事项模式
+- 高影响决策记录
+- `_系统/身份/`
+- `_系统/教训/`
+- `参考资料/`
+- `输出/草稿/`
+- `输出/确认成果/`
+- `事项/注册表.md`
 
-## Matter Mode 要求
+## 事项模式要求
 
-启用 Matter Mode 时，应该同时安装或软链接 `matter-workspace` skill。
+启用事项模式时，应该同时安装或软链接 `matter-workspace` skill。

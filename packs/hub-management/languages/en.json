@@ -1,0 +1,27 @@
+{
+  "language": "en",
+  "name": "Hub Management Pack",
+  "paths": {
+    "projects": "projects/",
+    "coordination": "projects/coordination/",
+    "incoming": ".incoming/",
+    "identity": "identity/",
+    "lessons": "lessons/",
+    "knowledge": "knowledge/",
+    "skills": "skills/"
+  },
+  "overrides": {
+    "formal_source": "projects/",
+    "business_work_area": "projects/coordination/"
+  },
+  "rules": [
+    { "slot": "pack.overview", "from": "rules/en/overview.md" },
+    { "slot": "pack.workflow", "from": "rules/en/workflow.md" }
+  ],
+  "templates": [],
+  "seed": [
+    { "from": "seed/en/projects/registry.json", "to": "projects/registry.json", "on_conflict": "create_new" },
+    { "from": "seed/en/projects/coordination/README.md", "to": "projects/coordination/README.md", "on_conflict": "create_new" },
+    { "from": "seed/en/.incoming/README.md", "to": ".incoming/README.md", "on_conflict": "create_new" }
+  ]
+}

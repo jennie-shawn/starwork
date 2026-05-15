@@ -14,7 +14,7 @@
 |---|---|
 | `decisions` | 只记录会影响后续工作的高影响、已确认决策。 |
 | `starter-outputs` | `references/` 是只读原始资料；`outputs/drafts/` 是未确认 AI 草稿；`outputs/final/` 是用户确认成果。 |
-| `matter-mode` | `matters/` 是过程工作区；成熟内容必须晋升到项目正式事实源。 |
+| `matter-mode` | 事项目录是过程工作区；成熟内容必须晋升到项目正式事实源。 |
 | `local-identity` | 项目本地身份参考，只能在用户确认后修改。 |
 | `local-lessons` | 项目本地可复用教训，不是普通复盘流水。 |
 | `main-repo-sync` | Hub 资源通过快照、只读链接、元数据和审核队列进入卫星项目；Hub registry 不存项目进度正文。 |

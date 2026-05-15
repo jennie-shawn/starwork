@@ -1,101 +1,41 @@
 {
   "schema": "starwork.pack.v0.1",
   "id": "content-creator",
-  "name": "自媒体内容创作者 Pack",
   "version": "0.1.0",
   "compatible_core": "0.1",
   "supports_workspace_types": ["single-light", "single-matter"],
   "requires_capabilities": [],
-  "paths": {
-    "account_profile": "账号定位/",
-    "ideas": "选题池/",
-    "materials": "素材库/",
-    "analysis": "爆款拆解/",
-    "calendar": "内容日历/",
-    "drafts": "草稿与脚本/",
-    "published": "发布记录/",
-    "review": "数据复盘/",
-    "feedback": "用户反馈/",
-    "commercial": "商业化线索/",
-    "style": "风格库/"
+  "roles": {
+    "account_profile": { "kind": "strategy" },
+    "ideas": { "kind": "pipeline" },
+    "materials": { "kind": "source" },
+    "analysis": { "kind": "research" },
+    "calendar": { "kind": "planning" },
+    "drafts": { "kind": "work_in_progress" },
+    "published": { "kind": "formal_source" },
+    "review": { "kind": "learning_loop" },
+    "feedback": { "kind": "source" },
+    "commercial": { "kind": "opportunity" },
+    "style": { "kind": "reference" }
   },
-  "flow": [
-    "account_profile",
-    "ideas",
-    "materials",
-    "drafts",
-    "published",
-    "review"
-  ],
-  "overrides": {
-    "formal_source": "发布记录/",
-    "business_work_area": "草稿与脚本/"
-  },
+  "flow": ["account_profile", "ideas", "materials", "drafts", "published", "review"],
   "rules": [
-    {
-      "slot": "pack.overview",
-      "from": "rules/overview.md"
-    },
-    {
-      "slot": "pack.workflow",
-      "from": "rules/workflow.md"
-    },
-    {
-      "slot": "pack.file_boundaries",
-      "from": "rules/file-boundaries.md"
-    },
-    {
-      "slot": "pack.review",
-      "from": "rules/review.md"
-    }
+    { "id": "overview", "slot": "pack.overview" },
+    { "id": "workflow", "slot": "pack.workflow" },
+    { "id": "file-boundaries", "slot": "pack.file_boundaries" },
+    { "id": "review", "slot": "pack.review" }
   ],
   "templates": [
-    {
-      "id": "content-brief",
-      "from": "templates/content-brief.md",
-      "description": "单篇内容大纲模板"
-    },
-    {
-      "id": "publish-record",
-      "from": "templates/publish-record.md",
-      "description": "发布记录模板"
-    },
-    {
-      "id": "weekly-review",
-      "from": "templates/weekly-review.md",
-      "description": "周复盘模板"
-    }
+    { "id": "content-brief" },
+    { "id": "publish-record" },
+    { "id": "weekly-review" }
   ],
   "seed": [
-    {
-      "from": "seed/账号定位/README.md",
-      "to": "账号定位/README.md",
-      "on_conflict": "create_new"
-    },
-    {
-      "from": "seed/选题池/README.md",
-      "to": "选题池/README.md",
-      "on_conflict": "create_new"
-    },
-    {
-      "from": "seed/素材库/README.md",
-      "to": "素材库/README.md",
-      "on_conflict": "create_new"
-    },
-    {
-      "from": "seed/草稿与脚本/README.md",
-      "to": "草稿与脚本/README.md",
-      "on_conflict": "create_new"
-    },
-    {
-      "from": "seed/发布记录/README.md",
-      "to": "发布记录/README.md",
-      "on_conflict": "create_new"
-    },
-    {
-      "from": "seed/数据复盘/README.md",
-      "to": "数据复盘/README.md",
-      "on_conflict": "create_new"
-    }
+    { "id": "account-profile", "role": "account_profile" },
+    { "id": "ideas", "role": "ideas" },
+    { "id": "materials", "role": "materials" },
+    { "id": "drafts", "role": "drafts" },
+    { "id": "published", "role": "published" },
+    { "id": "review", "role": "review" }
   ]
 }

@@ -8,7 +8,7 @@ capabilities:
   - decisions
   - local-identity
   - local-lessons
-formal_source_default: outputs/final/
+formal_source_default: 输出/确认成果/
 description: >
   面向需要长期事项接力的中文单项目用户。身份和教训保存在本项目内，
-  同时启用 Matter Mode 和高影响决策日志。
+  同时启用事项模式和高影响决策日志。

@@ -122,7 +122,7 @@ v0.1 不在 `init` 中处理升级。
 | 长期单项目 | `zh-local-matter` | 启用 Matter Mode 和决策记录。 |
 | 多项目管理中枢 | `zh-hub` | 建立主库 / 中枢，不创建卫星项目。 |
 
-注意：Core 中的 `zh-shared-matter` 更接近卫星项目 Kit，不应被 `init` 的“多项目管理中枢”入口直接使用。`init` 应使用独立的 Hub Kit / Hub Preset。
+注意：Core 中的 `zh-satellite-matter` 更接近卫星项目 Kit，不应被 `init` 的“多项目管理中枢”入口直接使用。`init` 应使用独立的 Hub Kit / Hub Preset。
 
 ### Step 2：选择 Pack
 
@@ -171,7 +171,7 @@ CLI 询问或自动推断：
 当前工作索引文件仍由 Kit / Core 决定，例如：
 
 ```text
-_系统/任务/current-work.md
+_系统/任务/当前工作.md
 ```
 
 但业务工作实际推进位置可以由 Pack 覆盖，例如自媒体 Pack 可以把单篇内容推进到内容事项或内容生产目录。
@@ -190,9 +190,9 @@ Pack：content-creator
 
 将创建：
 - AGENTS.md
-- _系统/上下文/current-projects.md
-- _系统/任务/current-work.md
-- matters/registry.md
+- _系统/上下文/项目状态.md
+- _系统/任务/当前工作.md
+- 事项/注册表.md
 - 选题池/
 - 素材库/
 - 草稿与脚本/
@@ -213,12 +213,13 @@ Pack：content-creator
 执行顺序：
 
 1. 解析 Kit。
-2. 解析 Pack。
-3. 合并路径、模板、规则和默认配置。
-4. 生成写入计划。
-5. 根据冲突策略写入文件。
-6. 写入 CLI 内部状态。
-7. 输出下一步建议。
+2. 解析 Pack 的 `pack.json`。
+3. 根据 Kit / profile 语言读取 `languages/<language>.json`。
+4. 合并 Pack 的业务角色、语言路径、模板、规则和默认配置。
+5. 生成写入计划。
+6. 根据冲突策略写入文件。
+7. 写入 CLI 内部状态。
+8. 输出下一步建议。
 
 完成提示示例：
 

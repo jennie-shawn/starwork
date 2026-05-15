@@ -5,10 +5,10 @@
   "cliPrompts": {
     "language": "你想使用中文还是英文？",
     "projectMode": "你是只管理一个项目，还是使用主库加多个卫星项目？",
-    "workMode": "你想用简单 outputs/references，还是启用事项？"
+    "workMode": "你想用简单输出/参考资料，还是启用事项？"
   },
   "capabilityNames": {
-    "starter-outputs": "Starter 输出模式",
+    "starter-outputs": "轻量输出模式",
     "matter-mode": "事项模式",
     "decisions": "高影响决策记录",
     "local-identity": "本地身份信息",
@@ -18,7 +18,7 @@
   },
   "folderLabels": {
     "references": "参考资料",
-    "outputs": "产出",
+    "outputs": "输出",
     "drafts": "草稿",
     "final": "确认成果",
     "matters": "事项"

@@ -41,7 +41,9 @@ test("creates a single-light workspace with general pack", () => {
   assert.equal(state.kit, "zh-local-starter");
   assert.equal(state.packs[0].id, "general");
   assert.equal(fs.existsSync(path.join(dir, "AGENTS.md")), true);
-  assert.equal(fs.existsSync(path.join(dir, "outputs", "final", "README.md")), true);
+  assert.equal(fs.existsSync(path.join(dir, "输出", "确认成果", "README.md")), true);
+  assert.equal(fs.existsSync(path.join(dir, "_系统", "身份", "README.md")), true);
+  assert.equal(fs.existsSync(path.join(dir, "_系统", "教训", "README.md")), true);
 });
 
 test("creates a single-matter workspace with content creator pack", () => {
@@ -54,6 +56,7 @@ test("creates a single-matter workspace with content creator pack", () => {
   assert.equal(state.packs[0].id, "content-creator");
   assert.equal(state.paths.formal_source, "发布记录/");
   assert.match(agents, /自媒体内容生产流/);
+  assert.equal(fs.existsSync(path.join(dir, "事项", "注册表.md")), true);
   assert.equal(fs.existsSync(path.join(dir, "发布记录", "README.md")), true);
   assert.equal(fs.existsSync(path.join(dir, ".starwork", "packs", "content-creator", "templates", "content-brief.md")), true);
 });
@@ -66,7 +69,8 @@ test("creates a hub workspace with hub management pack", () => {
   assert.equal(state.workspace_type, "hub");
   assert.equal(state.kit, "zh-hub");
   assert.equal(state.packs[0].id, "hub-management");
-  assert.equal(fs.existsSync(path.join(dir, "projects", "registry.json")), true);
+  assert.equal(fs.existsSync(path.join(dir, "项目", "registry.json")), true);
+  assert.equal(fs.existsSync(path.join(dir, "知识", "README.md")), true);
   assert.equal(fs.existsSync(path.join(dir, ".incoming", "README.md")), true);
 });
 

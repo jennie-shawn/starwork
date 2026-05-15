@@ -1,0 +1,40 @@
+{
+  "language": "zh",
+  "name": "自媒体内容创作者 Pack",
+  "paths": {
+    "account_profile": "账号定位/",
+    "ideas": "选题池/",
+    "materials": "素材库/",
+    "analysis": "爆款拆解/",
+    "calendar": "内容日历/",
+    "drafts": "草稿与脚本/",
+    "published": "发布记录/",
+    "review": "数据复盘/",
+    "feedback": "用户反馈/",
+    "commercial": "商业化线索/",
+    "style": "风格库/"
+  },
+  "overrides": {
+    "formal_source": "发布记录/",
+    "business_work_area": "草稿与脚本/"
+  },
+  "rules": [
+    { "slot": "pack.overview", "from": "rules/zh/overview.md" },
+    { "slot": "pack.workflow", "from": "rules/zh/workflow.md" },
+    { "slot": "pack.file_boundaries", "from": "rules/zh/file-boundaries.md" },
+    { "slot": "pack.review", "from": "rules/zh/review.md" }
+  ],
+  "templates": [
+    { "id": "content-brief", "from": "templates/zh/content-brief.md", "description": "单篇内容大纲模板" },
+    { "id": "publish-record", "from": "templates/zh/publish-record.md", "description": "发布记录模板" },
+    { "id": "weekly-review", "from": "templates/zh/weekly-review.md", "description": "周复盘模板" }
+  ],
+  "seed": [
+    { "from": "seed/zh/账号定位/README.md", "to": "账号定位/README.md", "on_conflict": "create_new" },
+    { "from": "seed/zh/选题池/README.md", "to": "选题池/README.md", "on_conflict": "create_new" },
+    { "from": "seed/zh/素材库/README.md", "to": "素材库/README.md", "on_conflict": "create_new" },
+    { "from": "seed/zh/草稿与脚本/README.md", "to": "草稿与脚本/README.md", "on_conflict": "create_new" },
+    { "from": "seed/zh/发布记录/README.md", "to": "发布记录/README.md", "on_conflict": "create_new" },
+    { "from": "seed/zh/数据复盘/README.md", "to": "数据复盘/README.md", "on_conflict": "create_new" }
+  ]
+}
