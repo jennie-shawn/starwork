@@ -516,7 +516,7 @@
           <p class="kicker">StarWork CLI v0.1</p>
           <h1>CLI 能力说明</h1>
           <p class="subtitle">
-            CLI 是 StarWork 的产品化入口。Core 定义什么是对的，CLI 负责把它生成出来、检查出来、适配出来，并把场景 Pack 安全安装进去。
+            CLI 是 StarWork 的产品化入口。Core 定义什么是对的，CLI 负责把它生成出来、检查出来、适配出来，并把场景 Pack 安全安装进去；定制化生成由 spawn blueprint 和 starworkSpawn skill 共同完成第一版闭环。
           </p>
         </div>
 
@@ -725,6 +725,7 @@
                 <li>按 <code>--mode</code> 选择 <code>satellite-starter</code> 或 <code>satellite-matter</code>。</li>
                 <li>写入项目自己的 workspace state 和同步说明。</li>
                 <li>回写 Hub 项目注册表，拒绝重复 ID 或重复路径。</li>
+                <li><code>--blueprint</code> 支持按工作台定制单创建目录、写入路径、注入规则和复制 seed。</li>
               </ul>
             </div>
             <div class="detail-box">
@@ -926,7 +927,7 @@ node cli/bin/starwork.js pack install content-creator \
           <p>这是最快确认 CLI 没坏的方法。当前测试覆盖 init、spawn、doctor、adapt、pack install 的核心路径。</p>
           <pre>cd /Users/shuxinding/satellite-starwork/product
 npm test</pre>
-          <p>预期结果：22 个测试全部通过。</p>
+          <p>预期结果：25 个测试全部通过。</p>
         </div>
 
         <div class="test-card">
@@ -974,6 +975,52 @@ node cli/bin/starwork.js spawn \
   --id content-site \
   --target "$PROJECT_DIR" \
   --mode matter \
+  --yes
+
+node cli/bin/starwork.js doctor --target "$PROJECT_DIR"</pre>
+        </div>
+
+        <div class="test-card">
+          <h3>方式四：手动测试 blueprint</h3>
+          <p>这会用工作台定制单生成一个带定制目录和规则的卫星项目。</p>
+          <pre>cd /Users/shuxinding/satellite-starwork/product
+
+BLUEPRINT_DIR=/tmp/starwork-blueprint-test
+HUB_DIR=/tmp/starwork-blueprint-hub
+PROJECT_DIR=/tmp/starwork-blueprint-project
+rm -rf "$BLUEPRINT_DIR" "$HUB_DIR" "$PROJECT_DIR"
+mkdir -p "$BLUEPRINT_DIR/rules"
+
+cat > "$BLUEPRINT_DIR/rules/file-boundaries.md" <<'EOF'
+正式成果放在 {{paths.formal_source}}。
+EOF
+
+cat > "$BLUEPRINT_DIR/blueprint.json" <<'EOF'
+{
+  "schema": "starwork.spawn_blueprint.v0.1",
+  "name": "定制项目",
+  "project_id": "custom-project",
+  "base": { "mode": "matter", "kit": "satellite-matter", "language": "zh" },
+  "paths": {
+    "formal_source": "交付物/确认版本/",
+    "business_work_area": "事项/"
+  },
+  "folders": ["资料库/", "交付物/确认版本/"],
+  "agent_rules": [
+    { "slot": "project.file_boundaries", "from": "rules/file-boundaries.md" }
+  ]
+}
+EOF
+
+node cli/bin/starwork.js init \
+  --type hub \
+  --target "$HUB_DIR" \
+  --yes
+
+node cli/bin/starwork.js spawn \
+  --hub "$HUB_DIR" \
+  --target "$PROJECT_DIR" \
+  --blueprint "$BLUEPRINT_DIR/blueprint.json" \
   --yes
 
 node cli/bin/starwork.js doctor --target "$PROJECT_DIR"</pre>
@@ -1034,7 +1081,7 @@ node cli/bin/starwork.js doctor --target "$TEST_DIR"</pre>
     </section>
 
     <footer class="footer">
-      <p>事实源：<code>product/cli/README.md</code>、<code>product/cli/*-spec.md</code> 和当前 CLI 实现。本文是 HTML 阅读版。</p>
+      <p>事实源：<code>product/cli/README.md</code>、<code>product/cli/*-spec.md</code>、<code>product/skills/starworkSpawn/</code> 和当前 CLI 实现。本文是 HTML 阅读版。</p>
     </footer>
   </main>
 </body>

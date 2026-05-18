@@ -71,6 +71,8 @@ starwork spawn \
 starwork spawn --hub <hub-path> --name <project-name> --target <path>
 starwork spawn --hub ~/my-hub --name "新项目" --target ~/projects/new-project --mode starter
 starwork spawn --hub ~/my-hub --name "长期项目" --target ~/projects/long-project --mode matter
+starwork spawn --hub ~/my-hub --target ~/projects/custom-project --blueprint ./blueprint.json --dry-run
+starwork spawn --hub ~/my-hub --target ~/projects/custom-project --blueprint ./blueprint.json --yes
 starwork spawn --hub ~/my-hub --name "新项目" --target ~/projects/new-project --dry-run
 starwork spawn --hub ~/my-hub --name "新项目" --target ~/projects/new-project --yes
 ```
@@ -80,6 +82,7 @@ starwork spawn --hub ~/my-hub --name "新项目" --target ~/projects/new-project
 | 参数 | 说明 |
 |---|---|
 | `--hub <path>` | Hub 工作台路径。必须是 `hub` 或未来兼容 Hub Kit。 |
+| `--blueprint <path>` | 可选工作台定制单。启用后可由 blueprint 提供项目名、模式、项目 ID、路径、目录、规则和 seed。 |
 | `--name <name>` | 卫星项目名称。 |
 | `--target <path>` | 卫星项目创建位置。 |
 | `--mode <starter|matter>` | 卫星项目模式。默认 `matter`。 |
@@ -369,6 +372,21 @@ starwork pack install content-creator --target <satellite> --yes
 
 后续如果支持 `--pack`，它应复用 `pack install` 的逻辑，而不是在 `spawn` 中重写一套 Pack 安装器。
 
+### 与 `spawn --blueprint`
+
+`spawn --blueprint` 已在 v0.1 第一版落地，用于把一次性项目定制交给 CLI 执行。
+
+当前支持：
+
+- 覆盖 `paths.formal_source` 和 `paths.business_work_area`。
+- 创建 `folders` 声明的定制目录。
+- 把 `agent_rules` 指向的 Markdown 注入 `AGENTS.md`。
+- 复制 `seed` 文件。
+- 在 `.starwork/workspace.json` 中记录 `customization`。
+- 在 Hub registry 中标记 `customized: true`。
+
+当前不支持 `renames`、`removals` 和自动安装 Pack。
+
 ## v0.1 不做什么
 
 - 不创建 Hub；Hub 必须已经存在。
@@ -380,13 +398,14 @@ starwork pack install content-creator --target <satellite> --yes
 - 不把项目进度写入 Hub registry。
 - 不让卫星项目直接改 Hub 的共享事实源。
 - 不处理 Pack 卸载、升级或迁移。
+- 不在 `spawn --blueprint` 中处理 `renames`、`removals` 或脚本执行。
 
 ## 最小实现范围
 
 第一版实现范围：
 
 1. 支持 `starwork spawn` 命令。
-2. 支持 `--hub`、`--name`、`--target`、`--mode`、`--id`、`--dry-run`、`--yes`。
+2. 支持 `--hub`、`--name`、`--target`、`--mode`、`--id`、`--blueprint`、`--dry-run`、`--yes`。
 3. 检查 Hub 是否为健康 `hub` 工作台。
 4. 只允许写入不存在或空目标目录。
 5. 根据 mode 复制 `satellite-starter` 或 `satellite-matter` Kit。

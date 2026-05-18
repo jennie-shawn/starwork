@@ -19,6 +19,7 @@ StarWork 现在不缺想法，缺的是一条清晰的主线。
 - `starwork doctor` 第一版已经可以检查工作台健康状态。
 - `starwork adapt` 第一版已经可以生成或登记 Agent 适配入口。
 - `starwork pack install` 第一版已经可以在健康工作台上补装 Pack。
+- `starwork spawn --blueprint` 第一版已经可以按工作台定制单生成定制化卫星项目；`starworkSpawn` skill 第一版用于生成工作台定制单。
 
 所以，下一步不应该继续扩张 Core 或 CLI，而应该进入第一个场景 Pack 与 Demo 验证。
 
@@ -109,6 +110,7 @@ M8 v1.0 稳定产品
 后续增强项：
 
 - `init` 交互体验继续打磨。
+- `spawn --blueprint` 增强：支持 `renames`、`removals`、更完整的 schema 校验和迁移。
 - `doctor` 内容边界 warning 和 strict / verbose 增强。
 - Pack 升级、卸载和迁移机制。
 

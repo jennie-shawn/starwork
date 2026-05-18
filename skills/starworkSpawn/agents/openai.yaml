@@ -1,0 +1,7 @@
+interface:
+  display_name: "StarWork Spawn"
+  short_description: "生成 StarWork 工作台定制单"
+  default_prompt: "Use $starworkSpawn to design a Spawn Blueprint for a new StarWork satellite workspace."
+
+policy:
+  allow_implicit_invocation: true

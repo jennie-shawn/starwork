@@ -140,7 +140,8 @@ test("spawn creates a matter project from a hub", () => {
   const state = readJson(path.join(target, ".starwork", "workspace.json"));
   const sync = readJson(path.join(target, ".core-sync.json"));
   const registry = readJson(path.join(hub, "项目", "registry.json"));
-  const doctor = runDoctor(["--target", target]);
+  const doctor = runDoctor(["--target", target, "--json"]);
+  const report = JSON.parse(doctor.stdout);
 
   assert.equal(spawn.status, 0);
   assert.equal(state.workspace_type, "satellite-matter");
@@ -161,13 +162,133 @@ test("spawn creates a starter project from a hub", () => {
 
   const spawn = runCommand(["spawn", "--hub", hub, "--name", "Quick Project", "--id", "quick-project", "--target", target, "--mode", "starter", "--yes"]);
   const state = readJson(path.join(target, ".starwork", "workspace.json"));
-  const doctor = runDoctor(["--target", target]);
+  const doctor = runDoctor(["--target", target, "--json"]);
+  const report = JSON.parse(doctor.stdout);
 
   assert.equal(spawn.status, 0);
   assert.equal(state.workspace_type, "satellite-starter");
   assert.equal(state.kit, "satellite-starter");
   assert.equal(fs.existsSync(path.join(target, "事项")), false);
   assert.equal(doctor.status, 0);
+});
+
+test("spawn creates a customized project from a blueprint", () => {
+  const hub = tempDir();
+  const target = tempDir();
+  const blueprintDir = tempDir();
+  fs.mkdirSync(path.join(blueprintDir, "rules"), { recursive: true });
+  fs.mkdirSync(path.join(blueprintDir, "seed", "会议纪要"), { recursive: true });
+  fs.writeFileSync(path.join(blueprintDir, "rules", "file-boundaries.md"), "正式成果放在 {{paths.formal_source}}。\n", "utf8");
+  fs.writeFileSync(path.join(blueprintDir, "rules", "workflow.md"), "当前推进放在 {{paths.business_work_area}}。\n", "utf8");
+  fs.writeFileSync(path.join(blueprintDir, "seed", "会议纪要", "README.md"), "# 会议纪要\n\n项目：{{project.name}}\n", "utf8");
+  fs.writeFileSync(path.join(blueprintDir, "blueprint.json"), `${JSON.stringify({
+    schema: "starwork.spawn_blueprint.v0.1",
+    name: "Blueprint Project",
+    project_id: "blueprint-project",
+    description: "用 blueprint 生成的定制项目。",
+    base: {
+      mode: "matter",
+      kit: "satellite-matter",
+      language: "zh"
+    },
+    paths: {
+      formal_source: "交付物/确认版本/",
+      business_work_area: "事项/"
+    },
+    folders: [
+      "资料库/",
+      "会议纪要/",
+      "版本记录/",
+      "交付物/确认版本/"
+    ],
+    agent_rules: [
+      { slot: "project.file_boundaries", from: "rules/file-boundaries.md" },
+      { slot: "project.workflow", from: "rules/workflow.md" }
+    ],
+    seed: [
+      { from: "seed/会议纪要/README.md", to: "会议纪要/README.md", on_conflict: "error" }
+    ]
+  }, null, 2)}\n`, "utf8");
+  runInit(["--type", "hub", "--target", hub, "--yes"]);
+
+  const spawn = runCommand(["spawn", "--hub", hub, "--target", target, "--blueprint", path.join(blueprintDir, "blueprint.json"), "--yes"]);
+  const state = readJson(path.join(target, ".starwork", "workspace.json"));
+  const agents = fs.readFileSync(path.join(target, "AGENTS.md"), "utf8");
+  const projectStatus = fs.readFileSync(path.join(target, "_系统", "上下文", "当前项目.md"), "utf8");
+  const seed = fs.readFileSync(path.join(target, "会议纪要", "README.md"), "utf8");
+  const registry = readJson(path.join(hub, "项目", "registry.json"));
+  const doctor = runDoctor(["--target", target, "--json"]);
+  const report = JSON.parse(doctor.stdout);
+
+  assert.equal(spawn.status, 0);
+  assert.equal(state.workspace_type, "satellite-matter");
+  assert.equal(state.paths.formal_source, "交付物/确认版本/");
+  assert.equal(state.customization.type, "spawn_blueprint");
+  assert.equal(state.customization.agent_rules[0].slot, "project.file_boundaries");
+  assert.equal(fs.existsSync(path.join(target, "资料库")), true);
+  assert.equal(fs.existsSync(path.join(target, "交付物", "确认版本")), true);
+  assert.match(agents, /StarWork Blueprint: project\.file_boundaries/);
+  assert.match(agents, /正式成果放在 交付物\/确认版本\//);
+  assert.match(projectStatus, /工作区定制/);
+  assert.match(seed, /项目：Blueprint Project/);
+  assert.equal(registry.projects[0].customized, true);
+  assert.equal(doctor.status, 0);
+  assert(report.checks.some((check) => check.id === "blueprint.folder.exists" && check.level === "pass"));
+  assert(report.checks.some((check) => check.id === "blueprint.rule.injected" && check.level === "pass"));
+});
+
+test("spawn blueprint dry-run does not write target or registry", () => {
+  const hub = tempDir();
+  const target = tempDir();
+  const blueprintDir = tempDir();
+  fs.writeFileSync(path.join(blueprintDir, "blueprint.json"), `${JSON.stringify({
+    schema: "starwork.spawn_blueprint.v0.1",
+    name: "Dry Blueprint",
+    base: {
+      mode: "starter",
+      kit: "satellite-starter",
+      language: "zh"
+    },
+    paths: {
+      formal_source: "交付物/",
+      business_work_area: "参考资料/"
+    },
+    folders: ["交付物/"]
+  }, null, 2)}\n`, "utf8");
+  runInit(["--type", "hub", "--target", hub, "--yes"]);
+
+  const result = runCommand(["spawn", "--hub", hub, "--target", target, "--blueprint", path.join(blueprintDir, "blueprint.json"), "--dry-run"]);
+  const registry = readJson(path.join(hub, "项目", "registry.json"));
+
+  assert.equal(result.status, 0);
+  assert.match(result.stdout, /Blueprint/);
+  assert.equal(fs.existsSync(path.join(target, ".starwork", "workspace.json")), false);
+  assert.deepEqual(registry.projects, []);
+});
+
+test("spawn blueprint rejects unsafe paths", () => {
+  const hub = tempDir();
+  const target = tempDir();
+  const blueprintDir = tempDir();
+  fs.writeFileSync(path.join(blueprintDir, "blueprint.json"), `${JSON.stringify({
+    schema: "starwork.spawn_blueprint.v0.1",
+    name: "Unsafe Blueprint",
+    base: {
+      mode: "matter",
+      kit: "satellite-matter",
+      language: "zh"
+    },
+    paths: {
+      formal_source: "../escape/",
+      business_work_area: "事项/"
+    }
+  }, null, 2)}\n`, "utf8");
+  runInit(["--type", "hub", "--target", hub, "--yes"]);
+
+  const result = runCommand(["spawn", "--hub", hub, "--target", target, "--blueprint", path.join(blueprintDir, "blueprint.json"), "--yes"]);
+
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /不能跳出工作区/);
 });
 
 test("spawn refuses duplicate registry id", () => {

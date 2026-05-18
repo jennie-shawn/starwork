@@ -9,3 +9,8 @@
 - [roadmap.md](roadmap.md)：StarWork 从当前状态到 v0.1 发布、v0.2 扩展和 v1.0 稳定产品的里程碑
 - [roadmap.html](roadmap.html)：里程碑 HTML 阅读版，包含 SVG 总路线图和当前焦点图
 - [v0.1-plan.md](v0.1-plan.md)：StarWork v0.1 三条并行工作线与首轮事项安排
+
+相关事实源：
+
+- CLI 命令规格在 `product/cli/`，包括 `spawn-blueprint-spec.md`。
+- StarWork 自研 Agent skill 在 `product/skills/`，当前包含 `starworkSpawn`。

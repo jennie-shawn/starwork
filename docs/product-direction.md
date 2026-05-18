@@ -22,7 +22,7 @@ StarWork 拆成四层：
 - Packs 负责具体场景解决方案和商业化。
 - Course 负责教育、转化、高客单服务和方法论表达。
 
-Course 层继续由 `珍妮丁丁GFM` 承载。本项目承载产品本体：Core、CLI、Packs、Adapters、schemas、examples、正式产品文档和发布材料。
+Course 层继续由 `珍妮丁丁GFM` 承载。本项目承载产品本体：Core、CLI、Packs、Skills、Adapters、schemas、examples、正式产品文档和发布材料。
 
 ## 方向约束
 
@@ -51,12 +51,14 @@ Demo 工作区与产品文档
 
 ## v0.1 当前收敛
 
-截至 2026-05-15，Core 被定义为开源 AI 工作区协议；Kit 是协议的参考落地结构；CLI 负责稳定生成、检查和适配；Pack 负责场景定制。
+截至 2026-05-18，Core 被定义为开源 AI 工作区协议；Kit 是协议的参考落地结构；CLI 负责稳定生成、检查、适配和安装 Pack；Skill 负责帮助 Agent 生成配置、理解流程和调用工具；Pack 负责场景定制。
 
 当前已经形成：
 
 - Core v0.1 协议入口与五类 Kit 结构。
-- `starwork init` 第一版。
+- `starwork init`、`starwork spawn`、`starwork doctor`、`starwork adapt`、`starwork pack install` 第一版。
+- `starwork spawn --blueprint` 第一版，可按工作台定制单生成定制化卫星项目。
+- `starworkSpawn` skill 第一版，用于帮助 Agent 设计 Spawn Blueprint。
 - Pack 源包结构：语言无关业务角色 + `languages/` 多语言落地配置。
 
-下一步重点不是继续扩张 Core，而是验证 CLI 能否稳定生成、检查和安装这些结构。
+下一步重点不是继续扩张 Core，而是验证 CLI、Skill 和 Pack 能否在真实场景里稳定生成、检查、安装和解释这些结构。

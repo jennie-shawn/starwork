@@ -183,22 +183,25 @@ async function spawnWorkspace(argv) {
   const hubState = readWorkspaceState(hubRoot);
   assertHealthyHub(hubRoot, hubState);
 
-  const projectName = options.name || path.basename(path.resolve(options.target || process.cwd()));
+  const blueprint = options.blueprint ? loadSpawnBlueprint(options.blueprint) : null;
+  const projectName = options.name || blueprint?.name || path.basename(path.resolve(options.target || process.cwd()));
   const targetDir = path.resolve(options.target || path.join(process.cwd(), slugifyProjectId(projectName) || "project"));
   assertSpawnTargetIsEmpty(targetDir);
 
-  const mode = options.mode || "matter";
-  const modeConfig = SPAWN_MODES[mode];
-  if (!modeConfig) {
+  const mode = options.mode || blueprint?.base?.mode || "matter";
+  const baseModeConfig = SPAWN_MODES[mode];
+  if (!baseModeConfig) {
     throw new Error(`不支持的 spawn 模式：${mode}。可选值：starter、matter。`);
   }
+  validateSpawnBlueprintForMode(blueprint, mode, baseModeConfig);
+  const modeConfig = applySpawnBlueprintModeConfig(baseModeConfig, blueprint);
 
   const status = options.status || "active";
   if (!["active", "paused"].includes(status)) {
     throw new Error("--status 只支持 active 或 paused。");
   }
 
-  const projectId = options.id || slugifyProjectId(projectName) || slugifyProjectId(path.basename(targetDir)) || "project";
+  const projectId = options.id || blueprint?.project_id || slugifyProjectId(projectName) || slugifyProjectId(path.basename(targetDir)) || "project";
   const plan = buildSpawnPlan({
     hubRoot,
     hubState,
@@ -207,7 +210,8 @@ async function spawnWorkspace(argv) {
     projectId,
     status,
     mode,
-    modeConfig
+    modeConfig,
+    blueprint
   });
 
   printSpawnPlan(plan, options.dryRun);
@@ -241,6 +245,8 @@ function parseArgs(argv) {
       options.agent = readValue(argv, ++i, arg);
     } else if (arg === "--hub") {
       options.hub = readValue(argv, ++i, arg);
+    } else if (arg === "--blueprint") {
+      options.blueprint = readValue(argv, ++i, arg);
     } else if (arg === "--mode") {
       options.mode = readValue(argv, ++i, arg);
     } else if (arg === "--id") {
@@ -408,6 +414,7 @@ function doctor(argv) {
   checkKit(result, workspaceRoot, state);
   checkCoreRoles(result, workspaceRoot, state);
   checkPackInstallations(result, workspaceRoot, state);
+  checkBlueprintCustomization(result, workspaceRoot, state);
 
   return finishDoctor(result, options);
 }
@@ -439,6 +446,7 @@ function doctorCollect(targetDir) {
   checkKit(result, workspaceRoot, state);
   checkCoreRoles(result, workspaceRoot, state);
   checkPackInstallations(result, workspaceRoot, state);
+  checkBlueprintCustomization(result, workspaceRoot, state);
   result.ok = result.summary.fail === 0;
   result.strict_ok = result.ok;
   result.exitCode = result.ok ? 0 : 1;
@@ -779,6 +787,38 @@ function checkPackInstallations(result, workspaceRoot, state) {
   }
 }
 
+function checkBlueprintCustomization(result, workspaceRoot, state) {
+  const customization = state.customization;
+  if (!customization) return;
+  if (customization.type !== "spawn_blueprint") return;
+
+  if (customization.schema === "starwork.spawn_blueprint.v0.1") {
+    addCheck(result, "blueprint.schema", "pass", "Blueprint schema is starwork.spawn_blueprint.v0.1", ".starwork/workspace.json");
+  } else {
+    addCheck(result, "blueprint.schema", "fail", "Blueprint customization schema 不正确。", ".starwork/workspace.json");
+  }
+
+  for (const folder of customization.folders || []) {
+    checkPathExists(result, workspaceRoot, folder, "blueprint.folder.exists", `Blueprint folder exists: ${folder}`, `Blueprint 缺少定制目录：${folder}`);
+  }
+
+  for (const seed of customization.seed || []) {
+    if (!seed?.to) continue;
+    checkPathExists(result, workspaceRoot, seed.to, "blueprint.seed.exists", `Blueprint seed exists: ${seed.to}`, `Blueprint 缺少 seed 文件：${seed.to}`);
+  }
+
+  const agentsPath = path.join(workspaceRoot, "AGENTS.md");
+  const agents = fs.existsSync(agentsPath) ? fs.readFileSync(agentsPath, "utf8") : "";
+  for (const rule of customization.agent_rules || []) {
+    if (!rule?.slot) continue;
+    if (agents.includes(`StarWork Blueprint: ${rule.slot}`)) {
+      addCheck(result, "blueprint.rule.injected", "pass", `Blueprint rule injected: ${rule.slot}`, "AGENTS.md");
+    } else {
+      addCheck(result, "blueprint.rule.injected", "fail", `Blueprint 规则未注入 AGENTS.md：${rule.slot}`, "AGENTS.md");
+    }
+  }
+}
+
 function checkPathExists(result, workspaceRoot, relativePath, id, passMessage, failMessage) {
   const normalized = normalizeRelativePath(relativePath);
   if (fs.existsSync(path.join(workspaceRoot, normalized))) {
@@ -790,6 +830,37 @@ function checkPathExists(result, workspaceRoot, relativePath, id, passMessage, f
 
 function normalizeRelativePath(relativePath) {
   return String(relativePath || "").replace(/\\/g, "/").replace(/^\/+/, "");
+}
+
+function normalizeSafeRelativePath(relativePath, label) {
+  if (typeof relativePath !== "string" || !relativePath.trim()) {
+    throw new Error(`${label} 必须是非空相对路径。`);
+  }
+  const raw = relativePath.replace(/\\/g, "/").trim();
+  if (path.isAbsolute(raw) || raw.startsWith("~")) {
+    throw new Error(`${label} 不能使用绝对路径或 ~：${relativePath}`);
+  }
+  const normalized = path.posix.normalize(raw.replace(/^\.\/+/, ""));
+  if (normalized === "." || normalized === ".." || normalized.startsWith("../")) {
+    throw new Error(`${label} 不能跳出工作区：${relativePath}`);
+  }
+  if (normalized === ".git" || normalized.startsWith(".git/")) {
+    throw new Error(`${label} 不能写入 .git：${relativePath}`);
+  }
+  return normalized;
+}
+
+function normalizeSafeSourcePath(relativePath, sourceRoot, label) {
+  const normalized = normalizeSafeRelativePath(relativePath, label);
+  const resolvedRoot = path.resolve(sourceRoot);
+  const resolved = path.resolve(resolvedRoot, normalized);
+  if (resolved !== resolvedRoot && !resolved.startsWith(`${resolvedRoot}${path.sep}`)) {
+    throw new Error(`${label} 不能跳出 blueprint 目录：${relativePath}`);
+  }
+  if (!fs.existsSync(resolved) || !fs.statSync(resolved).isFile()) {
+    throw new Error(`${label} 文件不存在：${relativePath}`);
+  }
+  return resolved;
 }
 
 function findStarWorkTrace(dir) {
@@ -1073,7 +1144,79 @@ function assertSpawnTargetIsEmpty(targetDir) {
   }
 }
 
-function buildSpawnPlan({ hubRoot, hubState, targetDir, projectName, projectId, status, mode, modeConfig }) {
+function loadSpawnBlueprint(blueprintPath) {
+  const filePath = path.resolve(blueprintPath);
+  let blueprint;
+  try {
+    blueprint = JSON.parse(fs.readFileSync(filePath, "utf8"));
+  } catch (error) {
+    throw new Error(`无法读取 blueprint：${error.message}`);
+  }
+  if (blueprint.schema !== "starwork.spawn_blueprint.v0.1") {
+    throw new Error("blueprint schema 必须是 starwork.spawn_blueprint.v0.1。");
+  }
+  if (!blueprint.name || typeof blueprint.name !== "string") {
+    throw new Error("blueprint 缺少项目名称 name。");
+  }
+  if (!blueprint.base || typeof blueprint.base !== "object") {
+    throw new Error("blueprint 缺少 base 配置。");
+  }
+  if (blueprint.base.language && blueprint.base.language !== "zh") {
+    throw new Error("spawn blueprint v0.1 只支持 language=zh。");
+  }
+  return {
+    ...blueprint,
+    __path: filePath,
+    __dir: path.dirname(filePath)
+  };
+}
+
+function validateSpawnBlueprintForMode(blueprint, mode, modeConfig) {
+  if (!blueprint) return;
+  if (blueprint.base.mode && blueprint.base.mode !== mode) {
+    throw new Error(`blueprint base.mode (${blueprint.base.mode}) 与本次 spawn 模式 (${mode}) 不一致。`);
+  }
+  if (blueprint.base.kit && blueprint.base.kit !== modeConfig.kit) {
+    throw new Error(`blueprint base.kit (${blueprint.base.kit}) 与模式 ${mode} 的 Kit (${modeConfig.kit}) 不匹配。`);
+  }
+  if (blueprint.renames && Object.keys(blueprint.renames).length > 0) {
+    throw new Error("spawn blueprint v0.1 暂不支持 renames。");
+  }
+  if (blueprint.removals && blueprint.removals.length > 0) {
+    throw new Error("spawn blueprint v0.1 暂不支持 removals。");
+  }
+  for (const relativePath of Object.values(blueprint.paths || {})) {
+    normalizeSafeRelativePath(relativePath, "blueprint.paths");
+  }
+  for (const folder of blueprint.folders || []) {
+    normalizeSafeRelativePath(folder, "blueprint.folders");
+  }
+  for (const rule of blueprint.agent_rules || []) {
+    normalizeSafeSourcePath(rule.from, blueprint.__dir, "blueprint.agent_rules.from");
+    if (!rule.slot || typeof rule.slot !== "string") {
+      throw new Error("blueprint agent_rules 每一项都必须包含 slot。");
+    }
+  }
+  for (const seed of blueprint.seed || []) {
+    normalizeSafeSourcePath(seed.from, blueprint.__dir, "blueprint.seed.from");
+    normalizeSafeRelativePath(seed.to, "blueprint.seed.to");
+    const conflict = seed.on_conflict || "error";
+    if (!["error", "skip", "create_new"].includes(conflict)) {
+      throw new Error("blueprint seed.on_conflict 只支持 error、skip 或 create_new。");
+    }
+  }
+}
+
+function applySpawnBlueprintModeConfig(modeConfig, blueprint) {
+  if (!blueprint) return modeConfig;
+  return {
+    ...modeConfig,
+    formalSource: blueprint.paths?.formal_source || modeConfig.formalSource,
+    businessWorkArea: blueprint.paths?.business_work_area || modeConfig.businessWorkArea
+  };
+}
+
+function buildSpawnPlan({ hubRoot, hubState, targetDir, projectName, projectId, status, mode, modeConfig, blueprint }) {
   const kitDir = path.join(PRODUCT_ROOT, "core", "kits", modeConfig.kit);
   if (!fs.existsSync(kitDir)) {
     throw new Error(`找不到 Kit：${modeConfig.kit}`);
@@ -1090,8 +1233,30 @@ function buildSpawnPlan({ hubRoot, hubState, targetDir, projectName, projectId, 
   for (const source of walkFiles(kitDir)) {
     const relativePath = path.relative(kitDir, source);
     if (shouldSpawnOverrideKitFile(relativePath)) continue;
-    const content = fs.readFileSync(source, "utf8");
+    let content = fs.readFileSync(source, "utf8");
+    if (normalizeRelativePath(relativePath) === "AGENTS.md") {
+      content = appendBlueprintRulesToAgents(content, blueprint, {
+        projectName,
+        projectId,
+        mode,
+        modeConfig
+      });
+    }
     actions.push(fileAction(targetDir, relativePath, content));
+  }
+
+  if (blueprint) {
+    for (const folder of blueprint.folders || []) {
+      actions.push(directoryAction(targetDir, normalizeSafeRelativePath(folder, "blueprint.folders")));
+    }
+    actions.push(directoryAction(targetDir, normalizeSafeRelativePath(modeConfig.formalSource, "paths.formal_source")));
+    actions.push(directoryAction(targetDir, normalizeSafeRelativePath(modeConfig.businessWorkArea, "paths.business_work_area")));
+    actions.push(...buildBlueprintSeedActions(targetDir, blueprint, {
+      projectName,
+      projectId,
+      mode,
+      modeConfig
+    }));
   }
 
   actions.push(...copyDirectoryFiles(hubRoot, "identity", targetDir, path.join("_系统", "身份")));
@@ -1118,11 +1283,27 @@ function buildSpawnPlan({ hubRoot, hubState, targetDir, projectName, projectId, 
       formal_source: modeConfig.formalSource,
       business_work_area: modeConfig.businessWorkArea
     },
+    ...(blueprint ? {
+      customization: {
+        type: "spawn_blueprint",
+        schema: blueprint.schema,
+        source: path.basename(blueprint.__path),
+        folders: (blueprint.folders || []).map((folder) => normalizeSafeRelativePath(folder, "blueprint.folders")),
+        agent_rules: (blueprint.agent_rules || []).map((rule) => ({
+          slot: rule.slot,
+          from: normalizeSafeRelativePath(rule.from, "blueprint.agent_rules.from")
+        })),
+        seed: (blueprint.seed || []).map((seed) => ({
+          from: normalizeSafeRelativePath(seed.from, "blueprint.seed.from"),
+          to: normalizeSafeRelativePath(seed.to, "blueprint.seed.to")
+        }))
+      }
+    } : {}),
     hub: {
       path: hubRoot,
       project_id: projectId
     },
-    created_by: "starwork spawn"
+    created_by: blueprint ? "starwork spawn --blueprint" : "starwork spawn"
   };
 
   const coreSync = {
@@ -1165,7 +1346,8 @@ function buildSpawnPlan({ hubRoot, hubState, targetDir, projectName, projectId, 
     projectId,
     hubRoot,
     mode,
-    modeConfig
+    modeConfig,
+    blueprint
   })));
 
   const nextRegistry = {
@@ -1181,6 +1363,7 @@ function buildSpawnPlan({ hubRoot, hubState, targetDir, projectName, projectId, 
         core: "0.1",
         kit: modeConfig.kit,
         mode,
+        customized: Boolean(blueprint),
         created_at: now,
         last_sync_at: now,
         sync: {
@@ -1203,6 +1386,7 @@ function buildSpawnPlan({ hubRoot, hubState, targetDir, projectName, projectId, 
     mode,
     modeLabel: modeConfig.label,
     kit: modeConfig.kit,
+    blueprint,
     actions: dedupeActions(actions)
   };
 }
@@ -1216,6 +1400,62 @@ function shouldSpawnOverrideKitFile(relativePath) {
     || normalized.startsWith("知识/")
     || normalized.startsWith(".agents/skills/")
     || normalized.startsWith(".claude/skills/");
+}
+
+function appendBlueprintRulesToAgents(content, blueprint, variables) {
+  if (!blueprint || !blueprint.agent_rules?.length) return content;
+  const parts = [];
+  for (const rule of blueprint.agent_rules) {
+    const source = normalizeSafeSourcePath(rule.from, blueprint.__dir, "blueprint.agent_rules.from");
+    const ruleContent = renderText(fs.readFileSync(source, "utf8"), buildBlueprintVariables(blueprint, variables)).trim();
+    if (!ruleContent) continue;
+    parts.push(`<!-- StarWork Blueprint: ${rule.slot} -->\n\n${ruleContent}`);
+  }
+  if (!parts.length) return content;
+  return `${content.trim()}\n\n## 项目定制规则\n\n${parts.join("\n\n")}\n`;
+}
+
+function buildBlueprintSeedActions(targetDir, blueprint, variables) {
+  const actions = [];
+  for (const seed of blueprint.seed || []) {
+    const source = normalizeSafeSourcePath(seed.from, blueprint.__dir, "blueprint.seed.from");
+    const target = normalizeSafeRelativePath(seed.to, "blueprint.seed.to");
+    const content = renderText(fs.readFileSync(source, "utf8"), buildBlueprintVariables(blueprint, variables));
+    const targetPath = path.join(targetDir, target);
+    const conflict = seed.on_conflict || "error";
+    if (fs.existsSync(targetPath)) {
+      if (conflict === "skip") continue;
+      if (conflict === "create_new") {
+        const alternate = nextAvailableSibling(targetPath);
+        actions.push({ type: "file", mode: "create-new", target: alternate, originalTarget: targetPath, relativePath: path.relative(targetDir, alternate), content });
+        continue;
+      }
+      throw new Error(`blueprint seed 目标已存在：${target}`);
+    }
+    actions.push(fileAction(targetDir, target, content));
+  }
+  return actions;
+}
+
+function buildBlueprintVariables(blueprint, { projectName, projectId, mode, modeConfig }) {
+  return {
+    blueprint,
+    workspace: {
+      name: projectName,
+      type: modeConfig.workspaceType
+    },
+    project: {
+      id: projectId,
+      name: projectName
+    },
+    spawn: {
+      mode
+    },
+    paths: {
+      formal_source: modeConfig.formalSource,
+      business_work_area: modeConfig.businessWorkArea
+    }
+  };
 }
 
 function copyDirectoryFiles(sourceRoot, sourceRelativeDir, targetRoot, targetRelativeDir) {
@@ -1250,12 +1490,19 @@ function ensureProjectCanBeRegistered(registry, projectId, targetPath) {
   }
 }
 
-function renderSpawnProjectStatus({ projectName, projectId, hubRoot, mode, modeConfig }) {
+function renderSpawnProjectStatus({ projectName, projectId, hubRoot, mode, modeConfig, blueprint }) {
+  const description = blueprint?.description
+    ? `\n## 项目定位\n\n${blueprint.description}\n`
+    : "";
+  const customization = blueprint
+    ? `\n## 工作区定制\n\n- Blueprint：${path.basename(blueprint.__path)}\n- 正式事实源：\`${modeConfig.formalSource}\`\n- 当前工作区：\`${modeConfig.businessWorkArea}\`\n- 定制目录：${(blueprint.folders || []).map((folder) => `\`${normalizeSafeRelativePath(folder, "blueprint.folders")}\``).join("、") || "无"}\n`
+    : "";
   return `# 当前项目状态
 
 ## 项目目标
 
 ${projectName}
+${description}
 
 ## 项目信息
 
@@ -1264,6 +1511,7 @@ ${projectName}
 - Kit：${modeConfig.kit}
 - 模式：${mode}
 - Hub：${hubRoot}
+${customization}
 
 ## 当前阶段
 
@@ -1273,6 +1521,7 @@ ${projectName}
 
 - 补充项目目标。
 - 确认正式事实源：\`${modeConfig.formalSource}\`。
+- 确认当前工作区：\`${modeConfig.businessWorkArea}\`。
 - 确认当前工作入口：\`_系统/任务/当前工作.md\`。
 
 ## 主要风险
@@ -1527,6 +1776,7 @@ function printSpawnPlan(plan, dryRun) {
   const creates = plan.actions.filter((action) => action.type === "file" && action.mode === "create");
   const overwrites = plan.actions.filter((action) => action.type === "file" && action.mode === "overwrite");
   const links = plan.actions.filter((action) => action.type === "symlink");
+  const dirs = plan.actions.filter((action) => action.type === "directory" && action.mode === "create");
 
   console.log("");
   console.log(dryRun ? "生成项目预览（dry run）：" : "生成项目计划：");
@@ -1537,12 +1787,22 @@ function printSpawnPlan(plan, dryRun) {
   console.log(`目标目录：${plan.targetDir}`);
   console.log(`模式：${plan.modeLabel} (${plan.mode})`);
   console.log(`Kit：${plan.kit}`);
+  if (plan.blueprint) {
+    console.log(`Blueprint：${plan.blueprint.__path}`);
+    console.log(`正式事实源：${plan.blueprint.paths?.formal_source || "(默认)"}`);
+    console.log(`当前工作区：${plan.blueprint.paths?.business_work_area || "(默认)"}`);
+  }
   console.log("");
 
   if (creates.length) {
     console.log("将在新项目中创建：");
     creates.slice(0, 40).forEach((action) => console.log(`- ${action.relativePath}`));
     if (creates.length > 40) console.log(`- ... 另有 ${creates.length - 40} 项`);
+    console.log("");
+  }
+  if (dirs.length) {
+    console.log("将在新项目中创建目录：");
+    dirs.forEach((action) => console.log(`- ${action.relativePath}`));
     console.log("");
   }
   if (links.length) {
@@ -1605,6 +1865,7 @@ Usage:
 Options:
   --type <single-light|single-matter|hub>
   --hub <path>
+  --blueprint <path>
   --mode <starter|matter>
   --id <project-id>
   --status <active|paused>
@@ -1627,9 +1888,11 @@ function printSpawnHelp() {
 
 Usage:
   starwork spawn --hub <hub-path> --name <project-name> --target <path> [options]
+  starwork spawn --hub <hub-path> --target <path> --blueprint <blueprint.json> [options]
 
 Options:
   --hub <path>
+  --blueprint <path>
   --name <name>
   --target <path>
   --mode <starter|matter>
