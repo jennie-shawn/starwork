@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>StarWork 文档中心</title>
+  <style>
+    :root {
+      --paper: #f7f4ec;
+      --paper-2: #ebe5d7;
+      --ink: #1d211d;
+      --muted: #62675f;
+      --line: #cfc7b7;
+      --white: #fffdf7;
+      --green: #286d4a;
+      --amber: #b36b19;
+      --blue: #2f6286;
+      --shadow: 0 18px 50px rgba(47, 43, 34, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        linear-gradient(90deg, rgba(62, 71, 62, 0.052) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(62, 71, 62, 0.045) 1px, transparent 1px),
+        var(--paper);
+      background-size: 34px 34px;
+      font-family: "Avenir Next", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      letter-spacing: 0;
+    }
+
+    .shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 320px minmax(0, 1fr);
+    }
+
+    aside {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      padding: 28px 22px;
+      border-right: 2px solid var(--ink);
+      background: rgba(255, 253, 247, 0.86);
+      overflow: auto;
+    }
+
+    main {
+      min-width: 0;
+      padding: 22px;
+    }
+
+    .brand {
+      padding-bottom: 22px;
+      border-bottom: 2px solid var(--ink);
+    }
+
+    .kicker {
+      margin: 0 0 10px;
+      color: var(--green);
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", "Songti SC", serif;
+      font-size: 38px;
+      line-height: 1.02;
+      letter-spacing: 0;
+    }
+
+    .intro {
+      margin: 14px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .nav-group {
+      margin-top: 24px;
+    }
+
+    .nav-title {
+      margin: 0 0 10px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .nav {
+      display: grid;
+      gap: 9px;
+    }
+
+    .nav a {
+      display: block;
+      padding: 12px 13px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      color: var(--ink);
+      text-decoration: none;
+      font-weight: 850;
+      line-height: 1.35;
+    }
+
+    .nav a span {
+      display: block;
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 1.45;
+    }
+
+    .nav a:hover,
+    .nav a:focus {
+      outline: none;
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px rgba(40, 109, 74, 0.12);
+      background: var(--white);
+    }
+
+    .hint {
+      margin-top: 24px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper-2);
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.65;
+    }
+
+    .viewer-wrap {
+      height: calc(100vh - 44px);
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      background: var(--white);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      background: var(--white);
+    }
+
+    code {
+      padding: 2px 5px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: rgba(29, 33, 29, 0.05);
+      font-family: "SFMono-Regular", "Menlo", "Consolas", monospace;
+      font-size: 0.92em;
+    }
+
+    @media (max-width: 900px) {
+      .shell {
+        grid-template-columns: 1fr;
+      }
+
+      aside {
+        position: relative;
+        height: auto;
+        border-right: 0;
+        border-bottom: 2px solid var(--ink);
+      }
+
+      main {
+        padding: 14px;
+      }
+
+      .viewer-wrap {
+        height: 78vh;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside>
+      <div class="brand">
+        <p class="kicker">StarWork Docs</p>
+        <h1>文档中心</h1>
+        <p class="intro">所有正式 HTML 阅读稿统一从这里进入。左侧选择子页面，右侧阅读，不再零散打开多个文件。</p>
+      </div>
+
+      <section class="nav-group">
+        <p class="nav-title">正式阅读稿</p>
+        <nav class="nav" aria-label="正式 HTML 文档">
+          <a href="cli-capabilities.html" target="reader">CLI 能力说明<span>解释 init、spawn、doctor、adapt、pack install 的能力边界和使用流程。</span></a>
+          <a href="roadmap.html" target="reader">产品里程碑<span>M0 到 M8 的路线图，以及当前阶段定位。</span></a>
+          <a href="product-shape-business-model.html" target="reader">产品形态与商业模式<span>StarWork 是什么、四层产品结构和商业化判断。</span></a>
+        </nav>
+      </section>
+
+      <section class="nav-group">
+        <p class="nav-title">归档草稿</p>
+        <nav class="nav" aria-label="归档 HTML 文档">
+          <a href="../../matters/2026-05-09-starwork-core-v0.1-build/drafts/core-framework-and-file-boundaries.html" target="reader">Core 框架与文件边界<span>早期推敲稿，仅作历史参考；正式事实以 product/ 为准。</span></a>
+        </nav>
+      </section>
+
+      <div class="hint">
+        Markdown 事实源仍保留在 <code>product/docs/</code> 与 <code>product/cli/</code>。HTML 是阅读版，后续新增 HTML 都应挂到这个文档中心。
+      </div>
+    </aside>
+
+    <main>
+      <div class="viewer-wrap">
+        <iframe name="reader" title="StarWork 文档阅读区" src="cli-capabilities.html"></iframe>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

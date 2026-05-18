@@ -1,0 +1,1024 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>StarWork 产品形态与商业模式</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23191f1b'/%3E%3Cpath d='M18 20h28v6H18zm0 12h20v6H18zm0 12h28v6H18z' fill='%23fffdf7'/%3E%3C/svg%3E">
+  <style>
+    :root {
+      --paper: #f6f0e2;
+      --paper-deep: #e5dac5;
+      --ink: #191f1b;
+      --muted: #62675f;
+      --line: #c8bda8;
+      --line-strong: #2f372f;
+      --white: #fffdf7;
+      --green: #23684b;
+      --green-soft: #d7eadc;
+      --blue: #2c5e85;
+      --blue-soft: #d6e4ed;
+      --amber: #a96213;
+      --amber-soft: #f2d8a7;
+      --red: #963d34;
+      --red-soft: #ecd0ca;
+      --violet: #5e4f92;
+      --violet-soft: #ded8ef;
+      --shadow: 0 20px 54px rgba(41, 35, 24, 0.14);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        linear-gradient(90deg, rgba(47, 55, 47, 0.052) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(47, 55, 47, 0.045) 1px, transparent 1px),
+        radial-gradient(circle at 8% 0%, rgba(35, 104, 75, 0.12), transparent 30%),
+        radial-gradient(circle at 92% 14%, rgba(169, 98, 19, 0.12), transparent 28%),
+        var(--paper);
+      background-size: 34px 34px, 34px 34px, auto, auto, auto;
+      font-family: "Avenir Next", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      letter-spacing: 0;
+    }
+
+    a {
+      color: inherit;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 3px;
+    }
+
+    .page {
+      width: min(1220px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 42px 0 70px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(360px, 0.9fr);
+      gap: 28px;
+      align-items: stretch;
+      min-height: 560px;
+    }
+
+    .hero-copy {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 34px 0 30px;
+      border-top: 2px solid var(--ink);
+      border-bottom: 2px solid var(--ink);
+    }
+
+    .kicker {
+      margin: 0 0 20px;
+      color: var(--green);
+      font-size: 13px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    h1,
+    h2,
+    h3 {
+      font-family: Georgia, "Times New Roman", "Songti SC", serif;
+      letter-spacing: 0;
+    }
+
+    h1 {
+      max-width: 820px;
+      margin: 0;
+      font-size: clamp(42px, 7.5vw, 88px);
+      line-height: 0.98;
+    }
+
+    .subtitle {
+      max-width: 720px;
+      margin: 28px 0 0;
+      color: var(--muted);
+      font-size: 19px;
+      line-height: 1.78;
+    }
+
+    .truth-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 34px;
+    }
+
+    .truth {
+      min-height: 126px;
+      padding: 15px 16px;
+      background: rgba(255, 253, 247, 0.74);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    .truth b {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--green);
+      font-size: 13px;
+    }
+
+    .truth span {
+      color: var(--ink);
+      font-size: 15px;
+      line-height: 1.55;
+    }
+
+    .hero-board {
+      min-height: 560px;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      background: var(--white);
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .section {
+      margin-top: 74px;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 24px;
+      margin-bottom: 24px;
+      padding-bottom: 14px;
+      border-bottom: 2px solid var(--ink);
+    }
+
+    h2 {
+      margin: 0;
+      font-size: clamp(29px, 4.2vw, 54px);
+      line-height: 1.05;
+    }
+
+    .section-note {
+      max-width: 500px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.75;
+    }
+
+    .wide-board {
+      padding: 18px;
+      background: rgba(255, 253, 247, 0.78);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: 0 12px 34px rgba(41, 35, 24, 0.08);
+    }
+
+    .split {
+      display: grid;
+      grid-template-columns: minmax(0, 0.94fr) minmax(0, 1.06fr);
+      gap: 16px;
+      align-items: stretch;
+    }
+
+    .panel {
+      padding: 20px;
+      background: rgba(255, 253, 247, 0.78);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    .panel h3 {
+      margin: 0 0 12px;
+      font-size: 26px;
+      line-height: 1.16;
+    }
+
+    .panel p {
+      margin: 0 0 16px;
+      color: var(--muted);
+      line-height: 1.75;
+    }
+
+    .list {
+      display: grid;
+      gap: 9px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .list li {
+      padding: 11px 12px;
+      border: 1px solid rgba(200, 189, 168, 0.9);
+      border-radius: 8px;
+      background: rgba(255, 253, 247, 0.68);
+      line-height: 1.55;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      margin-right: 8px;
+      padding: 3px 8px;
+      border: 1px solid currentColor;
+      border-radius: 999px;
+      color: var(--green);
+      font-size: 12px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .matrix {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .tier {
+      min-height: 285px;
+      padding: 18px;
+      background: rgba(255, 253, 247, 0.78);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .tier:nth-child(1) {
+      border-top: 6px solid var(--green);
+    }
+
+    .tier:nth-child(2) {
+      border-top: 6px solid var(--blue);
+    }
+
+    .tier:nth-child(3) {
+      border-top: 6px solid var(--amber);
+    }
+
+    .tier:nth-child(4) {
+      border-top: 6px solid var(--violet);
+    }
+
+    .tier h3 {
+      margin: 0;
+      font-size: 24px;
+    }
+
+    .tier .price {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-weight: 800;
+      line-height: 1.5;
+    }
+
+    .tier ul {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .callout {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 20px;
+      align-items: center;
+      margin-top: 18px;
+      padding: 18px 20px;
+      color: var(--ink);
+      background: var(--amber-soft);
+      border: 2px solid var(--amber);
+      border-radius: 8px;
+    }
+
+    .callout p {
+      margin: 0;
+      line-height: 1.7;
+    }
+
+    .stamp {
+      padding: 8px 11px;
+      border: 2px solid currentColor;
+      border-radius: 8px;
+      color: var(--amber);
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .footer {
+      margin-top: 76px;
+      padding-top: 18px;
+      border-top: 2px solid var(--ink);
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .mono {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    }
+
+    @media (max-width: 980px) {
+      .hero,
+      .split {
+        grid-template-columns: 1fr;
+      }
+
+      .hero {
+        min-height: auto;
+      }
+
+      .hero-board {
+        min-height: auto;
+      }
+
+      .truth-row,
+      .matrix {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .page {
+        width: min(100% - 24px, 1220px);
+        padding-top: 24px;
+      }
+
+      .truth-row,
+      .matrix {
+        grid-template-columns: 1fr;
+      }
+
+      .section-header,
+      .callout {
+        display: block;
+      }
+
+      .section-note {
+        margin-top: 12px;
+      }
+
+      .stamp {
+        display: inline-flex;
+        margin-top: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <div class="hero-copy">
+        <div>
+          <p class="kicker">StarWork / Product Shape / Business Model</p>
+          <h1>让 Agent 真正进入长期工作，而不是只进入一次对话。</h1>
+          <p class="subtitle">StarWork 的产品形态不是“又一个 Agent 壳”，也不是“文件夹模板”。它是一套跨 Agent 的 AI 工作系统：用 Core 建可信协议，用 CLI 降低启动门槛，用 Packs 交付场景价值，用 Course 完成教育、转化和高客单服务。</p>
+        </div>
+        <div class="truth-row">
+          <div class="truth">
+            <b>产品判断</b>
+            <span>不追底层 Runtime，借力 Codex、Claude Code、Cursor、Trae 等 Agent。</span>
+          </div>
+          <div class="truth">
+            <b>价值重心</b>
+            <span>把用户的长期工作变成 Agent 可读、可接、可审计的工作区系统。</span>
+          </div>
+          <div class="truth">
+            <b>商业抓手</b>
+            <span>Packs 交付场景解决方案，Course 承接教学、陪跑和组织级转化。</span>
+          </div>
+        </div>
+      </div>
+      <div class="hero-board" aria-label="StarWork 产品总图">
+        <svg viewBox="0 0 680 720" role="img">
+          <title>StarWork 产品总图</title>
+          <defs>
+            <marker id="arrow-main" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+              <path d="M2,2 L10,6 L2,10 Z" fill="#191f1b"></path>
+            </marker>
+            <filter id="soft-shadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#2b2418" flood-opacity="0.16"></feDropShadow>
+            </filter>
+          </defs>
+          <rect x="22" y="22" width="636" height="676" rx="18" fill="#f6f0e2" stroke="#191f1b" stroke-width="3"></rect>
+          <text x="54" y="76" font-size="25" font-weight="900" fill="#191f1b">StarWork 是工作系统层</text>
+          <text x="54" y="108" font-size="15" fill="#62675f">不是 Runtime，不是模板，而是让 Agent 接住真实工作的协议与场景套件。</text>
+
+          <rect x="68" y="148" width="544" height="96" rx="14" fill="#fffdf7" stroke="#2f372f" stroke-width="2" filter="url(#soft-shadow)"></rect>
+          <text x="340" y="190" text-anchor="middle" font-size="22" font-weight="900" fill="#23684b">用户真实工作</text>
+          <text x="340" y="220" text-anchor="middle" font-size="15" fill="#62675f">项目、内容、知识、决策、复盘、交付物</text>
+
+          <path d="M340 253 V305" stroke="#191f1b" stroke-width="3" marker-end="url(#arrow-main)"></path>
+
+          <rect x="74" y="312" width="118" height="86" rx="13" fill="#d7eadc" stroke="#23684b" stroke-width="2"></rect>
+          <text x="133" y="348" text-anchor="middle" font-size="20" font-weight="900" fill="#23684b">Core</text>
+          <text x="133" y="374" text-anchor="middle" font-size="13" fill="#23684b">开源协议</text>
+
+          <rect x="212" y="312" width="118" height="86" rx="13" fill="#d6e4ed" stroke="#2c5e85" stroke-width="2"></rect>
+          <text x="271" y="348" text-anchor="middle" font-size="20" font-weight="900" fill="#2c5e85">CLI</text>
+          <text x="271" y="374" text-anchor="middle" font-size="13" fill="#2c5e85">安装检查</text>
+
+          <rect x="350" y="312" width="118" height="86" rx="13" fill="#f2d8a7" stroke="#a96213" stroke-width="2"></rect>
+          <text x="409" y="348" text-anchor="middle" font-size="20" font-weight="900" fill="#a96213">Packs</text>
+          <text x="409" y="374" text-anchor="middle" font-size="13" fill="#a96213">场景方案</text>
+
+          <rect x="488" y="312" width="118" height="86" rx="13" fill="#ded8ef" stroke="#5e4f92" stroke-width="2"></rect>
+          <text x="547" y="348" text-anchor="middle" font-size="20" font-weight="900" fill="#5e4f92">Course</text>
+          <text x="547" y="374" text-anchor="middle" font-size="13" fill="#5e4f92">教育陪跑</text>
+
+          <path d="M133 407 V470" stroke="#23684b" stroke-width="3" marker-end="url(#arrow-main)"></path>
+          <path d="M271 407 V470" stroke="#2c5e85" stroke-width="3" marker-end="url(#arrow-main)"></path>
+          <path d="M409 407 V470" stroke="#a96213" stroke-width="3" marker-end="url(#arrow-main)"></path>
+          <path d="M547 407 V470" stroke="#5e4f92" stroke-width="3" marker-end="url(#arrow-main)"></path>
+
+          <rect x="68" y="482" width="544" height="122" rx="16" fill="#fffdf7" stroke="#191f1b" stroke-width="2"></rect>
+          <text x="340" y="524" text-anchor="middle" font-size="22" font-weight="900" fill="#191f1b">跨 Agent 长期协作工作台</text>
+          <text x="340" y="556" text-anchor="middle" font-size="15" fill="#62675f">开始前读什么、当前工作写哪里、正式事实源在哪里、过程如何留痕。</text>
+          <text x="340" y="584" text-anchor="middle" font-size="15" fill="#62675f">同一个工作区可被不同 Agent 稳定接力。</text>
+
+          <g transform="translate(94 636)">
+            <rect x="0" y="0" width="492" height="38" rx="19" fill="#191f1b"></rect>
+            <text x="246" y="25" text-anchor="middle" font-size="15" font-weight="900" fill="#fffdf7">最终卖点：少解释、可接力、不乱写、能复盘</text>
+          </g>
+        </svg>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <h2>用户买的不是工具，是连续性</h2>
+        <p class="section-note">真实痛点不在“有没有 AI”，而在每次换 Agent、换会话、换项目时，用户都要重新解释背景、边界、产物位置和当前进度。</p>
+      </div>
+      <div class="split">
+        <div class="wide-board">
+          <svg viewBox="0 0 720 520" role="img" aria-label="用户痛点到 StarWork 解决方案">
+            <title>用户痛点到 StarWork 解决方案</title>
+            <defs>
+              <marker id="arrow-pain" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+                <path d="M2,2 L10,6 L2,10 Z" fill="#963d34"></path>
+              </marker>
+              <marker id="arrow-solve" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+                <path d="M2,2 L10,6 L2,10 Z" fill="#23684b"></path>
+              </marker>
+            </defs>
+            <rect x="18" y="18" width="684" height="484" rx="18" fill="#fffdf7" stroke="#191f1b" stroke-width="3"></rect>
+            <text x="42" y="62" font-size="24" font-weight="900" fill="#191f1b">旧体验：一次性对话</text>
+            <text x="42" y="92" font-size="15" fill="#62675f">每一次开始都像重新开工。</text>
+            <g>
+              <rect x="48" y="128" width="160" height="74" rx="12" fill="#ecd0ca" stroke="#963d34" stroke-width="2"></rect>
+              <text x="128" y="158" text-anchor="middle" font-size="17" font-weight="900" fill="#963d34">背景丢失</text>
+              <text x="128" y="182" text-anchor="middle" font-size="13" fill="#963d34">重新解释项目</text>
+              <rect x="280" y="128" width="160" height="74" rx="12" fill="#ecd0ca" stroke="#963d34" stroke-width="2"></rect>
+              <text x="360" y="158" text-anchor="middle" font-size="17" font-weight="900" fill="#963d34">边界混乱</text>
+              <text x="360" y="182" text-anchor="middle" font-size="13" fill="#963d34">草稿与事实混用</text>
+              <rect x="512" y="128" width="160" height="74" rx="12" fill="#ecd0ca" stroke="#963d34" stroke-width="2"></rect>
+              <text x="592" y="158" text-anchor="middle" font-size="17" font-weight="900" fill="#963d34">接力失败</text>
+              <text x="592" y="182" text-anchor="middle" font-size="13" fill="#963d34">新 Agent 不知现状</text>
+              <path d="M214 165 H274" stroke="#963d34" stroke-width="3" marker-end="url(#arrow-pain)"></path>
+              <path d="M446 165 H506" stroke="#963d34" stroke-width="3" marker-end="url(#arrow-pain)"></path>
+            </g>
+            <path d="M360 232 V286" stroke="#191f1b" stroke-width="3" marker-end="url(#arrow-solve)"></path>
+            <text x="360" y="270" text-anchor="middle" font-size="14" font-weight="900" fill="#23684b">StarWork 把背景变成工作区协议</text>
+            <rect x="48" y="312" width="624" height="128" rx="16" fill="#d7eadc" stroke="#23684b" stroke-width="2"></rect>
+            <text x="360" y="354" text-anchor="middle" font-size="23" font-weight="900" fill="#23684b">新体验：连续工作系统</text>
+            <text x="360" y="386" text-anchor="middle" font-size="15" fill="#23684b">项目状态、当前工作、正式事实源、过程事项、规则与教训都有稳定位置。</text>
+            <text x="360" y="416" text-anchor="middle" font-size="15" fill="#23684b">用户不再把同一套背景反复讲给不同 Agent。</text>
+          </svg>
+        </div>
+        <div class="panel">
+          <h3>一句话商业洞察</h3>
+          <p>StarWork 不是靠“更聪明的模型”收费，而是靠“让聪明模型能进入真实工作流”收费。</p>
+          <ul class="list">
+            <li><span class="tag">降解释成本</span>每次 Agent 进入项目，都先读同一套工作区事实。</li>
+            <li><span class="tag">降混乱成本</span>过程材料和正式事实源分开，避免草稿污染产品。</li>
+            <li><span class="tag">降迁移成本</span>用户不被单一 Agent 绑定，底层工具更新时仍能接力。</li>
+            <li><span class="tag">升场景价值</span>Pack 把内容创作、项目管理、团队中枢等工作流产品化。</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <h2>四层产品形态</h2>
+        <p class="section-note">Core、CLI、Packs、Course 不是四个平行产品，而是一个从可信协议到商业交付的递进结构。</p>
+      </div>
+      <div class="wide-board">
+        <svg viewBox="0 0 1180 540" role="img" aria-label="StarWork 四层产品形态">
+          <title>StarWork 四层产品形态</title>
+          <defs>
+            <marker id="arrow-layer" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+              <path d="M2,2 L10,6 L2,10 Z" fill="#191f1b"></path>
+            </marker>
+          </defs>
+          <rect x="20" y="20" width="1140" height="500" rx="22" fill="#fffdf7" stroke="#191f1b" stroke-width="3"></rect>
+          <g transform="translate(62 74)">
+            <rect x="0" y="0" width="246" height="340" rx="16" fill="#d7eadc" stroke="#23684b" stroke-width="2"></rect>
+            <circle cx="42" cy="42" r="22" fill="#23684b"></circle>
+            <text x="42" y="50" text-anchor="middle" font-size="20" font-weight="900" fill="#fffdf7">1</text>
+            <text x="28" y="100" font-size="30" font-weight="900" fill="#23684b">Core</text>
+            <text x="28" y="134" font-size="16" fill="#23684b">开源 AI 工作区协议</text>
+            <line x1="28" y1="160" x2="218" y2="160" stroke="#23684b" stroke-width="2"></line>
+            <text x="28" y="198" font-size="15" fill="#23684b">定义 Agent：</text>
+            <text x="28" y="226" font-size="15" fill="#23684b">先读什么</text>
+            <text x="28" y="254" font-size="15" fill="#23684b">写到哪里</text>
+            <text x="28" y="282" font-size="15" fill="#23684b">什么是事实源</text>
+            <text x="28" y="310" font-size="15" fill="#23684b">哪些内容只读</text>
+          </g>
+          <g transform="translate(344 74)">
+            <rect x="0" y="0" width="246" height="340" rx="16" fill="#d6e4ed" stroke="#2c5e85" stroke-width="2"></rect>
+            <circle cx="42" cy="42" r="22" fill="#2c5e85"></circle>
+            <text x="42" y="50" text-anchor="middle" font-size="20" font-weight="900" fill="#fffdf7">2</text>
+            <text x="28" y="100" font-size="30" font-weight="900" fill="#2c5e85">CLI</text>
+            <text x="28" y="134" font-size="16" fill="#2c5e85">安装、检查、适配工具</text>
+            <line x1="28" y1="160" x2="218" y2="160" stroke="#2c5e85" stroke-width="2"></line>
+            <text x="28" y="198" font-size="15" fill="#2c5e85">starwork init</text>
+            <text x="28" y="226" font-size="15" fill="#2c5e85">starwork doctor</text>
+            <text x="28" y="254" font-size="15" fill="#2c5e85">starwork adapt</text>
+            <text x="28" y="282" font-size="15" fill="#2c5e85">starwork pack install</text>
+          </g>
+          <g transform="translate(626 74)">
+            <rect x="0" y="0" width="246" height="340" rx="16" fill="#f2d8a7" stroke="#a96213" stroke-width="2"></rect>
+            <circle cx="42" cy="42" r="22" fill="#a96213"></circle>
+            <text x="42" y="50" text-anchor="middle" font-size="20" font-weight="900" fill="#fffdf7">3</text>
+            <text x="28" y="100" font-size="30" font-weight="900" fill="#a96213">Packs</text>
+            <text x="28" y="134" font-size="16" fill="#a96213">岗位与场景工作流包</text>
+            <line x1="28" y1="160" x2="218" y2="160" stroke="#a96213" stroke-width="2"></line>
+            <text x="28" y="198" font-size="15" fill="#a96213">内容创作者 Pack</text>
+            <text x="28" y="226" font-size="15" fill="#a96213">通用工作 Pack</text>
+            <text x="28" y="254" font-size="15" fill="#a96213">多项目中枢 Pack</text>
+            <text x="28" y="282" font-size="15" fill="#a96213">未来行业 Packs</text>
+          </g>
+          <g transform="translate(908 74)">
+            <rect x="0" y="0" width="210" height="340" rx="16" fill="#ded8ef" stroke="#5e4f92" stroke-width="2"></rect>
+            <circle cx="42" cy="42" r="22" fill="#5e4f92"></circle>
+            <text x="42" y="50" text-anchor="middle" font-size="20" font-weight="900" fill="#fffdf7">4</text>
+            <text x="28" y="100" font-size="30" font-weight="900" fill="#5e4f92">Course</text>
+            <text x="28" y="134" font-size="16" fill="#5e4f92">课程与陪跑服务</text>
+            <line x1="28" y1="160" x2="182" y2="160" stroke="#5e4f92" stroke-width="2"></line>
+            <text x="28" y="198" font-size="15" fill="#5e4f92">方法论表达</text>
+            <text x="28" y="226" font-size="15" fill="#5e4f92">上手训练</text>
+            <text x="28" y="254" font-size="15" fill="#5e4f92">陪跑交付</text>
+            <text x="28" y="282" font-size="15" fill="#5e4f92">高客单转化</text>
+          </g>
+          <path d="M312 244 H338" stroke="#191f1b" stroke-width="3" marker-end="url(#arrow-layer)"></path>
+          <path d="M594 244 H620" stroke="#191f1b" stroke-width="3" marker-end="url(#arrow-layer)"></path>
+          <path d="M876 244 H902" stroke="#191f1b" stroke-width="3" marker-end="url(#arrow-layer)"></path>
+          <rect x="62" y="448" width="1056" height="42" rx="21" fill="#191f1b"></rect>
+          <text x="590" y="475" text-anchor="middle" font-size="16" font-weight="900" fill="#fffdf7">传播从 Core 开始，产品感由 CLI 完成，收入主要由 Packs 与 Course 承接。</text>
+        </svg>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <h2>工作区交付形态</h2>
+        <p class="section-note">StarWork 的可见产物是工作台，但工作台不是模板目录，而是由 Kit、Pack、Adapter 共同组装出的可运行系统。</p>
+      </div>
+      <div class="wide-board">
+        <svg viewBox="0 0 1180 570" role="img" aria-label="StarWork 工作区组装图">
+          <title>StarWork 工作区组装图</title>
+          <defs>
+            <marker id="arrow-assembly" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+              <path d="M2,2 L10,6 L2,10 Z" fill="#191f1b"></path>
+            </marker>
+          </defs>
+          <rect x="20" y="20" width="1140" height="530" rx="22" fill="#fffdf7" stroke="#191f1b" stroke-width="3"></rect>
+          <text x="60" y="70" font-size="26" font-weight="900" fill="#191f1b">从协议到用户工作台</text>
+          <text x="60" y="102" font-size="15" fill="#62675f">CLI 负责把 Core Kit 与场景 Pack 合并，并为当前 Agent 生成适配入口。</text>
+
+          <g transform="translate(72 148)">
+            <rect x="0" y="0" width="220" height="110" rx="14" fill="#d7eadc" stroke="#23684b" stroke-width="2"></rect>
+            <text x="110" y="42" text-anchor="middle" font-size="21" font-weight="900" fill="#23684b">Core Kit</text>
+            <text x="110" y="72" text-anchor="middle" font-size="14" fill="#23684b">最小工作区角色</text>
+            <text x="110" y="94" text-anchor="middle" font-size="14" fill="#23684b">系统层 / 事实源 / 规则</text>
+          </g>
+          <g transform="translate(72 302)">
+            <rect x="0" y="0" width="220" height="110" rx="14" fill="#f2d8a7" stroke="#a96213" stroke-width="2"></rect>
+            <text x="110" y="42" text-anchor="middle" font-size="21" font-weight="900" fill="#a96213">Scene Pack</text>
+            <text x="110" y="72" text-anchor="middle" font-size="14" fill="#a96213">目录 / 模板 / 规则</text>
+            <text x="110" y="94" text-anchor="middle" font-size="14" fill="#a96213">如内容创作者 Pack</text>
+          </g>
+          <g transform="translate(374 220)">
+            <rect x="0" y="0" width="210" height="120" rx="16" fill="#d6e4ed" stroke="#2c5e85" stroke-width="2"></rect>
+            <text x="105" y="48" text-anchor="middle" font-size="23" font-weight="900" fill="#2c5e85">StarWork CLI</text>
+            <text x="105" y="80" text-anchor="middle" font-size="14" fill="#2c5e85">init / doctor / adapt</text>
+            <text x="105" y="102" text-anchor="middle" font-size="14" fill="#2c5e85">pack install</text>
+          </g>
+          <path d="M298 203 C330 203 334 252 368 252" stroke="#191f1b" stroke-width="3" fill="none" marker-end="url(#arrow-assembly)"></path>
+          <path d="M298 357 C330 357 334 304 368 304" stroke="#191f1b" stroke-width="3" fill="none" marker-end="url(#arrow-assembly)"></path>
+
+          <g transform="translate(668 122)">
+            <rect x="0" y="0" width="400" height="318" rx="18" fill="#fffdf7" stroke="#191f1b" stroke-width="2"></rect>
+            <text x="200" y="44" text-anchor="middle" font-size="24" font-weight="900" fill="#191f1b">用户最终得到</text>
+            <line x1="34" y1="68" x2="366" y2="68" stroke="#c8bda8" stroke-width="2"></line>
+            <rect x="34" y="92" width="154" height="70" rx="10" fill="#d7eadc" stroke="#23684b" stroke-width="2"></rect>
+            <text x="111" y="122" text-anchor="middle" font-size="17" font-weight="900" fill="#23684b">系统层</text>
+            <text x="111" y="146" text-anchor="middle" font-size="13" fill="#23684b">上下文 / 当前工作</text>
+            <rect x="212" y="92" width="154" height="70" rx="10" fill="#f2d8a7" stroke="#a96213" stroke-width="2"></rect>
+            <text x="289" y="122" text-anchor="middle" font-size="17" font-weight="900" fill="#a96213">业务工作区</text>
+            <text x="289" y="146" text-anchor="middle" font-size="13" fill="#a96213">选题 / 草稿 / 复盘</text>
+            <rect x="34" y="190" width="154" height="70" rx="10" fill="#d6e4ed" stroke="#2c5e85" stroke-width="2"></rect>
+            <text x="111" y="220" text-anchor="middle" font-size="17" font-weight="900" fill="#2c5e85">Agent 入口</text>
+            <text x="111" y="244" text-anchor="middle" font-size="13" fill="#2c5e85">AGENTS / CLAUDE</text>
+            <rect x="212" y="190" width="154" height="70" rx="10" fill="#ded8ef" stroke="#5e4f92" stroke-width="2"></rect>
+            <text x="289" y="220" text-anchor="middle" font-size="17" font-weight="900" fill="#5e4f92">模板资产</text>
+            <text x="289" y="244" text-anchor="middle" font-size="13" fill="#5e4f92">内容 Brief / 周复盘</text>
+            <text x="200" y="300" text-anchor="middle" font-size="15" font-weight="900" fill="#191f1b">一个可被不同 Agent 读懂的工作台</text>
+          </g>
+          <path d="M590 280 H660" stroke="#191f1b" stroke-width="3" marker-end="url(#arrow-assembly)"></path>
+
+          <g transform="translate(184 466)">
+            <rect x="0" y="0" width="812" height="42" rx="21" fill="#191f1b"></rect>
+            <text x="406" y="27" text-anchor="middle" font-size="16" font-weight="900" fill="#fffdf7">交付物是工作台，真正卖的是“Agent 接力能力 + 场景工作流”。</text>
+          </g>
+        </svg>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <h2>商业飞轮</h2>
+        <p class="section-note">开源 Core 带来信任与传播；CLI 降低试用门槛；Packs 把具体人群的工作流变成可付费方案；Course 把方法论和落地服务放大。</p>
+      </div>
+      <div class="wide-board">
+        <svg viewBox="0 0 1180 610" role="img" aria-label="StarWork 商业飞轮">
+          <title>StarWork 商业飞轮</title>
+          <defs>
+            <marker id="arrow-wheel" markerWidth="13" markerHeight="13" refX="10" refY="6.5" orient="auto">
+              <path d="M2,2 L10,6.5 L2,11 Z" fill="#191f1b"></path>
+            </marker>
+          </defs>
+          <rect x="20" y="20" width="1140" height="570" rx="22" fill="#fffdf7" stroke="#191f1b" stroke-width="3"></rect>
+          <circle cx="590" cy="302" r="116" fill="#191f1b"></circle>
+          <text x="590" y="286" text-anchor="middle" font-size="23" font-weight="900" fill="#fffdf7">StarWork</text>
+          <text x="590" y="318" text-anchor="middle" font-size="15" fill="#fffdf7">长期工作系统</text>
+          <text x="590" y="346" text-anchor="middle" font-size="15" fill="#fffdf7">可传播 / 可交付 / 可复购</text>
+
+          <g transform="translate(130 96)">
+            <rect x="0" y="0" width="280" height="112" rx="16" fill="#d7eadc" stroke="#23684b" stroke-width="2"></rect>
+            <text x="140" y="42" text-anchor="middle" font-size="22" font-weight="900" fill="#23684b">1. Core 开源</text>
+            <text x="140" y="74" text-anchor="middle" font-size="14" fill="#23684b">建立可信标准与传播入口</text>
+            <text x="140" y="96" text-anchor="middle" font-size="14" fill="#23684b">让用户先相信“这不是模板”</text>
+          </g>
+          <g transform="translate(770 96)">
+            <rect x="0" y="0" width="280" height="112" rx="16" fill="#d6e4ed" stroke="#2c5e85" stroke-width="2"></rect>
+            <text x="140" y="42" text-anchor="middle" font-size="22" font-weight="900" fill="#2c5e85">2. CLI 试用</text>
+            <text x="140" y="74" text-anchor="middle" font-size="14" fill="#2c5e85">把协议变成可安装体验</text>
+            <text x="140" y="96" text-anchor="middle" font-size="14" fill="#2c5e85">降低理解与迁移门槛</text>
+          </g>
+          <g transform="translate(770 396)">
+            <rect x="0" y="0" width="280" height="112" rx="16" fill="#f2d8a7" stroke="#a96213" stroke-width="2"></rect>
+            <text x="140" y="42" text-anchor="middle" font-size="22" font-weight="900" fill="#a96213">3. Packs 变现</text>
+            <text x="140" y="74" text-anchor="middle" font-size="14" fill="#a96213">用场景工作流解决具体问题</text>
+            <text x="140" y="96" text-anchor="middle" font-size="14" fill="#a96213">内容创作者是首个切入点</text>
+          </g>
+          <g transform="translate(130 396)">
+            <rect x="0" y="0" width="280" height="112" rx="16" fill="#ded8ef" stroke="#5e4f92" stroke-width="2"></rect>
+            <text x="140" y="42" text-anchor="middle" font-size="22" font-weight="900" fill="#5e4f92">4. Course 放大</text>
+            <text x="140" y="74" text-anchor="middle" font-size="14" fill="#5e4f92">课程、陪跑、案例和组织落地</text>
+            <text x="140" y="96" text-anchor="middle" font-size="14" fill="#5e4f92">反哺 Core 与 Packs</text>
+          </g>
+
+          <path d="M420 150 C520 95 660 95 760 150" stroke="#191f1b" stroke-width="3" fill="none" marker-end="url(#arrow-wheel)"></path>
+          <path d="M916 218 C985 286 985 348 916 390" stroke="#191f1b" stroke-width="3" fill="none" marker-end="url(#arrow-wheel)"></path>
+          <path d="M760 452 C660 510 520 510 420 452" stroke="#191f1b" stroke-width="3" fill="none" marker-end="url(#arrow-wheel)"></path>
+          <path d="M264 390 C196 332 196 272 264 218" stroke="#191f1b" stroke-width="3" fill="none" marker-end="url(#arrow-wheel)"></path>
+
+          <text x="590" y="60" text-anchor="middle" font-size="15" font-weight="900" fill="#191f1b">传播 → 试用 → 付费 → 案例 → 继续传播</text>
+          <text x="590" y="560" text-anchor="middle" font-size="15" fill="#62675f">飞轮的关键不是一次卖出，而是把真实工作中的成功案例沉淀成新的 Pack、模板、课程和方法论。</text>
+        </svg>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <h2>收入阶梯</h2>
+        <p class="section-note">早期不需要复杂账号、授权和平台系统。先用清楚的价值阶梯验证：免费可信入口、低门槛工具、场景付费、陪跑服务。</p>
+      </div>
+      <div class="matrix">
+        <div class="tier">
+          <div>
+            <h3>Core</h3>
+            <p class="price">免费 / 开源 / 传播</p>
+          </div>
+          <ul>
+            <li>协议文档</li>
+            <li>参考 Kit</li>
+            <li>标准与生态入口</li>
+            <li>建立可信度</li>
+          </ul>
+        </div>
+        <div class="tier">
+          <div>
+            <h3>CLI</h3>
+            <p class="price">免费或低价工具层</p>
+          </div>
+          <ul>
+            <li>初始化工作区</li>
+            <li>健康检查</li>
+            <li>Agent 适配</li>
+            <li>Pack 安装</li>
+          </ul>
+        </div>
+        <div class="tier">
+          <div>
+            <h3>Packs</h3>
+            <p class="price">核心商品 / 场景方案</p>
+          </div>
+          <ul>
+            <li>内容创作者 Pack</li>
+            <li>模板与规则</li>
+            <li>Demo 工作区</li>
+            <li>行业扩展包</li>
+          </ul>
+        </div>
+        <div class="tier">
+          <div>
+            <h3>Course</h3>
+            <p class="price">高客单 / 陪跑 / 组织落地</p>
+          </div>
+          <ul>
+            <li>方法论课程</li>
+            <li>工作台搭建陪跑</li>
+            <li>团队内训</li>
+            <li>定制 Pack 咨询</li>
+          </ul>
+        </div>
+      </div>
+      <div class="callout">
+        <p><strong>早期商业主线：</strong>先用开源 Core 与 CLI 证明“可信且能跑”，再用 Content Creator Pack 证明“能解决具体工作”，最后把案例和方法论交给 Course 承接转化。</p>
+        <span class="stamp">v0.1 优先级</span>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <h2>第一个 Pack：内容创作者</h2>
+        <p class="section-note">首个商业验证不选抽象项目管理，而选内容创作者，因为它有清晰输入、生产链路、发布反馈和商业化线索。</p>
+      </div>
+      <div class="wide-board">
+        <svg viewBox="0 0 1180 620" role="img" aria-label="内容创作者 Pack 工作流">
+          <title>内容创作者 Pack 工作流</title>
+          <defs>
+            <marker id="arrow-flow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+              <path d="M2,2 L10,6 L2,10 Z" fill="#a96213"></path>
+            </marker>
+          </defs>
+          <rect x="20" y="20" width="1140" height="580" rx="22" fill="#fffdf7" stroke="#191f1b" stroke-width="3"></rect>
+          <text x="60" y="70" font-size="26" font-weight="900" fill="#191f1b">内容创作者 Pack 的最小闭环</text>
+          <text x="60" y="102" font-size="15" fill="#62675f">用户不用理解 Core，也能让 Agent 知道素材、选题、草稿、发布和复盘分别放在哪里。</text>
+
+          <g transform="translate(62 158)">
+            <rect x="0" y="0" width="136" height="92" rx="13" fill="#f2d8a7" stroke="#a96213" stroke-width="2"></rect>
+            <text x="68" y="38" text-anchor="middle" font-size="18" font-weight="900" fill="#a96213">灵感输入</text>
+            <text x="68" y="66" text-anchor="middle" font-size="13" fill="#a96213">素材 / 观察</text>
+          </g>
+          <g transform="translate(222 158)">
+            <rect x="0" y="0" width="136" height="92" rx="13" fill="#f2d8a7" stroke="#a96213" stroke-width="2"></rect>
+            <text x="68" y="38" text-anchor="middle" font-size="18" font-weight="900" fill="#a96213">选题整理</text>
+            <text x="68" y="66" text-anchor="middle" font-size="13" fill="#a96213">角度 / 价值</text>
+          </g>
+          <g transform="translate(382 158)">
+            <rect x="0" y="0" width="136" height="92" rx="13" fill="#f2d8a7" stroke="#a96213" stroke-width="2"></rect>
+            <text x="68" y="38" text-anchor="middle" font-size="18" font-weight="900" fill="#a96213">内容大纲</text>
+            <text x="68" y="66" text-anchor="middle" font-size="13" fill="#a96213">结构 / 钩子</text>
+          </g>
+          <g transform="translate(542 158)">
+            <rect x="0" y="0" width="136" height="92" rx="13" fill="#f2d8a7" stroke="#a96213" stroke-width="2"></rect>
+            <text x="68" y="38" text-anchor="middle" font-size="18" font-weight="900" fill="#a96213">正文脚本</text>
+            <text x="68" y="66" text-anchor="middle" font-size="13" fill="#a96213">草稿 / 改稿</text>
+          </g>
+          <g transform="translate(702 158)">
+            <rect x="0" y="0" width="136" height="92" rx="13" fill="#f2d8a7" stroke="#a96213" stroke-width="2"></rect>
+            <text x="68" y="38" text-anchor="middle" font-size="18" font-weight="900" fill="#a96213">发布记录</text>
+            <text x="68" y="66" text-anchor="middle" font-size="13" fill="#a96213">平台 / 链接</text>
+          </g>
+          <g transform="translate(862 158)">
+            <rect x="0" y="0" width="136" height="92" rx="13" fill="#f2d8a7" stroke="#a96213" stroke-width="2"></rect>
+            <text x="68" y="38" text-anchor="middle" font-size="18" font-weight="900" fill="#a96213">数据复盘</text>
+            <text x="68" y="66" text-anchor="middle" font-size="13" fill="#a96213">指标 / 反馈</text>
+          </g>
+          <g transform="translate(1022 158)">
+            <rect x="0" y="0" width="96" height="92" rx="13" fill="#d7eadc" stroke="#23684b" stroke-width="2"></rect>
+            <text x="48" y="38" text-anchor="middle" font-size="17" font-weight="900" fill="#23684b">下一轮</text>
+            <text x="48" y="66" text-anchor="middle" font-size="13" fill="#23684b">选题</text>
+          </g>
+
+          <path d="M202 204 H216" stroke="#a96213" stroke-width="3" marker-end="url(#arrow-flow)"></path>
+          <path d="M362 204 H376" stroke="#a96213" stroke-width="3" marker-end="url(#arrow-flow)"></path>
+          <path d="M522 204 H536" stroke="#a96213" stroke-width="3" marker-end="url(#arrow-flow)"></path>
+          <path d="M682 204 H696" stroke="#a96213" stroke-width="3" marker-end="url(#arrow-flow)"></path>
+          <path d="M842 204 H856" stroke="#a96213" stroke-width="3" marker-end="url(#arrow-flow)"></path>
+          <path d="M1002 204 H1016" stroke="#a96213" stroke-width="3" marker-end="url(#arrow-flow)"></path>
+
+          <g transform="translate(86 330)">
+            <rect x="0" y="0" width="180" height="88" rx="12" fill="#d6e4ed" stroke="#2c5e85" stroke-width="2"></rect>
+            <text x="90" y="36" text-anchor="middle" font-size="18" font-weight="900" fill="#2c5e85">账号定位</text>
+            <text x="90" y="62" text-anchor="middle" font-size="13" fill="#2c5e85">人设 / 栏目 / 受众</text>
+          </g>
+          <g transform="translate(292 330)">
+            <rect x="0" y="0" width="180" height="88" rx="12" fill="#d6e4ed" stroke="#2c5e85" stroke-width="2"></rect>
+            <text x="90" y="36" text-anchor="middle" font-size="18" font-weight="900" fill="#2c5e85">风格库</text>
+            <text x="90" y="62" text-anchor="middle" font-size="13" fill="#2c5e85">表达偏好 / 禁区</text>
+          </g>
+          <g transform="translate(498 330)">
+            <rect x="0" y="0" width="180" height="88" rx="12" fill="#d6e4ed" stroke="#2c5e85" stroke-width="2"></rect>
+            <text x="90" y="36" text-anchor="middle" font-size="18" font-weight="900" fill="#2c5e85">平台规则</text>
+            <text x="90" y="62" text-anchor="middle" font-size="13" fill="#2c5e85">格式 / 审核 / 节奏</text>
+          </g>
+          <g transform="translate(704 330)">
+            <rect x="0" y="0" width="180" height="88" rx="12" fill="#d6e4ed" stroke="#2c5e85" stroke-width="2"></rect>
+            <text x="90" y="36" text-anchor="middle" font-size="18" font-weight="900" fill="#2c5e85">用户反馈</text>
+            <text x="90" y="62" text-anchor="middle" font-size="13" fill="#2c5e85">评论 / 私信 / 问题</text>
+          </g>
+          <g transform="translate(910 330)">
+            <rect x="0" y="0" width="180" height="88" rx="12" fill="#d6e4ed" stroke="#2c5e85" stroke-width="2"></rect>
+            <text x="90" y="36" text-anchor="middle" font-size="18" font-weight="900" fill="#2c5e85">商业线索</text>
+            <text x="90" y="62" text-anchor="middle" font-size="13" fill="#2c5e85">合作 / 产品 / 转化</text>
+          </g>
+          <text x="590" y="480" text-anchor="middle" font-size="16" font-weight="900" fill="#191f1b">主流程交付生产连续性，支撑模块交付长期资产沉淀。</text>
+          <text x="590" y="516" text-anchor="middle" font-size="15" fill="#62675f">这就是首个 Pack 的商业验证点：内容不是一次写完，而是持续生产、复盘、再生产。</text>
+        </svg>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <h2>市场进入路径</h2>
+        <p class="section-note">StarWork 的早期路径应该从“个人创作者能跑通”开始，再扩大到多项目个人工作台、小团队和组织化场景。</p>
+      </div>
+      <div class="wide-board">
+        <svg viewBox="0 0 1180 560" role="img" aria-label="StarWork 市场进入路径">
+          <title>StarWork 市场进入路径</title>
+          <defs>
+            <marker id="arrow-market" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+              <path d="M2,2 L10,6 L2,10 Z" fill="#191f1b"></path>
+            </marker>
+          </defs>
+          <rect x="20" y="20" width="1140" height="520" rx="22" fill="#fffdf7" stroke="#191f1b" stroke-width="3"></rect>
+          <text x="60" y="72" font-size="26" font-weight="900" fill="#191f1b">从一个高频场景切入，再扩成工作系统生态</text>
+          <g transform="translate(72 130)">
+            <rect x="0" y="0" width="212" height="300" rx="16" fill="#f2d8a7" stroke="#a96213" stroke-width="2"></rect>
+            <text x="106" y="48" text-anchor="middle" font-size="22" font-weight="900" fill="#a96213">阶段 A</text>
+            <text x="106" y="82" text-anchor="middle" font-size="18" font-weight="900" fill="#a96213">个人内容创作者</text>
+            <line x1="28" y1="112" x2="184" y2="112" stroke="#a96213" stroke-width="2"></line>
+            <text x="28" y="150" font-size="15" fill="#a96213">目标：跑通内容闭环</text>
+            <text x="28" y="182" font-size="15" fill="#a96213">商品：Content Pack</text>
+            <text x="28" y="214" font-size="15" fill="#a96213">证据：Demo 工作区</text>
+            <text x="28" y="246" font-size="15" fill="#a96213">转化：课程与陪跑</text>
+          </g>
+          <g transform="translate(350 130)">
+            <rect x="0" y="0" width="212" height="300" rx="16" fill="#d7eadc" stroke="#23684b" stroke-width="2"></rect>
+            <text x="106" y="48" text-anchor="middle" font-size="22" font-weight="900" fill="#23684b">阶段 B</text>
+            <text x="106" y="82" text-anchor="middle" font-size="18" font-weight="900" fill="#23684b">多项目个人工作台</text>
+            <line x1="28" y1="112" x2="184" y2="112" stroke="#23684b" stroke-width="2"></line>
+            <text x="28" y="150" font-size="15" fill="#23684b">目标：Hub + Satellite</text>
+            <text x="28" y="182" font-size="15" fill="#23684b">商品：Hub Pack</text>
+            <text x="28" y="214" font-size="15" fill="#23684b">证据：跨项目接力</text>
+            <text x="28" y="246" font-size="15" fill="#23684b">转化：高级陪跑</text>
+          </g>
+          <g transform="translate(628 130)">
+            <rect x="0" y="0" width="212" height="300" rx="16" fill="#d6e4ed" stroke="#2c5e85" stroke-width="2"></rect>
+            <text x="106" y="48" text-anchor="middle" font-size="22" font-weight="900" fill="#2c5e85">阶段 C</text>
+            <text x="106" y="82" text-anchor="middle" font-size="18" font-weight="900" fill="#2c5e85">小团队工作流</text>
+            <line x1="28" y1="112" x2="184" y2="112" stroke="#2c5e85" stroke-width="2"></line>
+            <text x="28" y="150" font-size="15" fill="#2c5e85">目标：团队共享协议</text>
+            <text x="28" y="182" font-size="15" fill="#2c5e85">商品：Team Packs</text>
+            <text x="28" y="214" font-size="15" fill="#2c5e85">证据：协作留痕</text>
+            <text x="28" y="246" font-size="15" fill="#2c5e85">转化：内训咨询</text>
+          </g>
+          <g transform="translate(906 130)">
+            <rect x="0" y="0" width="212" height="300" rx="16" fill="#ded8ef" stroke="#5e4f92" stroke-width="2"></rect>
+            <text x="106" y="48" text-anchor="middle" font-size="22" font-weight="900" fill="#5e4f92">阶段 D</text>
+            <text x="106" y="82" text-anchor="middle" font-size="18" font-weight="900" fill="#5e4f92">组织级落地</text>
+            <line x1="28" y1="112" x2="184" y2="112" stroke="#5e4f92" stroke-width="2"></line>
+            <text x="28" y="150" font-size="15" fill="#5e4f92">目标：标准与治理</text>
+            <text x="28" y="182" font-size="15" fill="#5e4f92">商品：定制 Pack</text>
+            <text x="28" y="214" font-size="15" fill="#5e4f92">证据：培训体系</text>
+            <text x="28" y="246" font-size="15" fill="#5e4f92">转化：咨询交付</text>
+          </g>
+          <path d="M290 280 H344" stroke="#191f1b" stroke-width="3" marker-end="url(#arrow-market)"></path>
+          <path d="M568 280 H622" stroke="#191f1b" stroke-width="3" marker-end="url(#arrow-market)"></path>
+          <path d="M846 280 H900" stroke="#191f1b" stroke-width="3" marker-end="url(#arrow-market)"></path>
+          <text x="590" y="492" text-anchor="middle" font-size="15" font-weight="900" fill="#191f1b">不要从平台野心开始，要从一个用户愿意持续使用的工作闭环开始。</text>
+        </svg>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <h2>v0.1 到 v1.0</h2>
+        <p class="section-note">路线判断：Core 与 CLI 已经进入可验证状态，当前焦点应转向首个 Pack 与 Demo，而不是继续扩张地基。</p>
+      </div>
+      <div class="wide-board">
+        <svg viewBox="0 0 1180 560" role="img" aria-label="StarWork 路线图">
+          <title>StarWork 路线图</title>
+          <defs>
+            <marker id="arrow-road" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+              <path d="M2,2 L10,6 L2,10 Z" fill="#191f1b"></path>
+            </marker>
+          </defs>
+          <rect x="20" y="20" width="1140" height="520" rx="22" fill="#fffdf7" stroke="#191f1b" stroke-width="3"></rect>
+          <line x1="110" y1="294" x2="1070" y2="294" stroke="#191f1b" stroke-width="4" marker-end="url(#arrow-road)"></line>
+
+          <g transform="translate(78 144)">
+            <circle cx="52" cy="150" r="32" fill="#23684b"></circle>
+            <text x="52" y="158" text-anchor="middle" font-size="18" font-weight="900" fill="#fffdf7">M1</text>
+            <text x="52" y="218" text-anchor="middle" font-size="17" font-weight="900" fill="#23684b">Core 封版</text>
+            <text x="52" y="246" text-anchor="middle" font-size="13" fill="#62675f">已完成</text>
+          </g>
+          <g transform="translate(246 144)">
+            <circle cx="52" cy="150" r="32" fill="#2c5e85"></circle>
+            <text x="52" y="158" text-anchor="middle" font-size="18" font-weight="900" fill="#fffdf7">M2</text>
+            <text x="52" y="218" text-anchor="middle" font-size="17" font-weight="900" fill="#2c5e85">CLI 闭环</text>
+            <text x="52" y="246" text-anchor="middle" font-size="13" fill="#62675f">已完成</text>
+          </g>
+          <g transform="translate(414 104)">
+            <rect x="-18" y="0" width="140" height="256" rx="18" fill="#f2d8a7" stroke="#a96213" stroke-width="3"></rect>
+            <circle cx="52" cy="190" r="34" fill="#a96213"></circle>
+            <text x="52" y="198" text-anchor="middle" font-size="18" font-weight="900" fill="#fffdf7">M3</text>
+            <text x="52" y="70" text-anchor="middle" font-size="18" font-weight="900" fill="#a96213">Content</text>
+            <text x="52" y="98" text-anchor="middle" font-size="18" font-weight="900" fill="#a96213">Creator Pack</text>
+            <text x="52" y="132" text-anchor="middle" font-size="13" fill="#a96213">当前焦点</text>
+          </g>
+          <g transform="translate(594 144)">
+            <circle cx="52" cy="150" r="32" fill="#a96213"></circle>
+            <text x="52" y="158" text-anchor="middle" font-size="18" font-weight="900" fill="#fffdf7">M4</text>
+            <text x="52" y="218" text-anchor="middle" font-size="17" font-weight="900" fill="#a96213">Demo 工作区</text>
+            <text x="52" y="246" text-anchor="middle" font-size="13" fill="#62675f">验证案例</text>
+          </g>
+          <g transform="translate(762 144)">
+            <circle cx="52" cy="150" r="32" fill="#963d34"></circle>
+            <text x="52" y="158" text-anchor="middle" font-size="18" font-weight="900" fill="#fffdf7">M5</text>
+            <text x="52" y="218" text-anchor="middle" font-size="17" font-weight="900" fill="#963d34">内测修正</text>
+            <text x="52" y="246" text-anchor="middle" font-size="13" fill="#62675f">真实反馈</text>
+          </g>
+          <g transform="translate(930 144)">
+            <circle cx="52" cy="150" r="32" fill="#5e4f92"></circle>
+            <text x="52" y="158" text-anchor="middle" font-size="18" font-weight="900" fill="#fffdf7">M6</text>
+            <text x="52" y="218" text-anchor="middle" font-size="17" font-weight="900" fill="#5e4f92">v0.1 发布</text>
+            <text x="52" y="246" text-anchor="middle" font-size="13" fill="#62675f">对外试用</text>
+          </g>
+
+          <rect x="86" y="60" width="1008" height="42" rx="21" fill="#191f1b"></rect>
+          <text x="590" y="87" text-anchor="middle" font-size="16" font-weight="900" fill="#fffdf7">现在最重要的不是继续解释 StarWork，而是做出第一个能跑通的场景 Pack。</text>
+          <text x="590" y="486" text-anchor="middle" font-size="15" fill="#62675f">v0.2 再考虑 Pack 升级、卸载、迁移、更多 Agent 适配和更多行业包；v1.0 再追求稳定生态。</text>
+        </svg>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <h2>定位边界</h2>
+        <p class="section-note">清楚说“不做什么”，能保护 StarWork 不被旧 Runtime 心智、平台幻想和过早工程复杂度拖偏。</p>
+      </div>
+      <div class="split">
+        <div class="panel">
+          <h3>StarWork 要做</h3>
+          <ul class="list">
+            <li><span class="tag">协议</span>定义跨 Agent 工作区的最小可信结构。</li>
+            <li><span class="tag">工具</span>用 CLI 生成、检查、适配和安装 Pack。</li>
+            <li><span class="tag">场景</span>用 Packs 把真实工作流变成可复用产品。</li>
+            <li><span class="tag">教育</span>用 Course 帮用户真正改造自己的工作方式。</li>
+          </ul>
+        </div>
+        <div class="panel">
+          <h3>StarWork 暂不做</h3>
+          <ul class="list">
+            <li><span class="tag">Runtime</span>不自研完整 Agent Runtime，不追底层执行器。</li>
+            <li><span class="tag">Gateway</span>第一阶段不做消息平台网关。</li>
+            <li><span class="tag">绑定</span>不默认依赖单一 Agent、SDK 或海外服务。</li>
+            <li><span class="tag">平台</span>v0.1 不提前设计复杂账号、授权和商业系统。</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <p>事实源参考：<span class="mono">product/docs/product-direction.md</span>、<span class="mono">product/docs/v0.1-plan.md</span>、<span class="mono">product/docs/roadmap.md</span>、<span class="mono">product/core/core-v0.1-protocol.md</span>、<span class="mono">product/packs/content-creator/README.md</span>。</p>
+      <p>本文是 StarWork 产品形态与商业模式的 HTML 可视化阅读版，适合用于内部对齐、路演讲解和后续对外文档包装。</p>
+    </footer>
+  </main>
+</body>
+</html>

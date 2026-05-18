@@ -1,5 +1,5 @@
-id: zh-local-starter
-name: 中文单项目 Starter 版
+id: local-starter
+name: 单项目 Starter 版
 core: "0.1"
 profile: zh
 capabilities:
@@ -8,5 +8,5 @@ capabilities:
   - local-lessons
 formal_source_default: 输出/确认成果/
 description: >
-  面向学员和轻量单项目用户。使用中文路径、本地身份/教训，以及
+  面向学员和轻量单项目用户。默认使用中文路径、本地身份/教训，以及
   参考资料/输出工作流；不默认启用事项模式。

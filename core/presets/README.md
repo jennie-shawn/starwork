@@ -13,9 +13,14 @@ Presets 主要供 CLI 和 kit 生成使用。
 
 ## v0.1 包含
 
-- `zh-local-starter.yaml`
-- `zh-local-matter.yaml`
-- `zh-satellite-starter.yaml`
-- `zh-satellite-matter.yaml`
-- `zh-hub.yaml`
-- `en-local-starter.yaml`
+- `local-starter.yaml`
+- `local-matter.yaml`
+- `satellite-starter.yaml`
+- `satellite-matter.yaml`
+- `hub.yaml`
+
+## 命名原则
+
+Preset ID 不携带语言标签，只表达工作区形态。
+
+当前 v0.1 的正式 preset 默认使用中文 profile。英文 profile 下的参考样例放在 `profiles/en/reference-presets/`，不进入正式 preset 列表。

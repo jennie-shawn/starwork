@@ -3,7 +3,7 @@ const os = require("os");
 const path = require("path");
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { execFileSync } = require("node:child_process");
+const { execFileSync, spawnSync } = require("node:child_process");
 
 const root = path.resolve(__dirname, "..", "..");
 const bin = path.join(root, "cli", "bin", "starwork.js");
@@ -14,6 +14,20 @@ function tempDir() {
 
 function runInit(args) {
   return execFileSync(process.execPath, [bin, "init", ...args], {
+    cwd: root,
+    encoding: "utf8"
+  });
+}
+
+function runDoctor(args) {
+  return spawnSync(process.execPath, [bin, "doctor", ...args], {
+    cwd: root,
+    encoding: "utf8"
+  });
+}
+
+function runCommand(args) {
+  return spawnSync(process.execPath, [bin, ...args], {
     cwd: root,
     encoding: "utf8"
   });
@@ -38,7 +52,7 @@ test("creates a single-light workspace with general pack", () => {
 
   const state = readJson(path.join(dir, ".starwork", "workspace.json"));
   assert.equal(state.workspace_type, "single-light");
-  assert.equal(state.kit, "zh-local-starter");
+  assert.equal(state.kit, "local-starter");
   assert.equal(state.packs[0].id, "general");
   assert.equal(fs.existsSync(path.join(dir, "AGENTS.md")), true);
   assert.equal(fs.existsSync(path.join(dir, "输出", "确认成果", "README.md")), true);
@@ -67,7 +81,7 @@ test("creates a hub workspace with hub management pack", () => {
 
   const state = readJson(path.join(dir, ".starwork", "workspace.json"));
   assert.equal(state.workspace_type, "hub");
-  assert.equal(state.kit, "zh-hub");
+  assert.equal(state.kit, "hub");
   assert.equal(state.packs[0].id, "hub-management");
   assert.equal(fs.existsSync(path.join(dir, "项目", "registry.json")), true);
   assert.equal(fs.existsSync(path.join(dir, "知识", "README.md")), true);
@@ -82,4 +96,220 @@ test("does not overwrite existing user files", () => {
 
   assert.equal(fs.readFileSync(path.join(dir, "README.md"), "utf8"), "# Existing\n");
   assert.equal(fs.existsSync(path.join(dir, "README.starwork-new.md")), true);
+});
+
+test("doctor passes on a single-light workspace with general pack", () => {
+  const dir = tempDir();
+  runInit(["--type", "single-light", "--pack", "general", "--target", dir, "--yes"]);
+
+  const result = runDoctor(["--target", dir]);
+
+  assert.equal(result.status, 0);
+  assert.match(result.stdout, /Workspace is healthy/);
+});
+
+test("doctor passes on a single-matter workspace with content creator pack", () => {
+  const dir = tempDir();
+  runInit(["--type", "single-matter", "--pack", "content-creator", "--target", dir, "--yes"]);
+
+  const result = runDoctor(["--target", dir, "--json"]);
+  const report = JSON.parse(result.stdout);
+
+  assert.equal(result.status, 0);
+  assert.equal(report.ok, true);
+  assert.equal(report.workspace.workspace_type, "single-matter");
+  assert.deepEqual(report.workspace.packs, ["content-creator"]);
+});
+
+test("doctor passes on a hub workspace", () => {
+  const dir = tempDir();
+  runInit(["--type", "hub", "--target", dir, "--yes"]);
+
+  const result = runDoctor(["--target", dir]);
+
+  assert.equal(result.status, 0);
+  assert.match(result.stdout, /Workspace is healthy/);
+});
+
+test("spawn creates a matter project from a hub", () => {
+  const hub = tempDir();
+  const target = tempDir();
+  runInit(["--type", "hub", "--target", hub, "--yes"]);
+
+  const spawn = runCommand(["spawn", "--hub", hub, "--name", "Content Site", "--id", "content-site", "--target", target, "--mode", "matter", "--yes"]);
+  const state = readJson(path.join(target, ".starwork", "workspace.json"));
+  const sync = readJson(path.join(target, ".core-sync.json"));
+  const registry = readJson(path.join(hub, "项目", "registry.json"));
+  const doctor = runDoctor(["--target", target]);
+
+  assert.equal(spawn.status, 0);
+  assert.equal(state.workspace_type, "satellite-matter");
+  assert.equal(state.kit, "satellite-matter");
+  assert.equal(state.hub.project_id, "content-site");
+  assert.equal(sync.project_id, "content-site");
+  assert.equal(registry.projects[0].id, "content-site");
+  assert.equal(registry.projects[0].path, path.resolve(target));
+  assert.equal(fs.lstatSync(path.join(target, "知识")).isSymbolicLink(), true);
+  assert.equal(fs.lstatSync(path.join(target, ".agents", "skills")).isSymbolicLink(), true);
+  assert.equal(doctor.status, 0);
+});
+
+test("spawn creates a starter project from a hub", () => {
+  const hub = tempDir();
+  const target = tempDir();
+  runInit(["--type", "hub", "--target", hub, "--yes"]);
+
+  const spawn = runCommand(["spawn", "--hub", hub, "--name", "Quick Project", "--id", "quick-project", "--target", target, "--mode", "starter", "--yes"]);
+  const state = readJson(path.join(target, ".starwork", "workspace.json"));
+  const doctor = runDoctor(["--target", target]);
+
+  assert.equal(spawn.status, 0);
+  assert.equal(state.workspace_type, "satellite-starter");
+  assert.equal(state.kit, "satellite-starter");
+  assert.equal(fs.existsSync(path.join(target, "事项")), false);
+  assert.equal(doctor.status, 0);
+});
+
+test("spawn refuses duplicate registry id", () => {
+  const hub = tempDir();
+  const first = tempDir();
+  const second = tempDir();
+  runInit(["--type", "hub", "--target", hub, "--yes"]);
+  runCommand(["spawn", "--hub", hub, "--name", "First", "--id", "same-id", "--target", first, "--yes"]);
+
+  const duplicate = runCommand(["spawn", "--hub", hub, "--name", "Second", "--id", "same-id", "--target", second, "--yes"]);
+
+  assert.equal(duplicate.status, 1);
+  assert.match(duplicate.stderr, /已存在项目 ID/);
+});
+
+test("spawn refuses non-hub workspaces", () => {
+  const workspace = tempDir();
+  const target = tempDir();
+  runInit(["--type", "single-light", "--pack", "general", "--target", workspace, "--yes"]);
+
+  const result = runCommand(["spawn", "--hub", workspace, "--name", "Nope", "--id", "nope", "--target", target, "--yes"]);
+
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /多项目管理中枢/);
+});
+
+test("spawn refuses non-empty target directories", () => {
+  const hub = tempDir();
+  const target = tempDir();
+  fs.writeFileSync(path.join(target, "existing.txt"), "user content\n", "utf8");
+  runInit(["--type", "hub", "--target", hub, "--yes"]);
+
+  const result = runCommand(["spawn", "--hub", hub, "--name", "Existing", "--id", "existing", "--target", target, "--yes"]);
+
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /目标目录已有内容/);
+});
+
+test("doctor fails when AGENTS.md is missing", () => {
+  const dir = tempDir();
+  runInit(["--type", "single-light", "--pack", "general", "--target", dir, "--yes"]);
+  fs.rmSync(path.join(dir, "AGENTS.md"));
+
+  const result = runDoctor(["--target", dir]);
+
+  assert.equal(result.status, 1);
+  assert.match(result.stdout, /core\.entry_rules\.exists/);
+});
+
+test("doctor fails when the formal source is missing", () => {
+  const dir = tempDir();
+  runInit(["--type", "single-light", "--pack", "general", "--target", dir, "--yes"]);
+  fs.rmSync(path.join(dir, "输出", "确认成果"), { recursive: true, force: true });
+
+  const result = runDoctor(["--target", dir, "--json"]);
+  const report = JSON.parse(result.stdout);
+
+  assert.equal(result.status, 1);
+  assert.equal(report.ok, false);
+  assert(report.checks.some((check) => check.id === "core.formal_source.exists" && check.level === "fail"));
+});
+
+test("doctor fails when pack seed is missing", () => {
+  const dir = tempDir();
+  runInit(["--type", "single-matter", "--pack", "content-creator", "--target", dir, "--yes"]);
+  fs.rmSync(path.join(dir, "选题池", "README.md"));
+
+  const result = runDoctor(["--target", dir, "--json"]);
+  const report = JSON.parse(result.stdout);
+
+  assert.equal(result.status, 1);
+  assert(report.checks.some((check) => check.id === "pack.seed.installed" && check.level === "fail"));
+});
+
+test("doctor fails outside a StarWork workspace", () => {
+  const dir = tempDir();
+
+  const result = runDoctor(["--target", dir]);
+
+  assert.equal(result.status, 1);
+  assert.match(result.stdout, /不是 StarWork 工作台/);
+});
+
+test("adapt creates a Claude adapter and records it in workspace state", () => {
+  const dir = tempDir();
+  runInit(["--type", "single-light", "--pack", "general", "--target", dir, "--yes"]);
+
+  const result = runCommand(["adapt", "claude", "--target", dir, "--yes"]);
+  const state = readJson(path.join(dir, ".starwork", "workspace.json"));
+  const claude = fs.readFileSync(path.join(dir, "CLAUDE.md"), "utf8");
+
+  assert.equal(result.status, 0);
+  assert.match(claude, /StarWork Adapter for Claude Code/);
+  assert.equal(state.adapters[0].id, "claude");
+});
+
+test("adapt creates Cursor rules", () => {
+  const dir = tempDir();
+  runInit(["--type", "single-light", "--pack", "general", "--target", dir, "--yes"]);
+
+  const result = runCommand(["adapt", "--agent", "cursor", "--target", dir, "--yes"]);
+  const cursorRule = fs.readFileSync(path.join(dir, ".cursor", "rules", "starwork.mdc"), "utf8");
+
+  assert.equal(result.status, 0);
+  assert.match(cursorRule, /alwaysApply: true/);
+  assert.match(cursorRule, /AGENTS\.md/);
+});
+
+test("pack install adds content creator pack to an existing workspace", () => {
+  const dir = tempDir();
+  runInit(["--type", "single-light", "--pack", "general", "--target", dir, "--yes"]);
+
+  const install = runCommand(["pack", "install", "content-creator", "--target", dir, "--yes"]);
+  const state = readJson(path.join(dir, ".starwork", "workspace.json"));
+  const agents = fs.readFileSync(path.join(dir, "AGENTS.md"), "utf8");
+  const doctor = runDoctor(["--target", dir]);
+
+  assert.equal(install.status, 0);
+  assert.deepEqual(state.packs.map((pack) => pack.id), ["general", "content-creator"]);
+  assert.equal(state.paths.formal_source, "发布记录/");
+  assert.equal(fs.existsSync(path.join(dir, "发布记录", "README.md")), true);
+  assert.equal(fs.existsSync(path.join(dir, ".starwork", "packs", "content-creator", "templates", "content-brief.md")), true);
+  assert.match(agents, /StarWork Pack: content-creator/);
+  assert.equal(doctor.status, 0);
+});
+
+test("pack install refuses unsupported workspace types", () => {
+  const dir = tempDir();
+  runInit(["--type", "hub", "--target", dir, "--yes"]);
+
+  const result = runCommand(["pack", "install", "content-creator", "--target", dir, "--yes"]);
+
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /不支持工作区类型 hub/);
+});
+
+test("pack install skips already installed packs", () => {
+  const dir = tempDir();
+  runInit(["--type", "single-light", "--pack", "general", "--target", dir, "--yes"]);
+
+  const result = runCommand(["pack", "install", "general", "--target", dir, "--yes"]);
+
+  assert.equal(result.status, 0);
+  assert.match(result.stdout, /已安装/);
 });

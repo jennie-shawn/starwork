@@ -1,5 +1,5 @@
-id: zh-hub
-name: 中文多项目管理中枢
+id: hub
+name: 多项目管理中枢
 core: "0.1"
 profile: zh
 capabilities:

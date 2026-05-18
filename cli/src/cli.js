@@ -7,21 +7,38 @@ const PRODUCT_ROOT = path.resolve(__dirname, "..", "..");
 const WORKSPACE_TYPES = {
   "single-light": {
     label: "轻量单项目",
-    kit: "zh-local-starter",
+    kit: "local-starter",
     defaultPack: "general",
     description: "适合放资料、写草稿、整理最终成果。"
   },
   "single-matter": {
     label: "长期单项目",
-    kit: "zh-local-matter",
+    kit: "local-matter",
     defaultPack: "general",
     description: "适合需要事项追踪、跨会话接力、长期沉淀过程的项目。"
   },
   hub: {
     label: "多项目管理中枢",
-    kit: "zh-hub",
+    kit: "hub",
     defaultPack: "hub-management",
     description: "适合统一管理身份、教训、知识、skills 和多个项目。"
+  }
+};
+
+const SPAWN_MODES = {
+  starter: {
+    label: "轻量项目",
+    workspaceType: "satellite-starter",
+    kit: "satellite-starter",
+    formalSource: "输出/确认成果/",
+    businessWorkArea: "参考资料/"
+  },
+  matter: {
+    label: "事项型项目",
+    workspaceType: "satellite-matter",
+    kit: "satellite-matter",
+    formalSource: "输出/确认成果/",
+    businessWorkArea: "事项/"
   }
 };
 
@@ -31,6 +48,25 @@ const PACK_LABELS = {
   "hub-management": "多项目中枢管理"
 };
 
+const ADAPTERS = {
+  codex: {
+    label: "Codex",
+    path: null
+  },
+  claude: {
+    label: "Claude Code",
+    path: "CLAUDE.md"
+  },
+  cursor: {
+    label: "Cursor",
+    path: path.join(".cursor", "rules", "starwork.mdc")
+  },
+  trae: {
+    label: "Trae",
+    path: path.join(".trae", "rules", "starwork.md")
+  }
+};
+
 async function run(argv) {
   const command = argv[0];
   if (!command || command === "--help" || command === "-h") {
@@ -38,11 +74,33 @@ async function run(argv) {
     return;
   }
 
-  if (command !== "init") {
-    throw new Error(`未知命令：${command}`);
+  if (command === "init") {
+    await init(argv.slice(1));
+    return;
   }
 
-  await init(argv.slice(1));
+  if (command === "doctor") {
+    const result = doctor(argv.slice(1));
+    process.exitCode = result.exitCode;
+    return;
+  }
+
+  if (command === "spawn") {
+    await spawnWorkspace(argv.slice(1));
+    return;
+  }
+
+  if (command === "adapt") {
+    await adapt(argv.slice(1));
+    return;
+  }
+
+  if (command === "pack") {
+    await packCommand(argv.slice(1));
+    return;
+  }
+
+  throw new Error(`未知命令：${command}`);
 }
 
 async function init(argv) {
@@ -108,6 +166,63 @@ async function init(argv) {
   console.log("3. 如需生成特定 Agent 适配文件，后续运行 starwork adapt。");
 }
 
+async function spawnWorkspace(argv) {
+  const options = parseArgs(argv);
+  if (options.help) {
+    printSpawnHelp();
+    return;
+  }
+  if (options.pack) {
+    throw new Error("spawn v0.1 暂不支持 --pack。请先创建项目，再运行 starwork pack install。");
+  }
+  if (!options.target) {
+    throw new Error("spawn 需要指定 --target <path>，避免误把新项目写进当前目录。");
+  }
+
+  const hubRoot = resolveHubRoot(options.hub || process.cwd());
+  const hubState = readWorkspaceState(hubRoot);
+  assertHealthyHub(hubRoot, hubState);
+
+  const projectName = options.name || path.basename(path.resolve(options.target || process.cwd()));
+  const targetDir = path.resolve(options.target || path.join(process.cwd(), slugifyProjectId(projectName) || "project"));
+  assertSpawnTargetIsEmpty(targetDir);
+
+  const mode = options.mode || "matter";
+  const modeConfig = SPAWN_MODES[mode];
+  if (!modeConfig) {
+    throw new Error(`不支持的 spawn 模式：${mode}。可选值：starter、matter。`);
+  }
+
+  const status = options.status || "active";
+  if (!["active", "paused"].includes(status)) {
+    throw new Error("--status 只支持 active 或 paused。");
+  }
+
+  const projectId = options.id || slugifyProjectId(projectName) || slugifyProjectId(path.basename(targetDir)) || "project";
+  const plan = buildSpawnPlan({
+    hubRoot,
+    hubState,
+    targetDir,
+    projectName,
+    projectId,
+    status,
+    mode,
+    modeConfig
+  });
+
+  printSpawnPlan(plan, options.dryRun);
+  if (options.dryRun) return;
+
+  await confirmOrThrow(options, "是否从中枢生成新项目工作台？");
+  applyPlan(plan);
+  console.log("");
+  console.log("StarWork 项目工作台已生成。");
+  console.log("");
+  console.log("下一步建议：");
+  console.log(`1. 运行 starwork doctor --target ${plan.targetDir}`);
+  console.log("2. 打开 _系统/上下文/当前项目.md，补充项目目标和近期重点。");
+}
+
 function parseArgs(argv) {
   const options = {};
   for (let i = 0; i < argv.length; i += 1) {
@@ -116,6 +231,22 @@ function parseArgs(argv) {
       options.yes = true;
     } else if (arg === "--dry-run") {
       options.dryRun = true;
+    } else if (arg === "--json") {
+      options.json = true;
+    } else if (arg === "--strict") {
+      options.strict = true;
+    } else if (arg === "--verbose") {
+      options.verbose = true;
+    } else if (arg === "--agent") {
+      options.agent = readValue(argv, ++i, arg);
+    } else if (arg === "--hub") {
+      options.hub = readValue(argv, ++i, arg);
+    } else if (arg === "--mode") {
+      options.mode = readValue(argv, ++i, arg);
+    } else if (arg === "--id") {
+      options.id = readValue(argv, ++i, arg);
+    } else if (arg === "--status") {
+      options.status = readValue(argv, ++i, arg);
     } else if (arg === "--type") {
       options.type = readValue(argv, ++i, arg);
     } else if (arg === "--pack") {
@@ -130,11 +261,616 @@ function parseArgs(argv) {
       options.target = readValue(argv, ++i, arg);
     } else if (arg === "--help" || arg === "-h") {
       options.help = true;
+    } else if (!arg.startsWith("-")) {
+      if (!options._) options._ = [];
+      options._.push(arg);
     } else {
       throw new Error(`未知参数：${arg}`);
     }
   }
   return options;
+}
+
+async function adapt(argv) {
+  const options = parseArgs(argv);
+  if (options.help) {
+    printAdaptHelp();
+    return;
+  }
+
+  const targetDir = path.resolve(options.target || process.cwd());
+  const workspaceRoot = requireWorkspaceRoot(targetDir);
+  const state = readWorkspaceState(workspaceRoot);
+  const agent = options.agent || options._?.[0] || "codex";
+  const agents = agent === "all" ? Object.keys(ADAPTERS) : [agent];
+
+  for (const id of agents) {
+    if (!ADAPTERS[id]) {
+      throw new Error(`不支持的 Agent 适配目标：${id}`);
+    }
+  }
+
+  const health = doctorCollect(workspaceRoot);
+  if (health.summary.fail > 0) {
+    throw new Error("当前工作台未通过 doctor 检查，请先修复阻塞问题。");
+  }
+
+  const plan = buildAdaptPlan({ workspaceRoot, state, agents });
+  printGenericPlan(options.dryRun ? "适配预览（dry run）：" : "适配计划：", plan.actions);
+
+  if (options.dryRun) return;
+  await confirmOrThrow(options, "是否执行适配？");
+  applyPlan(plan);
+  console.log("");
+  console.log("StarWork Agent 适配已完成。");
+  console.log("下一步建议：运行 starwork doctor 再检查一次工作台。");
+}
+
+async function packCommand(argv) {
+  const subcommand = argv[0];
+  if (!subcommand || subcommand === "--help" || subcommand === "-h") {
+    printPackHelp();
+    return;
+  }
+  if (subcommand !== "install") {
+    throw new Error(`未知 pack 子命令：${subcommand}`);
+  }
+  await packInstall(argv.slice(1));
+}
+
+async function packInstall(argv) {
+  const options = parseArgs(argv);
+  if (options.help) {
+    printPackInstallHelp();
+    return;
+  }
+
+  const packId = options.pack || options._?.[0];
+  if (!packId) {
+    throw new Error("pack install 需要指定 Pack ID。");
+  }
+
+  const targetDir = path.resolve(options.target || process.cwd());
+  const workspaceRoot = requireWorkspaceRoot(targetDir);
+  const state = readWorkspaceState(workspaceRoot);
+
+  if (state.packs?.some((pack) => pack.id === packId)) {
+    console.log(`Pack ${packId} 已安装，无需重复安装。`);
+    return;
+  }
+
+  const health = doctorCollect(workspaceRoot);
+  if (health.summary.fail > 0) {
+    throw new Error("当前工作台未通过 doctor 检查，请先修复阻塞问题。");
+  }
+
+  const pack = loadPack(packId, state.language || "zh");
+  validatePack(pack, state.workspace_type);
+  const plan = buildPackInstallPlan({ workspaceRoot, state, pack });
+
+  printGenericPlan(options.dryRun ? "Pack 安装预览（dry run）：" : "Pack 安装计划：", plan.actions);
+  if (options.dryRun) return;
+
+  await confirmOrThrow(options, `是否安装 Pack ${pack.id}？`);
+  applyPlan(plan);
+  console.log("");
+  console.log(`Pack ${pack.name || pack.id} 已安装。`);
+  console.log("下一步建议：运行 starwork doctor 检查 Pack 落地结果。");
+}
+
+function doctor(argv) {
+  const options = parseArgs(argv);
+  if (options.help) {
+    printDoctorHelp();
+    return { exitCode: 0 };
+  }
+
+  const targetDir = path.resolve(options.target || process.cwd());
+  const result = createDoctorResult(targetDir);
+
+  if (!fs.existsSync(targetDir)) {
+    addCheck(result, "workspace.target.exists", "fail", `目标目录不存在：${targetDir}`);
+    return finishDoctor(result, options);
+  }
+
+  const workspaceRoot = findWorkspaceRoot(targetDir);
+  if (!workspaceRoot) {
+    const trace = findStarWorkTrace(targetDir);
+    if (trace) {
+      addCheck(result, "workspace.state.exists", "fail", "疑似 StarWork 工作台，但缺少 .starwork/workspace.json。", trace);
+    } else {
+      addCheck(result, "workspace.state.exists", "fail", "当前目录不是 StarWork 工作台。请先运行 starwork init。");
+    }
+    return finishDoctor(result, options);
+  }
+
+  result.workspace_root = workspaceRoot;
+  const statePath = path.join(workspaceRoot, ".starwork", "workspace.json");
+  addCheck(result, "workspace.state.exists", "pass", ".starwork/workspace.json exists", ".starwork/workspace.json");
+
+  let state;
+  try {
+    state = JSON.parse(fs.readFileSync(statePath, "utf8"));
+  } catch (error) {
+    addCheck(result, "workspace.state.parse", "fail", `无法解析 workspace state：${error.message}`, ".starwork/workspace.json");
+    return finishDoctor(result, options);
+  }
+
+  result.workspace = {
+    core: state.core || null,
+    workspace_type: state.workspace_type || null,
+    kit: state.kit || null,
+    language: state.language || null,
+    packs: Array.isArray(state.packs) ? state.packs.map((pack) => pack.id).filter(Boolean) : []
+  };
+
+  checkWorkspaceState(result, state);
+  checkKit(result, workspaceRoot, state);
+  checkCoreRoles(result, workspaceRoot, state);
+  checkPackInstallations(result, workspaceRoot, state);
+
+  return finishDoctor(result, options);
+}
+
+function doctorCollect(targetDir) {
+  const result = createDoctorResult(targetDir);
+  const workspaceRoot = findWorkspaceRoot(targetDir);
+  if (!workspaceRoot) {
+    addCheck(result, "workspace.state.exists", "fail", "当前目录不是 StarWork 工作台。请先运行 starwork init。");
+    return result;
+  }
+  result.workspace_root = workspaceRoot;
+  const statePath = path.join(workspaceRoot, ".starwork", "workspace.json");
+  let state;
+  try {
+    state = JSON.parse(fs.readFileSync(statePath, "utf8"));
+  } catch (error) {
+    addCheck(result, "workspace.state.parse", "fail", `无法解析 workspace state：${error.message}`, ".starwork/workspace.json");
+    return result;
+  }
+  result.workspace = {
+    core: state.core || null,
+    workspace_type: state.workspace_type || null,
+    kit: state.kit || null,
+    language: state.language || null,
+    packs: Array.isArray(state.packs) ? state.packs.map((pack) => pack.id).filter(Boolean) : []
+  };
+  checkWorkspaceState(result, state);
+  checkKit(result, workspaceRoot, state);
+  checkCoreRoles(result, workspaceRoot, state);
+  checkPackInstallations(result, workspaceRoot, state);
+  result.ok = result.summary.fail === 0;
+  result.strict_ok = result.ok;
+  result.exitCode = result.ok ? 0 : 1;
+  return result;
+}
+
+function createDoctorResult(targetDir) {
+  return {
+    schema: "starwork.doctor.result.v0.1",
+    ok: false,
+    strict_ok: false,
+    workspace_root: null,
+    target: targetDir,
+    workspace: null,
+    summary: {
+      pass: 0,
+      info: 0,
+      warn: 0,
+      fail: 0
+    },
+    checks: [],
+    exitCode: 1
+  };
+}
+
+function requireWorkspaceRoot(targetDir) {
+  if (!fs.existsSync(targetDir)) {
+    throw new Error(`目标目录不存在：${targetDir}`);
+  }
+  const workspaceRoot = findWorkspaceRoot(targetDir);
+  if (!workspaceRoot) {
+    throw new Error("当前目录不是 StarWork 工作台。请先运行 starwork init。");
+  }
+  return workspaceRoot;
+}
+
+function readWorkspaceState(workspaceRoot) {
+  const statePath = path.join(workspaceRoot, ".starwork", "workspace.json");
+  try {
+    return JSON.parse(fs.readFileSync(statePath, "utf8"));
+  } catch (error) {
+    throw new Error(`无法读取 workspace state：${error.message}`);
+  }
+}
+
+async function confirmOrThrow(options, question) {
+  if (options.dryRun) return;
+  if (!options.yes && process.stdin.isTTY) {
+    const ok = await confirm(question, true);
+    if (!ok) {
+      throw new Error("已取消，没有写入任何文件。");
+    }
+  } else if (!options.yes && !process.stdin.isTTY) {
+    throw new Error("非交互环境需要传入 --yes 或 --dry-run。");
+  }
+}
+
+function buildAdaptPlan({ workspaceRoot, state, agents }) {
+  const actions = [];
+  for (const agent of agents) {
+    const config = ADAPTERS[agent];
+    if (!config.path) continue;
+    actions.push(fileAction(workspaceRoot, config.path, renderAdapterContent(agent, state)));
+  }
+
+  const nextState = {
+    ...state,
+    adapters: mergeInstalledRecords(state.adapters, agents)
+  };
+  actions.push(overwriteFileAction(workspaceRoot, path.join(".starwork", "workspace.json"), `${JSON.stringify(nextState, null, 2)}\n`));
+
+  return {
+    targetDir: workspaceRoot,
+    actions: dedupeActions(actions)
+  };
+}
+
+function renderAdapterContent(agent, state) {
+  const rolePaths = getCoreRolePaths(state);
+  const adapterName = ADAPTERS[agent].label;
+  if (agent === "cursor") {
+    return `---\ndescription: StarWork workspace rules\nalwaysApply: true\n---\n\n# StarWork Adapter for ${adapterName}\n\nThis workspace follows StarWork Core ${state.core || "0.1"}.\n\nRead first:\n\n1. AGENTS.md\n2. ${rolePaths.projectStatus}\n3. ${rolePaths.currentWork}\n\nFollow AGENTS.md as the source of truth. Do not overwrite user content silently.\n`;
+  }
+  return `# StarWork Adapter for ${adapterName}\n\nThis workspace follows StarWork Core ${state.core || "0.1"}.\n\n## Read First\n\n1. AGENTS.md\n2. ${rolePaths.projectStatus}\n3. ${rolePaths.currentWork}\n\n## Rule\n\nAGENTS.md is the source of truth. This file is only an adapter entrypoint for ${adapterName}.\n\nDo not overwrite user content silently. When unsure, ask before changing identity, lessons, shared knowledge, formal outputs, or synced repository content.\n`;
+}
+
+function buildPackInstallPlan({ workspaceRoot, state, pack }) {
+  const variables = {
+    workspace: {
+      name: path.basename(workspaceRoot),
+      type: state.workspace_type
+    },
+    pack,
+    paths: pack.paths || {},
+    overrides: pack.overrides || {}
+  };
+  const actions = [];
+
+  for (const rolePath of Object.values(pack.paths || {})) {
+    actions.push(directoryAction(workspaceRoot, rolePath));
+  }
+
+  for (const seed of pack.seed || []) {
+    const source = path.join(pack.__dir, seed.from);
+    if (!fs.existsSync(source)) {
+      throw new Error(`Pack seed 不存在：${pack.id}/${seed.from}`);
+    }
+    const content = renderText(fs.readFileSync(source, "utf8"), variables);
+    actions.push(fileAction(workspaceRoot, seed.to, content));
+  }
+
+  for (const template of pack.templates || []) {
+    const source = path.join(pack.__dir, template.from);
+    if (!fs.existsSync(source)) {
+      throw new Error(`Pack template 不存在：${pack.id}/${template.from}`);
+    }
+    const target = path.join(".starwork", "packs", pack.id, "templates", path.basename(template.from));
+    const content = renderText(fs.readFileSync(source, "utf8"), variables);
+    actions.push(fileAction(workspaceRoot, target, content));
+  }
+
+  const agentsPath = path.join(workspaceRoot, "AGENTS.md");
+  if (!fs.existsSync(agentsPath)) {
+    throw new Error("缺少 AGENTS.md，无法安装 Pack 规则。");
+  }
+  const agents = fs.readFileSync(agentsPath, "utf8");
+  const rulesSection = renderInstalledPackRules(pack, variables);
+  if (rulesSection.trim() && !agents.includes(`Pack: ${pack.id}`)) {
+    actions.push(overwriteFileAction(workspaceRoot, "AGENTS.md", `${agents.trim()}\n\n${rulesSection.trim()}\n`));
+  }
+
+  const nextState = {
+    ...state,
+    packs: [
+      ...(Array.isArray(state.packs) ? state.packs : []),
+      {
+        id: pack.id,
+        version: pack.version || "0.1.0",
+        installed_at: new Date().toISOString()
+      }
+    ],
+    paths: {
+      ...(state.paths || {}),
+      formal_source: pack.overrides?.formal_source || state.paths?.formal_source,
+      business_work_area: pack.overrides?.business_work_area || state.paths?.business_work_area
+    }
+  };
+  actions.push(overwriteFileAction(workspaceRoot, path.join(".starwork", "workspace.json"), `${JSON.stringify(nextState, null, 2)}\n`));
+
+  return {
+    targetDir: workspaceRoot,
+    actions: dedupeActions(actions)
+  };
+}
+
+function renderInstalledPackRules(pack, variables) {
+  const rules = renderPackRules(pack, variables);
+  if (!rules.trim()) return "";
+  return `## 场景规则\n\n<!-- StarWork Pack: ${pack.id} -->\n\n${rules.trim()}`;
+}
+
+function mergeInstalledRecords(existing, ids) {
+  const current = Array.isArray(existing) ? existing.filter((item) => item?.id) : [];
+  const seen = new Set(current.map((item) => item.id));
+  const merged = [...current];
+  for (const id of ids) {
+    if (seen.has(id)) continue;
+    merged.push({
+      id,
+      installed_at: new Date().toISOString()
+    });
+    seen.add(id);
+  }
+  return merged;
+}
+
+function checkWorkspaceState(result, state) {
+  if (state.schema === "starwork.workspace.v0.1") {
+    addCheck(result, "workspace.state.schema", "pass", "workspace schema is starwork.workspace.v0.1", ".starwork/workspace.json");
+  } else {
+    addCheck(result, "workspace.state.schema", "fail", "workspace schema 不是 starwork.workspace.v0.1。", ".starwork/workspace.json");
+  }
+
+  if (state.core === "0.1") {
+    addCheck(result, "workspace.state.core", "pass", "Core version is 0.1", ".starwork/workspace.json");
+  } else {
+    addCheck(result, "workspace.state.core", "fail", "workspace core 必须兼容 0.1。", ".starwork/workspace.json");
+  }
+
+  if (["single-light", "single-matter", "hub", "satellite-starter", "satellite-matter"].includes(state.workspace_type)) {
+    addCheck(result, "workspace.state.type", "pass", `workspace_type is ${state.workspace_type}`, ".starwork/workspace.json");
+  } else {
+    addCheck(result, "workspace.state.type", "fail", "workspace_type 必须是 single-light、single-matter、hub、satellite-starter 或 satellite-matter。", ".starwork/workspace.json");
+  }
+
+  if (state.kit) {
+    addCheck(result, "workspace.state.kit", "pass", `kit is ${state.kit}`, ".starwork/workspace.json");
+  } else {
+    addCheck(result, "workspace.state.kit", "fail", "workspace state 缺少 kit。", ".starwork/workspace.json");
+  }
+
+  if (state.language) {
+    addCheck(result, "workspace.state.language", "pass", `language is ${state.language}`, ".starwork/workspace.json");
+  } else {
+    addCheck(result, "workspace.state.language", "fail", "workspace state 缺少 language。", ".starwork/workspace.json");
+  }
+
+  if (Array.isArray(state.packs)) {
+    addCheck(result, "workspace.state.packs", "pass", `packs count is ${state.packs.length}`, ".starwork/workspace.json");
+  } else {
+    addCheck(result, "workspace.state.packs", "fail", "workspace state 的 packs 必须是数组。", ".starwork/workspace.json");
+  }
+
+  if (state.paths?.formal_source) {
+    addCheck(result, "workspace.state.formal_source", "pass", `formal source is ${state.paths.formal_source}`, ".starwork/workspace.json");
+  } else {
+    addCheck(result, "workspace.state.formal_source", "fail", "workspace state 缺少 paths.formal_source。", ".starwork/workspace.json");
+  }
+
+  if (state.paths?.business_work_area) {
+    addCheck(result, "workspace.state.business_work_area", "pass", `business work area is ${state.paths.business_work_area}`, ".starwork/workspace.json");
+  } else {
+    addCheck(result, "workspace.state.business_work_area", "fail", "workspace state 缺少 paths.business_work_area。", ".starwork/workspace.json");
+  }
+}
+
+function checkKit(result, workspaceRoot, state) {
+  if (!state.kit) return;
+
+  const kitDir = path.join(PRODUCT_ROOT, "core", "kits", state.kit);
+  if (!fs.existsSync(kitDir)) {
+    addCheck(result, "kit.source.exists", "fail", `找不到 Kit 源目录：${state.kit}`);
+    return;
+  }
+  addCheck(result, "kit.source.exists", "pass", `Kit source exists: ${state.kit}`);
+
+  const allowedKits = {
+    "single-light": ["local-starter"],
+    "single-matter": ["local-matter"],
+    hub: ["hub"],
+    "satellite-starter": ["satellite-starter"],
+    "satellite-matter": ["satellite-matter"]
+  };
+  const allowed = allowedKits[state.workspace_type];
+  if (allowed && allowed.includes(state.kit)) {
+    addCheck(result, "kit.workspace_type.match", "pass", `${state.kit} matches ${state.workspace_type}`);
+  } else {
+    addCheck(result, "kit.workspace_type.match", "fail", `Kit ${state.kit} 与工作区类型 ${state.workspace_type || "(missing)"} 不匹配。`);
+  }
+
+  const files = walkFiles(kitDir);
+  const missing = [];
+  for (const source of files) {
+    const relativePath = path.relative(kitDir, source);
+    if (!fs.existsSync(path.join(workspaceRoot, relativePath))) {
+      missing.push(relativePath);
+    }
+  }
+  if (missing.length === 0) {
+    addCheck(result, "kit.files.complete", "pass", `Kit files are complete: ${state.kit}`);
+  } else {
+    addCheck(result, "kit.files.complete", "fail", `Kit 缺少 ${missing.length} 个文件。`, missing.slice(0, 5).join(", "));
+  }
+}
+
+function checkCoreRoles(result, workspaceRoot, state) {
+  checkPathExists(result, workspaceRoot, "AGENTS.md", "core.entry_rules.exists", "Agent entry rules exist", "缺少 Agent 入口规则 AGENTS.md。");
+
+  const rolePaths = getCoreRolePaths(state);
+  checkPathExists(result, workspaceRoot, rolePaths.projectStatus, "core.project_status.exists", "Project status exists", "缺少项目状态文件。");
+  checkPathExists(result, workspaceRoot, rolePaths.currentWork, "core.current_work.exists", "Current work exists", "缺少当前工作入口文件。");
+
+  if (state.paths?.formal_source) {
+    checkPathExists(result, workspaceRoot, state.paths.formal_source, "core.formal_source.exists", "Formal source exists", "缺少 workspace state 声明的正式事实源。");
+  }
+
+  if (state.paths?.business_work_area) {
+    checkPathExists(result, workspaceRoot, state.paths.business_work_area, "core.business_work_area.exists", "Business work area exists", "缺少 workspace state 声明的业务工作区。");
+  }
+}
+
+function getCoreRolePaths(state) {
+  const kit = state.kit || "";
+  if (kit.startsWith("satellite-")) {
+    return {
+      projectStatus: "_系统/上下文/当前项目.md",
+      currentWork: "_系统/任务/当前工作.md"
+    };
+  }
+  return {
+    projectStatus: "_系统/上下文/项目状态.md",
+    currentWork: "_系统/任务/当前工作.md"
+  };
+}
+
+function checkPackInstallations(result, workspaceRoot, state) {
+  if (!Array.isArray(state.packs)) return;
+  for (const installedPack of state.packs) {
+    if (!installedPack?.id) {
+      addCheck(result, "pack.id.exists", "fail", "已安装 Pack 缺少 id。", ".starwork/workspace.json");
+      continue;
+    }
+
+    let pack;
+    try {
+      pack = loadPack(installedPack.id, state.language || "zh");
+    } catch (error) {
+      addCheck(result, "pack.source.exists", "fail", `无法读取 Pack ${installedPack.id}：${error.message}`);
+      continue;
+    }
+
+    addCheck(result, "pack.source.exists", "pass", `Pack source exists: ${installedPack.id}`);
+
+    if (pack.compatible_core === state.core) {
+      addCheck(result, "pack.core.compatible", "pass", `${installedPack.id} is compatible with Core ${state.core}`);
+    } else {
+      addCheck(result, "pack.core.compatible", "fail", `Pack ${installedPack.id} 不兼容 Core ${state.core || "(missing)"}。`);
+    }
+
+    if (pack.supports_workspace_types?.includes(state.workspace_type)) {
+      addCheck(result, "pack.workspace_type.supported", "pass", `${installedPack.id} supports ${state.workspace_type}`);
+    } else {
+      addCheck(result, "pack.workspace_type.supported", "fail", `Pack ${installedPack.id} 不支持工作区类型 ${state.workspace_type || "(missing)"}。`);
+    }
+
+    for (const rolePath of Object.values(pack.paths || {})) {
+      checkPathExists(result, workspaceRoot, rolePath, "pack.paths.exist", `Pack path exists: ${rolePath}`, `Pack ${installedPack.id} 缺少目录：${rolePath}`);
+    }
+
+    for (const seed of pack.seed || []) {
+      checkPathExists(result, workspaceRoot, seed.to, "pack.seed.installed", `Pack seed exists: ${seed.to}`, `Pack ${installedPack.id} 缺少 seed 文件：${seed.to}`);
+    }
+
+    for (const template of pack.templates || []) {
+      const relativePath = path.join(".starwork", "packs", pack.id, "templates", path.basename(template.from));
+      checkPathExists(result, workspaceRoot, relativePath, "pack.templates.installed", `Pack template exists: ${relativePath}`, `Pack ${installedPack.id} 缺少模板：${relativePath}`);
+    }
+  }
+}
+
+function checkPathExists(result, workspaceRoot, relativePath, id, passMessage, failMessage) {
+  const normalized = normalizeRelativePath(relativePath);
+  if (fs.existsSync(path.join(workspaceRoot, normalized))) {
+    addCheck(result, id, "pass", passMessage, normalized);
+  } else {
+    addCheck(result, id, "fail", failMessage, normalized);
+  }
+}
+
+function normalizeRelativePath(relativePath) {
+  return String(relativePath || "").replace(/\\/g, "/").replace(/^\/+/, "");
+}
+
+function findStarWorkTrace(dir) {
+  const traces = [
+    "AGENTS.md",
+    "_系统",
+    "_system",
+    "事项",
+    "matters"
+  ];
+  return traces.find((trace) => fs.existsSync(path.join(dir, trace))) || null;
+}
+
+function addCheck(result, id, level, message, checkPath) {
+  result.summary[level] += 1;
+  result.checks.push({
+    id,
+    level,
+    message,
+    path: checkPath || null
+  });
+}
+
+function finishDoctor(result, options) {
+  result.ok = result.summary.fail === 0;
+  result.strict_ok = result.ok && (!options.strict || result.summary.warn === 0);
+  result.exitCode = result.strict_ok ? 0 : 1;
+  if (options.json) {
+    console.log(JSON.stringify(doctorPublicResult(result), null, 2));
+  } else {
+    printDoctorResult(result, options);
+  }
+  return result;
+}
+
+function doctorPublicResult(result) {
+  const { exitCode, target, ...publicResult } = result;
+  return publicResult;
+}
+
+function printDoctorResult(result, options) {
+  console.log("StarWork Doctor");
+  console.log("");
+  console.log(`Workspace: ${result.workspace_root || result.target}`);
+  if (result.workspace) {
+    console.log(`Core: ${result.workspace.core || "(unknown)"}`);
+    console.log(`Type: ${result.workspace.workspace_type || "(unknown)"}`);
+    console.log(`Kit: ${result.workspace.kit || "(unknown)"}`);
+    console.log(`Packs: ${result.workspace.packs.length ? result.workspace.packs.join(", ") : "(none)"}`);
+  }
+  console.log("");
+  console.log("Summary:");
+  console.log(`  pass: ${result.summary.pass}`);
+  console.log(`  info: ${result.summary.info}`);
+  console.log(`  warn: ${result.summary.warn}`);
+  console.log(`  fail: ${result.summary.fail}`);
+  console.log("");
+
+  const visibleChecks = options.verbose
+    ? result.checks
+    : result.checks.filter((check) => check.level !== "pass");
+  if (visibleChecks.length) {
+    console.log("Checks:");
+    for (const check of visibleChecks) {
+      console.log(`  [${check.level}] ${check.id}`);
+      console.log(`         ${check.message}`);
+      if (check.path) {
+        console.log(`         ${check.path}`);
+      }
+      console.log("");
+    }
+  }
+
+  console.log("Result:");
+  if (result.summary.fail > 0) {
+    console.log("  Workspace has blocking issues.");
+  } else if (result.summary.warn > 0) {
+    console.log("  Workspace is usable, with warnings.");
+  } else {
+    console.log("  Workspace is healthy.");
+  }
 }
 
 function readValue(argv, index, flag) {
@@ -295,6 +1031,279 @@ function buildInitPlan({ targetDir, workspaceName, workspaceType, workspaceConfi
   };
 }
 
+function resolveHubRoot(hubPath) {
+  const resolved = path.resolve(hubPath);
+  return requireWorkspaceRoot(resolved);
+}
+
+function assertHealthyHub(hubRoot, hubState) {
+  if (hubState.workspace_type !== "hub" || hubState.kit !== "hub") {
+    throw new Error("spawn 必须从多项目管理中枢工作台执行。请先运行 starwork init --type hub。");
+  }
+  const health = doctorCollect(hubRoot);
+  if (health.summary.fail > 0) {
+    throw new Error("Hub 工作台未通过 doctor 检查，请先修复阻塞问题。");
+  }
+  const required = [
+    "项目/registry.json",
+    "identity",
+    "lessons",
+    "skills",
+    "知识"
+  ];
+  for (const relativePath of required) {
+    if (!fs.existsSync(path.join(hubRoot, relativePath))) {
+      throw new Error(`Hub 缺少必要资源：${relativePath}`);
+    }
+  }
+}
+
+function assertSpawnTargetIsEmpty(targetDir) {
+  const existingWorkspace = fs.existsSync(targetDir) ? findWorkspaceRoot(targetDir) : null;
+  if (existingWorkspace) {
+    throw new Error("目标目录已经位于 StarWork 工作台内，请换一个空目录。");
+  }
+  if (!fs.existsSync(targetDir)) return;
+  if (!fs.statSync(targetDir).isDirectory()) {
+    throw new Error("spawn 目标必须是目录。");
+  }
+  const entries = fs.readdirSync(targetDir).filter((entry) => entry !== ".DS_Store");
+  if (entries.length > 0) {
+    throw new Error("spawn v0.1 只写入不存在或空目录，目标目录已有内容。");
+  }
+}
+
+function buildSpawnPlan({ hubRoot, hubState, targetDir, projectName, projectId, status, mode, modeConfig }) {
+  const kitDir = path.join(PRODUCT_ROOT, "core", "kits", modeConfig.kit);
+  if (!fs.existsSync(kitDir)) {
+    throw new Error(`找不到 Kit：${modeConfig.kit}`);
+  }
+
+  const registryPath = path.join(hubRoot, "项目", "registry.json");
+  const registry = readProjectRegistry(registryPath);
+  const targetPath = path.resolve(targetDir);
+  ensureProjectCanBeRegistered(registry, projectId, targetPath);
+
+  const now = new Date().toISOString();
+  const actions = [];
+
+  for (const source of walkFiles(kitDir)) {
+    const relativePath = path.relative(kitDir, source);
+    if (shouldSpawnOverrideKitFile(relativePath)) continue;
+    const content = fs.readFileSync(source, "utf8");
+    actions.push(fileAction(targetDir, relativePath, content));
+  }
+
+  actions.push(...copyDirectoryFiles(hubRoot, "identity", targetDir, path.join("_系统", "身份")));
+  actions.push(...copyDirectoryFiles(hubRoot, "lessons", targetDir, path.join("_系统", "教训")));
+  if (fs.existsSync(path.join(hubRoot, ".internal"))) {
+    actions.push(...copyDirectoryFiles(hubRoot, ".internal", targetDir, ".internal"));
+  }
+  if (fs.existsSync(path.join(hubRoot, ".obsidian"))) {
+    actions.push(...copyDirectoryFiles(hubRoot, ".obsidian", targetDir, ".obsidian"));
+  }
+
+  actions.push(symlinkAction(targetDir, "知识", path.join(hubRoot, "知识")));
+  actions.push(symlinkAction(targetDir, path.join(".agents", "skills"), path.join(hubRoot, "skills")));
+  actions.push(symlinkAction(targetDir, path.join(".claude", "skills"), path.join(hubRoot, "skills")));
+
+  const workspaceState = {
+    schema: "starwork.workspace.v0.1",
+    core: "0.1",
+    workspace_type: modeConfig.workspaceType,
+    kit: modeConfig.kit,
+    packs: [],
+    language: hubState.language || "zh",
+    paths: {
+      formal_source: modeConfig.formalSource,
+      business_work_area: modeConfig.businessWorkArea
+    },
+    hub: {
+      path: hubRoot,
+      project_id: projectId
+    },
+    created_by: "starwork spawn"
+  };
+
+  const coreSync = {
+    schema: "starwork.core_sync.v0.1",
+    hub_path: hubRoot,
+    project_id: projectId,
+    project_name: projectName,
+    core: "0.1",
+    mode,
+    created_at: now,
+    last_sync_at: now,
+    resources: {
+      identity: {
+        source: "identity/",
+        target: "_系统/身份/",
+        mode: "snapshot"
+      },
+      lessons: {
+        source: "lessons/",
+        target: "_系统/教训/",
+        mode: "snapshot"
+      },
+      knowledge: {
+        source: "知识/",
+        target: "知识/",
+        mode: "readonly-link"
+      },
+      skills: {
+        source: "skills/",
+        target: [".agents/skills/", ".claude/skills/"],
+        mode: "symlink"
+      }
+    }
+  };
+
+  actions.push(fileAction(targetDir, path.join(".starwork", "workspace.json"), `${JSON.stringify(workspaceState, null, 2)}\n`));
+  actions.push(fileAction(targetDir, ".core-sync.json", `${JSON.stringify(coreSync, null, 2)}\n`));
+  actions.push(fileAction(targetDir, path.join("_系统", "上下文", "当前项目.md"), renderSpawnProjectStatus({
+    projectName,
+    projectId,
+    hubRoot,
+    mode,
+    modeConfig
+  })));
+
+  const nextRegistry = {
+    ...registry,
+    schema: registry.schema || "starwork.projects.registry.v0.1",
+    projects: [
+      ...(Array.isArray(registry.projects) ? registry.projects : []),
+      {
+        id: projectId,
+        name: projectName,
+        path: targetPath,
+        status,
+        core: "0.1",
+        kit: modeConfig.kit,
+        mode,
+        created_at: now,
+        last_sync_at: now,
+        sync: {
+          identity: "snapshot",
+          lessons: "snapshot",
+          knowledge: "readonly-link",
+          skills: "symlink"
+        }
+      }
+    ]
+  };
+  actions.push(overwriteFileAction(hubRoot, path.join("项目", "registry.json"), `${JSON.stringify(nextRegistry, null, 2)}\n`));
+
+  return {
+    hubRoot,
+    targetDir,
+    projectName,
+    projectId,
+    status,
+    mode,
+    modeLabel: modeConfig.label,
+    kit: modeConfig.kit,
+    actions: dedupeActions(actions)
+  };
+}
+
+function shouldSpawnOverrideKitFile(relativePath) {
+  const normalized = normalizeRelativePath(relativePath);
+  return normalized === ".core-sync.json"
+    || normalized === "_系统/上下文/当前项目.md"
+    || normalized.startsWith("_系统/身份/")
+    || normalized.startsWith("_系统/教训/")
+    || normalized.startsWith("知识/")
+    || normalized.startsWith(".agents/skills/")
+    || normalized.startsWith(".claude/skills/");
+}
+
+function copyDirectoryFiles(sourceRoot, sourceRelativeDir, targetRoot, targetRelativeDir) {
+  const sourceDir = path.join(sourceRoot, sourceRelativeDir);
+  if (!fs.existsSync(sourceDir)) return [];
+  return walkFiles(sourceDir).map((source) => {
+    const relativePath = path.relative(sourceDir, source);
+    const targetRelativePath = path.join(targetRelativeDir, relativePath);
+    return fileAction(targetRoot, targetRelativePath, fs.readFileSync(source, "utf8"));
+  });
+}
+
+function readProjectRegistry(registryPath) {
+  try {
+    const registry = JSON.parse(fs.readFileSync(registryPath, "utf8"));
+    if (!Array.isArray(registry.projects)) {
+      throw new Error("projects 必须是数组");
+    }
+    return registry;
+  } catch (error) {
+    throw new Error(`无法读取 Hub 项目注册表：${error.message}`);
+  }
+}
+
+function ensureProjectCanBeRegistered(registry, projectId, targetPath) {
+  const projects = Array.isArray(registry.projects) ? registry.projects : [];
+  if (projects.some((project) => project?.id === projectId)) {
+    throw new Error(`Hub registry 已存在项目 ID：${projectId}`);
+  }
+  if (projects.some((project) => project?.path && path.resolve(project.path) === targetPath)) {
+    throw new Error(`Hub registry 已存在目标路径：${targetPath}`);
+  }
+}
+
+function renderSpawnProjectStatus({ projectName, projectId, hubRoot, mode, modeConfig }) {
+  return `# 当前项目状态
+
+## 项目目标
+
+${projectName}
+
+## 项目信息
+
+- 项目 ID：${projectId}
+- 工作区类型：${modeConfig.workspaceType}
+- Kit：${modeConfig.kit}
+- 模式：${mode}
+- Hub：${hubRoot}
+
+## 当前阶段
+
+刚由 \`starwork spawn\` 创建，等待补充项目目标、近期重点和执行边界。
+
+## 近期重点
+
+- 补充项目目标。
+- 确认正式事实源：\`${modeConfig.formalSource}\`。
+- 确认当前工作入口：\`_系统/任务/当前工作.md\`。
+
+## 主要风险
+
+- 不要把 Hub 的项目注册表当成项目进度正文。
+- 主库同步资源默认只读，项目内更新应走跨项目联络或回写流程。
+
+## 正式事实源
+
+\`${modeConfig.formalSource}\`
+
+## 下一步
+
+- 运行 \`starwork doctor\` 检查工作台。
+- 根据项目实际情况更新本文件。
+
+## 兼容说明
+
+当前 Hub + 项目模式读取 \`_系统/上下文/当前项目.md\`。如果未来迁移到其他命名，只能保留一个状态事实源，另一个应作为别名、指针或生成副本。
+`;
+}
+
+function slugifyProjectId(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/['"]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 function loadPack(packIdOrPath, language = "zh") {
   const packPath = path.isAbsolute(packIdOrPath) || packIdOrPath.startsWith(".")
     ? path.resolve(packIdOrPath)
@@ -392,9 +1401,19 @@ function fileAction(targetDir, relativePath, content) {
   return { type: "file", mode: "create-new", target: alternate, originalTarget: target, relativePath: path.relative(targetDir, alternate), content };
 }
 
+function overwriteFileAction(targetDir, relativePath, content) {
+  const target = path.join(targetDir, relativePath);
+  return { type: "file", mode: "overwrite", target, relativePath, content };
+}
+
 function directoryAction(targetDir, relativePath) {
   const target = path.join(targetDir, relativePath);
   return { type: "directory", mode: fs.existsSync(target) ? "exists" : "create", target, relativePath };
+}
+
+function symlinkAction(targetDir, relativePath, sourcePath) {
+  const target = path.join(targetDir, relativePath);
+  return { type: "symlink", mode: "create", target, relativePath, sourcePath };
 }
 
 function nextAvailableSibling(target) {
@@ -428,8 +1447,46 @@ function applyPlan(plan) {
       fs.mkdirSync(action.target, { recursive: true });
       continue;
     }
+    if (action.type === "symlink") {
+      fs.mkdirSync(path.dirname(action.target), { recursive: true });
+      if (!fs.existsSync(action.target)) {
+        fs.symlinkSync(action.sourcePath, action.target, "dir");
+      }
+      continue;
+    }
     fs.mkdirSync(path.dirname(action.target), { recursive: true });
     fs.writeFileSync(action.target, action.content, "utf8");
+  }
+}
+
+function printGenericPlan(title, actions) {
+  const creates = actions.filter((action) => action.mode === "create");
+  const overwrites = actions.filter((action) => action.mode === "overwrite" || action.mode === "overwrite-empty");
+  const createNew = actions.filter((action) => action.mode === "create-new");
+  const dirs = actions.filter((action) => action.type === "directory" && action.mode === "create");
+
+  console.log("");
+  console.log(title);
+  console.log("");
+  if (dirs.length) {
+    console.log("将创建目录：");
+    dirs.forEach((action) => console.log(`- ${action.relativePath}`));
+    console.log("");
+  }
+  if (creates.length) {
+    console.log("将创建文件：");
+    creates.forEach((action) => console.log(`- ${action.relativePath}`));
+    console.log("");
+  }
+  if (overwrites.length) {
+    console.log("将更新文件：");
+    overwrites.forEach((action) => console.log(`- ${action.relativePath}`));
+    console.log("");
+  }
+  if (createNew.length) {
+    console.log("不会覆盖已有内容，将生成旁路文件：");
+    createNew.forEach((action) => console.log(`- ${path.relative(path.dirname(action.originalTarget), action.originalTarget)} -> ${action.relativePath}`));
+    console.log("");
   }
 }
 
@@ -466,6 +1523,40 @@ function printPlan(plan, dryRun) {
   }
 }
 
+function printSpawnPlan(plan, dryRun) {
+  const creates = plan.actions.filter((action) => action.type === "file" && action.mode === "create");
+  const overwrites = plan.actions.filter((action) => action.type === "file" && action.mode === "overwrite");
+  const links = plan.actions.filter((action) => action.type === "symlink");
+
+  console.log("");
+  console.log(dryRun ? "生成项目预览（dry run）：" : "生成项目计划：");
+  console.log("");
+  console.log(`Hub：${plan.hubRoot}`);
+  console.log(`项目名称：${plan.projectName}`);
+  console.log(`项目 ID：${plan.projectId}`);
+  console.log(`目标目录：${plan.targetDir}`);
+  console.log(`模式：${plan.modeLabel} (${plan.mode})`);
+  console.log(`Kit：${plan.kit}`);
+  console.log("");
+
+  if (creates.length) {
+    console.log("将在新项目中创建：");
+    creates.slice(0, 40).forEach((action) => console.log(`- ${action.relativePath}`));
+    if (creates.length > 40) console.log(`- ... 另有 ${creates.length - 40} 项`);
+    console.log("");
+  }
+  if (links.length) {
+    console.log("将挂载 Hub 共享资源：");
+    links.forEach((action) => console.log(`- ${action.relativePath} -> ${action.sourcePath}`));
+    console.log("");
+  }
+  if (overwrites.length) {
+    console.log("将在 Hub 中更新：");
+    overwrites.forEach((action) => console.log(`- ${action.relativePath}`));
+    console.log("");
+  }
+}
+
 function walkFiles(dir) {
   const entries = fs.readdirSync(dir, { withFileTypes: true });
   const result = [];
@@ -493,13 +1584,11 @@ function findWorkspaceRoot(startDir) {
 }
 
 function getKitDefaultFormalSource(kit) {
-  if (kit === "zh-hub") return "项目/";
-  if (kit.startsWith("zh-")) return "输出/确认成果/";
-  return "outputs/final/";
+  if (kit === "hub") return "项目/";
+  return "输出/确认成果/";
 }
 
 function getKitLanguage(kit) {
-  if (kit.startsWith("en-")) return "en";
   return "zh";
 }
 
@@ -508,13 +1597,92 @@ function printHelp() {
 
 Usage:
   starwork init [options]
+  starwork spawn [options]
+  starwork doctor [options]
+  starwork adapt [agent] [options]
+  starwork pack install <pack> [options]
 
 Options:
   --type <single-light|single-matter|hub>
+  --hub <path>
+  --mode <starter|matter>
+  --id <project-id>
+  --status <active|paused>
   --pack <general|content-creator|hub-management|path>
   --name <name>
   --formal-source <path>
   --language <zh|en>
+  --target <path>
+  --dry-run
+  --json
+  --strict
+  --verbose
+  --agent <codex|claude|cursor|trae|all>
+  --yes, -y
+`);
+}
+
+function printSpawnHelp() {
+  console.log(`StarWork Spawn
+
+Usage:
+  starwork spawn --hub <hub-path> --name <project-name> --target <path> [options]
+
+Options:
+  --hub <path>
+  --name <name>
+  --target <path>
+  --mode <starter|matter>
+  --id <project-id>
+  --status <active|paused>
+  --dry-run
+  --yes, -y
+`);
+}
+
+function printDoctorHelp() {
+  console.log(`StarWork Doctor
+
+Usage:
+  starwork doctor [options]
+
+Options:
+  --target <path>
+  --json
+  --strict
+  --verbose
+`);
+}
+
+function printAdaptHelp() {
+  console.log(`StarWork Adapt
+
+Usage:
+  starwork adapt [codex|claude|cursor|trae|all] [options]
+
+Options:
+  --agent <codex|claude|cursor|trae|all>
+  --target <path>
+  --dry-run
+  --yes, -y
+`);
+}
+
+function printPackHelp() {
+  console.log(`StarWork Pack
+
+Usage:
+  starwork pack install <pack> [options]
+`);
+}
+
+function printPackInstallHelp() {
+  console.log(`StarWork Pack Install
+
+Usage:
+  starwork pack install <general|content-creator|hub-management> [options]
+
+Options:
   --target <path>
   --dry-run
   --yes, -y

@@ -1,0 +1,1041 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>StarWork CLI 能力说明</title>
+  <style>
+    :root {
+      --paper: #f7f4ec;
+      --paper-2: #ebe5d7;
+      --ink: #1d211d;
+      --muted: #62675f;
+      --line: #cfc7b7;
+      --white: #fffdf7;
+      --green: #286d4a;
+      --green-soft: #d8eadc;
+      --amber: #b36b19;
+      --amber-soft: #f3dfbd;
+      --blue: #2f6286;
+      --blue-soft: #d7e4ea;
+      --red: #9b3d2c;
+      --red-soft: #edd6cf;
+      --shadow: 0 18px 50px rgba(47, 43, 34, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        linear-gradient(90deg, rgba(62, 71, 62, 0.052) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(62, 71, 62, 0.045) 1px, transparent 1px),
+        var(--paper);
+      background-size: 34px 34px;
+      font-family: "Avenir Next", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      letter-spacing: 0;
+    }
+
+    a {
+      color: inherit;
+      text-underline-offset: 3px;
+    }
+
+    code {
+      padding: 2px 6px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: rgba(29, 33, 29, 0.05);
+      font-family: "SFMono-Regular", "Menlo", "Consolas", monospace;
+      font-size: 0.92em;
+    }
+
+    .page {
+      width: min(1180px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 42px 0 70px;
+    }
+
+    .home-link {
+      display: inline-flex;
+      align-items: center;
+      min-height: 34px;
+      margin-bottom: 18px;
+      padding: 6px 11px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 253, 247, 0.75);
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 800;
+      text-decoration: none;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(360px, 0.9fr);
+      gap: 28px;
+      align-items: stretch;
+      min-height: 520px;
+    }
+
+    .hero-copy {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 34px 0 30px;
+      border-top: 2px solid var(--ink);
+      border-bottom: 2px solid var(--ink);
+    }
+
+    .kicker {
+      margin: 0 0 20px;
+      color: var(--green);
+      font-size: 13px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    h1,
+    h2,
+    h3 {
+      font-family: Georgia, "Times New Roman", "Songti SC", serif;
+      letter-spacing: 0;
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 820px;
+      font-size: clamp(42px, 7.4vw, 86px);
+      line-height: 0.98;
+    }
+
+    .subtitle {
+      max-width: 720px;
+      margin: 28px 0 0;
+      color: var(--muted);
+      font-size: 19px;
+      line-height: 1.78;
+    }
+
+    .quick-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 34px;
+    }
+
+    .quick {
+      padding: 14px;
+      min-height: 112px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 253, 247, 0.75);
+    }
+
+    .quick b {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--green);
+      font-size: 13px;
+    }
+
+    .quick span {
+      color: var(--ink);
+      font-size: 14px;
+      line-height: 1.52;
+    }
+
+    .hero-board {
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      background: var(--white);
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .section {
+      margin-top: 70px;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 24px;
+      margin-bottom: 24px;
+      padding-bottom: 14px;
+      border-bottom: 2px solid var(--ink);
+    }
+
+    h2 {
+      margin: 0;
+      font-size: clamp(29px, 4vw, 52px);
+      line-height: 1.05;
+    }
+
+    .section-note {
+      max-width: 520px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.75;
+    }
+
+    .command-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .command {
+      min-height: 330px;
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 253, 247, 0.78);
+      box-shadow: 0 10px 28px rgba(47, 43, 34, 0.07);
+    }
+
+    .command:nth-child(1) {
+      background: var(--green-soft);
+      border-color: rgba(40, 109, 74, 0.45);
+    }
+
+    .command:nth-child(2) {
+      background: var(--amber-soft);
+      border-color: rgba(179, 107, 25, 0.45);
+    }
+
+    .command:nth-child(3) {
+      background: var(--blue-soft);
+      border-color: rgba(47, 98, 134, 0.42);
+    }
+
+    .command:nth-child(4) {
+      background: var(--red-soft);
+      border-color: rgba(155, 61, 44, 0.34);
+    }
+
+    .command-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .command h3 {
+      margin: 0;
+      font-size: 31px;
+      line-height: 1.06;
+    }
+
+    .badge {
+      padding: 6px 10px;
+      border: 1px solid currentColor;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .command p {
+      margin: 0 0 16px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .command ul,
+    .flow-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 9px;
+    }
+
+    .command li,
+    .flow-list li {
+      position: relative;
+      padding-left: 18px;
+      line-height: 1.55;
+    }
+
+    .command li::before,
+    .flow-list li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0.72em;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+      opacity: 0.68;
+      transform: translateY(-50%);
+    }
+
+    .command pre,
+    .script pre {
+      margin: 16px 0 0;
+      padding: 14px;
+      overflow: auto;
+      border: 1px solid rgba(29, 33, 29, 0.13);
+      border-radius: 8px;
+      background: rgba(255, 253, 247, 0.76);
+      font-family: "SFMono-Regular", "Menlo", "Consolas", monospace;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .detail-stack {
+      display: grid;
+      gap: 18px;
+    }
+
+    .detail-card {
+      display: grid;
+      grid-template-columns: minmax(220px, 0.45fr) minmax(0, 1fr);
+      gap: 18px;
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 253, 247, 0.78);
+    }
+
+    .detail-card h3 {
+      margin: 0 0 12px;
+      font-size: 30px;
+      line-height: 1.08;
+    }
+
+    .detail-card p {
+      margin: 0 0 14px;
+      color: var(--muted);
+      line-height: 1.72;
+    }
+
+    .mini-label {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      margin-bottom: 12px;
+      padding: 5px 9px;
+      border: 1px solid currentColor;
+      border-radius: 999px;
+      color: var(--green);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .detail-columns {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 14px;
+    }
+
+    .detail-box {
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(247, 244, 236, 0.7);
+    }
+
+    .detail-box h4 {
+      margin: 0 0 10px;
+      font-size: 15px;
+      color: var(--green);
+    }
+
+    .detail-box ol,
+    .detail-box ul {
+      margin: 0;
+      padding-left: 20px;
+      display: grid;
+      gap: 7px;
+      line-height: 1.55;
+    }
+
+    .test-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 16px;
+    }
+
+    .test-card {
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 253, 247, 0.78);
+    }
+
+    .test-card h3 {
+      margin: 0 0 12px;
+      font-size: 27px;
+      line-height: 1.12;
+    }
+
+    .test-card p {
+      margin: 0 0 14px;
+      color: var(--muted);
+      line-height: 1.72;
+    }
+
+    .split {
+      display: grid;
+      grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+      gap: 16px;
+      align-items: stretch;
+    }
+
+    .panel {
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 253, 247, 0.78);
+    }
+
+    .panel h3 {
+      margin: 0 0 14px;
+      font-size: 27px;
+      line-height: 1.12;
+    }
+
+    .panel p {
+      margin: 0 0 14px;
+      color: var(--muted);
+      line-height: 1.75;
+    }
+
+    .script {
+      padding: 22px;
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      background: var(--white);
+      box-shadow: var(--shadow);
+    }
+
+    .script h3 {
+      margin: 0 0 14px;
+      font-size: 30px;
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      background: rgba(255, 253, 247, 0.76);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      display: table;
+    }
+
+    .table th,
+    .table td {
+      padding: 13px 14px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+      line-height: 1.55;
+    }
+
+    .table th {
+      color: var(--green);
+      font-size: 13px;
+      text-transform: uppercase;
+      background: rgba(216, 234, 220, 0.55);
+    }
+
+    .table tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .footer {
+      margin-top: 70px;
+      padding-top: 18px;
+      border-top: 2px solid var(--ink);
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    @media (max-width: 940px) {
+      .hero,
+      .split,
+      .command-grid,
+      .detail-card,
+      .detail-columns,
+      .test-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .quick-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .section-header {
+        display: block;
+      }
+
+      .section-note {
+        margin-top: 12px;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .page {
+        width: min(100% - 24px, 1180px);
+        padding-top: 24px;
+      }
+
+      .quick-row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <a class="home-link" href="index.html" target="_top">返回 StarWork 文档中心</a>
+
+    <section class="hero">
+      <div class="hero-copy">
+        <div>
+          <p class="kicker">StarWork CLI v0.1</p>
+          <h1>CLI 能力说明</h1>
+          <p class="subtitle">
+            CLI 是 StarWork 的产品化入口。Core 定义什么是对的，CLI 负责把它生成出来、检查出来、适配出来，并把场景 Pack 安全安装进去。
+          </p>
+        </div>
+
+        <div class="quick-row" aria-label="CLI 五个命令">
+          <div class="quick"><b>init</b><span>从空文件夹生成一个可工作的 StarWork 工作台。</span></div>
+          <div class="quick"><b>spawn</b><span>从多项目中枢生成并登记一个新项目工作台。</span></div>
+          <div class="quick"><b>doctor</b><span>检查工作台是否健康，找出缺失、错配和风险。</span></div>
+          <div class="quick"><b>adapt</b><span>为不同 Agent 生成轻量入口，但不复制规则源。</span></div>
+          <div class="quick"><b>pack install</b><span>在健康工作台上补装场景 Pack。</span></div>
+        </div>
+      </div>
+
+      <div class="hero-board" aria-label="CLI 最小闭环图">
+        <svg viewBox="0 0 640 520" role="img" aria-labelledby="cli-flow-title cli-flow-desc">
+          <title id="cli-flow-title">CLI 最小闭环</title>
+          <desc id="cli-flow-desc">init 生成工作台，spawn 从中枢生成项目，doctor 检查工作台，adapt 适配 Agent，pack install 安装场景 Pack。</desc>
+          <defs>
+            <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="#1d211d"></path>
+            </marker>
+          </defs>
+          <rect x="12" y="12" width="616" height="496" rx="8" fill="#fffdf7" stroke="#1d211d" stroke-width="3"></rect>
+          <text x="44" y="58" font-size="25" font-weight="900" fill="#1d211d">M2 CLI 最小闭环</text>
+          <text x="44" y="84" font-size="14" fill="#62675f">五个命令共同完成：初始化、派生项目、检查、适配、扩展。</text>
+
+          <g transform="translate(74 150)">
+            <rect width="150" height="82" rx="8" fill="#d8eadc" stroke="#286d4a" stroke-width="2"></rect>
+            <text x="75" y="38" text-anchor="middle" font-size="23" font-weight="900" fill="#286d4a">init</text>
+            <text x="75" y="61" text-anchor="middle" font-size="13" fill="#286d4a">生成工作台</text>
+          </g>
+          <g transform="translate(416 150)">
+            <rect width="150" height="82" rx="8" fill="#f3dfbd" stroke="#b36b19" stroke-width="2"></rect>
+            <text x="75" y="38" text-anchor="middle" font-size="23" font-weight="900" fill="#b36b19">doctor</text>
+            <text x="75" y="61" text-anchor="middle" font-size="13" fill="#b36b19">检查健康</text>
+          </g>
+          <g transform="translate(416 330)">
+            <rect width="150" height="82" rx="8" fill="#d7e4ea" stroke="#2f6286" stroke-width="2"></rect>
+            <text x="75" y="38" text-anchor="middle" font-size="23" font-weight="900" fill="#2f6286">adapt</text>
+            <text x="75" y="61" text-anchor="middle" font-size="13" fill="#2f6286">适配 Agent</text>
+          </g>
+          <g transform="translate(74 330)">
+            <rect width="150" height="82" rx="8" fill="#edd6cf" stroke="#9b3d2c" stroke-width="2"></rect>
+            <text x="75" y="38" text-anchor="middle" font-size="23" font-weight="900" fill="#9b3d2c">pack</text>
+            <text x="75" y="61" text-anchor="middle" font-size="13" fill="#9b3d2c">安装场景</text>
+          </g>
+
+          <path d="M224 191 L416 191" stroke="#1d211d" stroke-width="4" marker-end="url(#arrow)"></path>
+          <path d="M491 232 L491 330" stroke="#1d211d" stroke-width="4" marker-end="url(#arrow)"></path>
+          <path d="M416 371 L224 371" stroke="#1d211d" stroke-width="4" marker-end="url(#arrow)"></path>
+          <path d="M149 330 L149 232" stroke="#1d211d" stroke-width="4" marker-end="url(#arrow)"></path>
+
+          <text x="320" y="270" text-anchor="middle" font-size="15" fill="#62675f">每一步都保护用户已有内容</text>
+        </svg>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <h2>五个命令</h2>
+        <p class="section-note">v0.1 不做大而全的 CLI，而是先完成一条可靠路径：能初始化、能生成中枢项目、能检查、能适配、能补装 Pack。</p>
+      </div>
+
+      <div class="command-grid">
+        <article class="command">
+          <div class="command-top">
+            <h3><code>init</code></h3>
+            <span class="badge">生成</span>
+          </div>
+          <p>把 Core Kit 和场景 Pack 组装成一个可直接使用的 StarWork 工作台。普通用户不需要理解 Kit、Profile、Capability。</p>
+          <ul>
+            <li>支持轻量单项目、长期单项目、多项目管理中枢。</li>
+            <li>初始化时选择 Pack，通用场景也是 Pack。</li>
+            <li>写入前预览，不静默覆盖已有内容。</li>
+            <li>生成 `.starwork/workspace.json`，供后续命令读取。</li>
+          </ul>
+          <pre>node cli/bin/starwork.js init --type single-matter --pack content-creator --target ./workspace --yes</pre>
+        </article>
+
+        <article class="command">
+          <div class="command-top">
+            <h3><code>spawn</code></h3>
+            <span class="badge">派生</span>
+          </div>
+          <p>从健康的多项目中枢生成一个被管理的新项目工作台，并把它登记回 Hub 的项目注册表。</p>
+          <ul>
+            <li>支持 <code>starter</code> 和 <code>matter</code> 两种项目模式。</li>
+            <li>复制 Hub 的身份和教训快照。</li>
+            <li>软链接 Hub 的知识和 skills 入口。</li>
+            <li>写入 <code>.core-sync.json</code> 和 Hub <code>项目/registry.json</code>。</li>
+          </ul>
+          <pre>node cli/bin/starwork.js spawn --hub ./hub --name "新项目" --target ./project --mode matter --yes</pre>
+        </article>
+
+        <article class="command">
+          <div class="command-top">
+            <h3><code>doctor</code></h3>
+            <span class="badge">检查</span>
+          </div>
+          <p>检查工作台是不是健康。它只报告问题，不默认修复文件，是后续适配和 Pack 安装的守门员。</p>
+          <ul>
+            <li>检查 workspace state、Core 必需角色、Kit 文件。</li>
+            <li>检查正式事实源、业务工作区、Pack seed 和模板。</li>
+            <li>支持人类可读输出和 <code>--json</code>。</li>
+            <li>健康返回退出码 0，有阻塞问题返回 1。</li>
+          </ul>
+          <pre>node cli/bin/starwork.js doctor --target ./workspace --json</pre>
+        </article>
+
+        <article class="command">
+          <div class="command-top">
+            <h3><code>adapt</code></h3>
+            <span class="badge">适配</span>
+          </div>
+          <p>为具体 Agent 生成轻量适配入口。它不复制一整套规则，只告诉 Agent 去读 StarWork 的统一规则源。</p>
+          <ul>
+            <li>支持 <code>codex</code>、<code>claude</code>、<code>cursor</code>、<code>trae</code>、<code>all</code>。</li>
+            <li>Claude 生成 <code>CLAUDE.md</code>。</li>
+            <li>Cursor 生成 <code>.cursor/rules/starwork.mdc</code>。</li>
+            <li>适配结果记录到 workspace state。</li>
+          </ul>
+          <pre>node cli/bin/starwork.js adapt claude --target ./workspace --yes</pre>
+        </article>
+
+        <article class="command">
+          <div class="command-top">
+            <h3><code>pack install</code></h3>
+            <span class="badge">扩展</span>
+          </div>
+          <p>在已有健康工作台上补装场景 Pack。它让用户可以先从通用工作台开始，再逐步加入具体场景能力。</p>
+          <ul>
+            <li>安装前必须通过阻塞级 <code>doctor</code> 检查。</li>
+            <li>创建 Pack 目录、seed 和 templates。</li>
+            <li>把 Pack 规则追加到 <code>AGENTS.md</code>。</li>
+            <li>更新 workspace state，已安装 Pack 不重复安装。</li>
+          </ul>
+          <pre>node cli/bin/starwork.js pack install content-creator --target ./workspace --yes</pre>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <h2>详细能力与执行步骤</h2>
+        <p class="section-note">这一段按命令拆开看：每个 CLI 到底能做什么、执行时经过哪些步骤、适合什么时候用。</p>
+      </div>
+
+      <div class="detail-stack">
+        <article class="detail-card">
+          <div>
+            <span class="mini-label">01 / 生成工作台</span>
+            <h3><code>starwork init</code></h3>
+            <p>把 Core Kit 和 Pack 合成一个最终工作台。它是用户第一次接触 StarWork 的入口。</p>
+            <pre>node cli/bin/starwork.js init \
+  --type single-matter \
+  --pack content-creator \
+  --target ./workspace \
+  --yes</pre>
+          </div>
+          <div class="detail-columns">
+            <div class="detail-box">
+              <h4>具备的能力</h4>
+              <ul>
+                <li>识别目标目录是否已经是 StarWork 工作台。</li>
+                <li>根据 <code>--type</code> 选择 Kit：轻量单项目、长期单项目、多项目中枢。</li>
+                <li>根据 <code>--pack</code> 安装通用、内容创作者或中枢管理 Pack。</li>
+                <li>生成 <code>AGENTS.md</code>、系统状态文件、工作目录、Pack seed 和 templates。</li>
+                <li>写入 <code>.starwork/workspace.json</code>，作为后续命令读取的机器状态。</li>
+                <li>遇到已有用户文件时生成旁路文件，不静默覆盖。</li>
+              </ul>
+            </div>
+            <div class="detail-box">
+              <h4>执行步骤</h4>
+              <ol>
+                <li>解析参数和目标目录。</li>
+                <li>检查是否已经位于 StarWork 工作台内。</li>
+                <li>确定工作区类型、Kit、语言和 Pack。</li>
+                <li>加载 Kit 文件和 Pack 语言配置。</li>
+                <li>渲染 Pack 规则、seed、templates。</li>
+                <li>生成写入计划并展示预览。</li>
+                <li>确认后写入文件和 workspace state。</li>
+                <li>提示下一步运行 <code>doctor</code> 和 <code>adapt</code>。</li>
+              </ol>
+            </div>
+          </div>
+        </article>
+
+        <article class="detail-card">
+          <div>
+            <span class="mini-label">02 / 生成中枢项目</span>
+            <h3><code>starwork spawn</code></h3>
+            <p>从 Hub 生成一个新项目工作台。用户面对的是“生成一个新项目”，内部使用 <code>satellite-starter</code> 或 <code>satellite-matter</code> Kit。</p>
+            <pre>node cli/bin/starwork.js spawn \
+  --hub ./hub \
+  --name "内容产品官网" \
+  --id content-site \
+  --target ./content-site \
+  --mode matter \
+  --yes</pre>
+          </div>
+          <div class="detail-columns">
+            <div class="detail-box">
+              <h4>具备的能力</h4>
+              <ul>
+                <li>检查 Hub 是否健康，且必须是 <code>hub</code> 工作区。</li>
+                <li>只允许写入不存在或空目录。</li>
+                <li>按 <code>--mode</code> 选择 <code>satellite-starter</code> 或 <code>satellite-matter</code>。</li>
+                <li>写入项目自己的 workspace state 和同步说明。</li>
+                <li>回写 Hub 项目注册表，拒绝重复 ID 或重复路径。</li>
+              </ul>
+            </div>
+            <div class="detail-box">
+              <h4>执行步骤</h4>
+              <ol>
+                <li>定位并检查 Hub 工作台。</li>
+                <li>检查目标目录是否可写。</li>
+                <li>复制项目 Kit。</li>
+                <li>同步身份、教训、知识和 skills 入口。</li>
+                <li>写入 <code>.starwork/workspace.json</code> 与 <code>.core-sync.json</code>。</li>
+                <li>更新 Hub <code>项目/registry.json</code>。</li>
+                <li>提示运行 <code>doctor</code>。</li>
+              </ol>
+            </div>
+          </div>
+        </article>
+
+        <article class="detail-card">
+          <div>
+            <span class="mini-label">03 / 检查健康</span>
+            <h3><code>starwork doctor</code></h3>
+            <p>检查当前工作台是否健康。它是守门员，不修复，只报告。</p>
+            <pre>node cli/bin/starwork.js doctor \
+  --target ./workspace
+
+node cli/bin/starwork.js doctor \
+  --target ./workspace \
+  --json</pre>
+          </div>
+          <div class="detail-columns">
+            <div class="detail-box">
+              <h4>具备的能力</h4>
+              <ul>
+                <li>定位 <code>.starwork/workspace.json</code>。</li>
+                <li>检查 state schema、Core 版本、工作区类型、Kit、语言、Packs。</li>
+                <li>检查 Core 必需角色：入口规则、项目状态、当前工作。</li>
+                <li>检查正式事实源和业务工作区。</li>
+                <li>检查 Kit 源文件是否完整落地。</li>
+                <li>检查 Pack paths、seed 和 templates 是否存在。</li>
+                <li>支持人类可读输出和 JSON 输出。</li>
+              </ul>
+            </div>
+            <div class="detail-box">
+              <h4>执行步骤</h4>
+              <ol>
+                <li>从目标目录向上查找 StarWork 工作台。</li>
+                <li>读取并解析 workspace state。</li>
+                <li>按 Kit 推导 Core 关键角色路径。</li>
+                <li>检查 Kit 文件完整性。</li>
+                <li>读取已安装 Pack 的语言配置。</li>
+                <li>检查 Pack 的目录、seed、templates。</li>
+                <li>汇总 <code>pass</code>、<code>info</code>、<code>warn</code>、<code>fail</code>。</li>
+                <li>没有阻塞问题返回退出码 0，有阻塞问题返回 1。</li>
+              </ol>
+            </div>
+          </div>
+        </article>
+
+        <article class="detail-card">
+          <div>
+            <span class="mini-label">04 / 适配 Agent</span>
+            <h3><code>starwork adapt</code></h3>
+            <p>给不同 Agent 生成轻量入口。它不另起一套规则，而是把 Agent 引回 StarWork 统一规则源。</p>
+            <pre>node cli/bin/starwork.js adapt claude \
+  --target ./workspace \
+  --yes
+
+node cli/bin/starwork.js adapt --agent cursor \
+  --target ./workspace \
+  --yes</pre>
+          </div>
+          <div class="detail-columns">
+            <div class="detail-box">
+              <h4>具备的能力</h4>
+              <ul>
+                <li>支持 <code>codex</code>、<code>claude</code>、<code>cursor</code>、<code>trae</code>、<code>all</code>。</li>
+                <li>Codex 复用 <code>AGENTS.md</code>，只登记适配状态。</li>
+                <li>Claude Code 生成 <code>CLAUDE.md</code>。</li>
+                <li>Cursor 生成 <code>.cursor/rules/starwork.mdc</code>。</li>
+                <li>Trae 生成 <code>.trae/rules/starwork.md</code>。</li>
+                <li>适配前检查工作台是否健康。</li>
+                <li>适配结果写入 workspace state 的 <code>adapters</code> 字段。</li>
+              </ul>
+            </div>
+            <div class="detail-box">
+              <h4>执行步骤</h4>
+              <ol>
+                <li>定位 StarWork 工作台。</li>
+                <li>读取 workspace state。</li>
+                <li>运行阻塞级 <code>doctor</code> 检查。</li>
+                <li>确定目标 Agent。</li>
+                <li>生成对应适配入口内容。</li>
+                <li>生成写入计划。</li>
+                <li>确认后写入适配文件。</li>
+                <li>更新 workspace state。</li>
+              </ol>
+            </div>
+          </div>
+        </article>
+
+        <article class="detail-card">
+          <div>
+            <span class="mini-label">05 / 安装 Pack</span>
+            <h3><code>starwork pack install</code></h3>
+            <p>在已有健康工作台上补装场景 Pack。适合先建通用工作台，再加入内容创作者等场景能力。</p>
+            <pre>node cli/bin/starwork.js pack install content-creator \
+  --target ./workspace \
+  --yes</pre>
+          </div>
+          <div class="detail-columns">
+            <div class="detail-box">
+              <h4>具备的能力</h4>
+              <ul>
+                <li>安装前运行阻塞级 <code>doctor</code> 检查。</li>
+                <li>读取 Pack 的 <code>pack.json</code> 和 <code>languages/&lt;language&gt;.json</code>。</li>
+                <li>校验 Pack 是否支持当前工作区类型。</li>
+                <li>创建 Pack 目录。</li>
+                <li>写入 Pack seed 和 templates。</li>
+                <li>把 Pack 规则追加到 <code>AGENTS.md</code>。</li>
+                <li>更新 workspace state 中的 <code>packs</code> 和路径配置。</li>
+                <li>已安装 Pack 不重复安装。</li>
+              </ul>
+            </div>
+            <div class="detail-box">
+              <h4>执行步骤</h4>
+              <ol>
+                <li>定位 StarWork 工作台。</li>
+                <li>读取 workspace state。</li>
+                <li>确认 Pack 尚未安装。</li>
+                <li>运行阻塞级 <code>doctor</code> 检查。</li>
+                <li>加载 Pack 与语言配置。</li>
+                <li>生成目录、seed、templates、规则追加计划。</li>
+                <li>确认后安全写入。</li>
+                <li>更新 workspace state，并建议重新运行 <code>doctor</code>。</li>
+              </ol>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <h2>用户流程</h2>
+        <p class="section-note">这套 CLI 的核心价值，是把协议和模板变成一条用户能走完的路。</p>
+      </div>
+
+      <div class="split">
+        <div class="panel">
+          <h3>第一次使用</h3>
+          <ul class="flow-list">
+            <li>用户运行 <code>init</code>，选择工作区类型和 Pack。</li>
+            <li>CLI 生成 Kit + Pack 的最终工作台。</li>
+            <li>用户运行 <code>doctor</code>，确认结构健康。</li>
+            <li>用户运行 <code>adapt</code>，为当前 Agent 生成入口。</li>
+            <li>用户开始真实工作。</li>
+          </ul>
+        </div>
+
+        <div class="panel">
+          <h3>中枢创建项目</h3>
+          <ul class="flow-list">
+            <li>用户先用 <code>init --type hub</code> 创建多项目中枢。</li>
+            <li>用户运行 <code>spawn</code>，从中枢生成一个新项目工作台。</li>
+            <li>CLI 写入项目自己的 state 和同步说明。</li>
+            <li>CLI 回写 Hub 的项目注册表。</li>
+            <li>用户进入新项目运行 <code>doctor</code>。</li>
+          </ul>
+        </div>
+
+        <div class="script">
+          <h3>典型脚本</h3>
+          <pre>node cli/bin/starwork.js init \
+  --type single-light \
+  --pack general \
+  --target ./creator-workspace \
+  --yes
+
+node cli/bin/starwork.js doctor --target ./creator-workspace
+
+node cli/bin/starwork.js adapt claude --target ./creator-workspace --yes
+
+node cli/bin/starwork.js pack install content-creator \
+  --target ./creator-workspace \
+  --yes</pre>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <h2>现在怎么测试</h2>
+        <p class="section-note">建议先用临时目录完整跑一遍，不要在真实项目里第一次试。下面的命令都在 <code>/Users/shuxinding/satellite-starwork/product</code> 下执行。</p>
+      </div>
+
+      <div class="test-grid">
+        <div class="test-card">
+          <h3>方式一：跑自动测试</h3>
+          <p>这是最快确认 CLI 没坏的方法。当前测试覆盖 init、spawn、doctor、adapt、pack install 的核心路径。</p>
+          <pre>cd /Users/shuxinding/satellite-starwork/product
+npm test</pre>
+          <p>预期结果：22 个测试全部通过。</p>
+        </div>
+
+        <div class="test-card">
+          <h3>方式二：手动跑完整链路</h3>
+          <p>这更接近真实用户体验，会在临时目录生成一个工作台，然后检查、适配、补装 Pack。</p>
+          <pre>cd /Users/shuxinding/satellite-starwork/product
+
+TEST_DIR=/tmp/starwork-cli-manual-test
+rm -rf "$TEST_DIR"
+
+node cli/bin/starwork.js init \
+  --type single-light \
+  --pack general \
+  --target "$TEST_DIR" \
+  --yes
+
+node cli/bin/starwork.js doctor --target "$TEST_DIR"
+
+node cli/bin/starwork.js adapt claude --target "$TEST_DIR" --yes
+
+node cli/bin/starwork.js pack install content-creator \
+  --target "$TEST_DIR" \
+  --yes
+
+node cli/bin/starwork.js doctor --target "$TEST_DIR"</pre>
+        </div>
+
+        <div class="test-card">
+          <h3>方式三：手动测试 spawn</h3>
+          <p>这会先生成一个 Hub，再从 Hub 生成一个事项型项目工作台，并检查两边是否健康。</p>
+          <pre>cd /Users/shuxinding/satellite-starwork/product
+
+HUB_DIR=/tmp/starwork-hub-test
+PROJECT_DIR=/tmp/starwork-spawn-test
+rm -rf "$HUB_DIR" "$PROJECT_DIR"
+
+node cli/bin/starwork.js init \
+  --type hub \
+  --target "$HUB_DIR" \
+  --yes
+
+node cli/bin/starwork.js spawn \
+  --hub "$HUB_DIR" \
+  --name "内容产品官网" \
+  --id content-site \
+  --target "$PROJECT_DIR" \
+  --mode matter \
+  --yes
+
+node cli/bin/starwork.js doctor --target "$PROJECT_DIR"</pre>
+        </div>
+
+        <div class="test-card">
+          <h3>应该看到什么</h3>
+          <ul class="flow-list">
+            <li><code>doctor</code> 最后输出 <code>Workspace is healthy.</code></li>
+            <li>目录里出现 <code>AGENTS.md</code>、<code>CLAUDE.md</code>、<code>.starwork/workspace.json</code>。</li>
+            <li>补装 Pack 后出现 <code>选题池/</code>、<code>素材库/</code>、<code>草稿与脚本/</code>、<code>发布记录/</code> 等目录。</li>
+            <li><code>.starwork/packs/content-creator/templates/</code> 下有内容模板。</li>
+          </ul>
+        </div>
+
+        <div class="test-card">
+          <h3>故障测试</h3>
+          <p>可以故意删掉关键文件，看 <code>doctor</code> 是否能发现问题。</p>
+          <pre>rm "$TEST_DIR/AGENTS.md"
+node cli/bin/starwork.js doctor --target "$TEST_DIR"</pre>
+          <p>预期结果：退出码为 1，并提示 <code>core.entry_rules.exists</code> 失败。</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <h2>边界</h2>
+        <p class="section-note">v0.1 的 CLI 是最小闭环，不是平台，不是账号系统，也不是 Agent Runtime。</p>
+      </div>
+
+      <table class="table">
+        <thead>
+          <tr>
+            <th>会做</th>
+            <th>不做</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>生成工作台结构、写入 workspace state。</td>
+            <td>不处理账号、登录、授权、云端同步。</td>
+          </tr>
+          <tr>
+            <td>检查 Core、Kit、Pack 是否一致。</td>
+            <td>不默认自动修复、不静默覆盖用户内容。</td>
+          </tr>
+          <tr>
+            <td>生成 Agent 适配入口。</td>
+            <td>不为不同 Agent 维护多套规则事实源。</td>
+          </tr>
+          <tr>
+            <td>补装 Pack 并更新规则、模板和状态。</td>
+            <td>不做 Pack 市场、卸载、升级和复杂冲突迁移。</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <footer class="footer">
+      <p>事实源：<code>product/cli/README.md</code>、<code>product/cli/*-spec.md</code> 和当前 CLI 实现。本文是 HTML 阅读版。</p>
+    </footer>
+  </main>
+</body>
+</html>

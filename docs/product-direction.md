@@ -55,7 +55,7 @@ Demo 工作区与产品文档
 
 当前已经形成：
 
-- Core v0.1 协议入口与六类 Kit 结构。
+- Core v0.1 协议入口与五类 Kit 结构。
 - `starwork init` 第一版。
 - Pack 源包结构：语言无关业务角色 + `languages/` 多语言落地配置。
 

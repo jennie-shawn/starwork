@@ -1,6 +1,6 @@
-# 中文多项目管理中枢 Kit
+# 多项目管理中枢 Kit
 
-Preset: `zh-hub`
+Preset: `hub`
 
 适合希望建立主库 / 中枢的用户。
 

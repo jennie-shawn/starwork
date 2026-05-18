@@ -1,12 +1,12 @@
-# 中文单项目 Starter Kit
+# 单项目 Starter Kit
 
-Preset: `zh-local-starter`
+Preset: `local-starter`
 
 适合学员当前模板和轻量单项目用户。
 
 ## 包含
 
-- 中文路径 profile
+- 默认中文路径 profile
 - `AGENTS.md`
 - `_系统/上下文/项目状态.md`
 - `_系统/任务/当前工作.md`

@@ -1,13 +1,15 @@
-# 中文卫星项目 Starter Kit
+# 卫星项目 Matter Kit
 
-Preset: `zh-satellite-starter`
+Preset: `satellite-matter`
 
-适合接入主库的轻量卫星项目。
+适合接入主库、并启用事项机制的卫星项目。
 
 ## 包含
 
-- 中文路径 profile
+- 默认中文路径 profile
 - 轻量输出模式
+- 事项模式
+- Decisions
 - 主库同步模式
 - 共享 skill 软链接挂载能力
 
@@ -27,13 +29,9 @@ Preset: `zh-satellite-starter`
 - `知识/`：指向主库 `knowledge/` 的只读链接
 - `参考资料/`：本项目原始资料和参考材料
 - `输出/`：本项目草稿和确认成果
+- `事项/`：本项目事项推进过程
 - `.core-sync.json`：记录主库来源、同步时间、共享资源和 skill 挂载信息
 - `.agents/skills/`、`.claude/skills/`：按需软链接主库正式 skill
-
-## 不默认包含
-
-- `事项/`
-- `_系统/上下文/决策.md`
 
 项目特定事实进入项目自己的正式事实源，不写回主库正式目录。
 

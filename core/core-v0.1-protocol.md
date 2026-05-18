@@ -87,17 +87,17 @@ Core v0.1 把额外功能做成 capabilities。能力可以组合，但不能改
 | `main-repo-sync` | 支持主库 + 多个卫星项目的 Hub + Satellite 模型。 |
 | `skill-mount` | 通过软链接挂载主库共享 skills。 |
 
-## 三种首批状态
+## 五种首批形态
 
-v0.1 先保留三种中文用户状态，外加一个英文轻量状态。
+v0.1 先保留五种工作区形态。Kit 名称不携带语言标签；当前正式 Kit 默认以中文 profile 落地，其他语言通过 profile 扩展。
 
 | Preset | 面向谁 | 默认特点 |
 |---|---|---|
-| `zh-local-starter` | 学员、轻量单项目用户 | 本地身份/教训，`references/outputs` 工作流，不启用事项。 |
-| `zh-local-matter` | 单项目长期用户 | 本地身份/教训，启用 Matter Mode 和高影响决策。 |
-| `zh-satellite-starter` | 接入主库的轻量卫星项目 | 主库分发身份、教训、知识、skills；卫星项目不默认启用事项。 |
-| `zh-satellite-matter` | 主库 + 多卫星项目用户 | 主库分发身份、教训、知识、skills；卫星项目维护自己的事项和正式事实源。 |
-| `en-local-starter` | 英文轻量用户 | 英文路径和模板，本地身份/教训，`references/outputs` 工作流。 |
+| `local-starter` | 学员、轻量单项目用户 | 本地身份/教训，轻量输入输出工作流，不启用事项。 |
+| `local-matter` | 单项目长期用户 | 本地身份/教训，启用 Matter Mode 和高影响决策。 |
+| `satellite-starter` | 接入主库的轻量卫星项目 | 主库分发身份、教训、知识、skills；卫星项目不默认启用事项。 |
+| `satellite-matter` | 主库 + 多卫星项目用户 | 主库分发身份、教训、知识、skills；卫星项目维护自己的事项和正式事实源。 |
+| `hub` | 多项目管理中枢用户 | 统一维护身份、教训、知识、skills、项目注册表和跨项目联络。 |
 
 Preset 是配方，不是协议本身。它选择 profile、capabilities 和默认正式事实源。
 
@@ -183,7 +183,7 @@ Core v0.1 可以封版，至少需要满足：
 
 - 普通人能读懂 Core 是什么、不是什么。
 - Agent 能知道开始前读哪里、当前工作写哪里、正式事实源在哪里。
-- 三种中文首批状态边界清楚。
+- 五种首批工作区形态边界清楚。
 - 单项目和多项目不互相污染。
 - Matter Mode 是可选增强，不强迫所有用户使用。
 - Kit 被定位为参考实现或 CLI 输出，不被误认为协议事实源。

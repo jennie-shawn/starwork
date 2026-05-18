@@ -263,7 +263,7 @@ Pack 安装后，应写入 `.starwork/workspace.json`。
   "schema": "starwork.workspace.v0.1",
   "core": "0.1",
   "workspace_type": "single-matter",
-  "kit": "zh-local-matter",
+  "kit": "local-matter",
   "packs": [
     {
       "id": "content-creator",

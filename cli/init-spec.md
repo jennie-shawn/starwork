@@ -118,11 +118,11 @@ v0.1 不在 `init` 中处理升级。
 
 | 用户选择 | Kit / Preset | 说明 |
 |---|---|---|
-| 轻量单项目 | `zh-local-starter` | 不启用事项机制，使用轻量输入输出结构。 |
-| 长期单项目 | `zh-local-matter` | 启用 Matter Mode 和决策记录。 |
-| 多项目管理中枢 | `zh-hub` | 建立主库 / 中枢，不创建卫星项目。 |
+| 轻量单项目 | `local-starter` | 不启用事项机制，使用轻量输入输出结构。 |
+| 长期单项目 | `local-matter` | 启用 Matter Mode 和决策记录。 |
+| 多项目管理中枢 | `hub` | 建立主库 / 中枢，不创建卫星项目。 |
 
-注意：Core 中的 `zh-satellite-matter` 更接近卫星项目 Kit，不应被 `init` 的“多项目管理中枢”入口直接使用。`init` 应使用独立的 Hub Kit / Hub Preset。
+注意：Core 中的 `satellite-matter` 更接近卫星项目 Kit，不应被 `init` 的“多项目管理中枢”入口直接使用。`init` 应使用独立的 Hub Kit / Hub Preset。
 
 ### Step 2：选择 Pack
 
@@ -184,7 +184,7 @@ _系统/任务/当前工作.md
 将创建 StarWork 工作台：
 
 工作区类型：长期单项目
-Kit：zh-local-matter
+Kit：local-matter
 Pack：content-creator
 工作台名称：my-content-workspace
 
@@ -306,7 +306,7 @@ Pack 可以改变业务流向，但不能移除工作区仪表盘。
   "schema": "starwork.workspace.v0.1",
   "core": "0.1",
   "workspace_type": "single-matter",
-  "kit": "zh-local-matter",
+  "kit": "local-matter",
   "packs": [
     "content-creator"
   ],
@@ -403,7 +403,7 @@ v0.1 `init` 不处理：
 
 ## v0.1 实现状态
 
-当前第一版实现已补齐：
+当前 M2 CLI v0.1 最小闭环已补齐：
 
 1. `general` 默认 Pack 的声明。
 2. `content-creator` Pack 的声明文件。
@@ -411,12 +411,15 @@ v0.1 `init` 不处理：
 4. `hub-management` Pack。
 5. `.starwork/workspace.json` 最小状态文件。
 6. 写入计划、dry-run 预览和冲突旁路文件策略。
+7. `doctor` 对 `.starwork/workspace.json`、Kit 和 Pack 的检查。
+8. `adapt` 对 Codex、Claude Code、Cursor、Trae 的轻量适配。
+9. `pack install` 对已有健康工作台的补装 Pack 能力。
 
 后续仍需要补齐：
 
 1. 正式 JSON Schema 文件。
 2. 更细的模板 slot 机制。
-3. `doctor` 对 `.starwork/workspace.json`、Kit 和 Pack 的检查。
+3. Pack 升级、卸载和迁移机制。
 
 ## v0.1 验收标准
 

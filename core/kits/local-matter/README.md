@@ -1,12 +1,12 @@
-# 中文单项目 Matter Kit
+# 单项目 Matter Kit
 
-Preset: `zh-local-matter`
+Preset: `local-matter`
 
-适合需要长期事项接力和过程沉淀的中文单项目用户。
+适合需要长期事项接力和过程沉淀的单项目用户。
 
 ## 包含
 
-- 中文路径 profile
+- 默认中文路径 profile
 - 轻量输出模式
 - 事项模式
 - 高影响决策记录

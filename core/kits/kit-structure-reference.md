@@ -13,42 +13,17 @@
 
 | Kit | 定位 |
 |---|---|
-| `en-local-starter` | 英文轻量单项目 Kit。 |
-| `zh-local-starter` | 中文轻量单项目 Kit。 |
-| `zh-local-matter` | 中文单项目事项型 Kit。 |
-| `zh-hub` | 中文多项目管理中枢 Kit。 |
-| `zh-satellite-starter` | 中文轻量卫星项目 Kit，不启用事项。 |
-| `zh-satellite-matter` | 中文事项型卫星项目 Kit，启用事项。 |
+| `local-starter` | 轻量单项目 Kit。 |
+| `local-matter` | 单项目事项型 Kit。 |
+| `hub` | 多项目管理中枢 Kit。 |
+| `satellite-starter` | 轻量卫星项目 Kit，不启用事项。 |
+| `satellite-matter` | 事项型卫星项目 Kit，启用事项。 |
 
-## `en-local-starter`
+命名原则：Kit 名称不携带语言标签，只表达工作区形态。当前 `product/core/kits/` 下的结构默认以中文 profile 落地。英文 profile 的参考样例放在 `product/core/profiles/en/reference-kits/`，不进入正式 Kit 列表。
 
-定位：英文轻量单项目 Kit，是 `zh-local-starter` 的英文镜像版本。
+## `local-starter`
 
-```text
-.
-├── AGENTS.md
-├── README.md
-├── _system/
-│   ├── context/
-│   │   └── project-status.md
-│   ├── tasks/
-│   │   └── current-work.md
-│   ├── identity/
-│   │   └── README.md
-│   └── lessons/
-│       └── README.md
-├── references/
-│   └── README.md
-└── outputs/
-    ├── drafts/
-    │   └── README.md
-    └── final/
-        └── README.md
-```
-
-## `zh-local-starter`
-
-定位：中文轻量单项目 Kit。适合单项目、无事项机制、使用参考资料和输出目录的轻量工作区。
+定位：轻量单项目 Kit。适合单项目、无事项机制、使用参考资料和输出目录的轻量工作区。
 
 ```text
 .
@@ -79,9 +54,9 @@
 _系统/上下文/决策.md
 ```
 
-## `zh-local-matter`
+## `local-matter`
 
-定位：中文单项目事项型 Kit。适合需要长期事项追踪、跨会话接力和过程沉淀的单项目工作区。
+定位：单项目事项型 Kit。适合需要长期事项追踪、跨会话接力和过程沉淀的单项目工作区。
 
 ```text
 .
@@ -115,9 +90,9 @@ _系统/上下文/决策.md
             └── .gitkeep
 ```
 
-## `zh-hub`
+## `hub`
 
-定位：中文多项目管理中枢 Kit。用于建立主库 / 中枢，不直接创建卫星项目。
+定位：多项目管理中枢 Kit。用于建立主库 / 中枢，不直接创建卫星项目。
 
 ```text
 .
@@ -148,12 +123,12 @@ _系统/上下文/决策.md
 说明：
 
 - `identity/`、`lessons/` 保留在中枢根目录，因为它们是主库重点维护的项目。
-- `项目/` 按中文镜像语言本地化。
+- `项目/` 使用当前默认中文 profile 的目录名。
 - `skills/` 和 `.incoming/` 暂保留英文名，因为它们更像工具 / 协议入口。
 
-## `zh-satellite-starter`
+## `satellite-starter`
 
-定位：中文轻量卫星项目 Kit。适合接入主库，但不启用事项机制的项目。
+定位：轻量卫星项目 Kit。适合接入主库，但不启用事项机制的项目。
 
 ```text
 .
@@ -206,9 +181,9 @@ _系统/上下文/决策.md
 _系统/上下文/决策.md
 ```
 
-## `zh-satellite-matter`
+## `satellite-matter`
 
-定位：中文事项型卫星项目 Kit。适合接入主库，并启用事项机制的项目。
+定位：事项型卫星项目 Kit。适合接入主库，并启用事项机制的项目。
 
 ```text
 .
@@ -266,13 +241,13 @@ _系统/上下文/决策.md
 
 ## 已确认的结构原则
 
-1. 中文 Kit 的语义目录优先使用中文。
+1. 当前正式 Kit 的结构描述默认使用中文 profile。
 2. `AGENTS.md`、`README.md`、`CLAUDE.md` 暂保留工具生态约定文件名。
 3. 单项目 Kit 中，`身份/` 和 `教训/` 属于 `_系统/`。
 4. 卫星项目 Kit 中，`身份/` 和 `教训/` 也放在 `_系统/`，表示它们是主库快照或项目内候选沉淀，不是主库本体。
 5. Hub Kit 中，`identity/`、`lessons/` 保留在根目录，因为它们是中枢重点维护对象。
 6. `日记/` 不进入 v0.1 Kit。
 7. 通用卫星项目不默认包含 `product/`；默认确认成果位置是 `输出/确认成果/`。
-8. `knowledge/` 在中文 Kit 中翻译为 `知识/`。
-9. 卫星项目分为 no-matter 与 matter 两类：`zh-satellite-starter` 和 `zh-satellite-matter`。
-10. 中文决策文件使用 `_系统/上下文/决策.md`，中文当前工作文件使用 `_系统/任务/当前工作.md`。
+8. `knowledge/` 在默认中文 profile 中落地为 `知识/`。
+9. 卫星项目分为 no-matter 与 matter 两类：`satellite-starter` 和 `satellite-matter`。
+10. 默认中文 profile 的决策文件使用 `_系统/上下文/决策.md`，当前工作文件使用 `_系统/任务/当前工作.md`。

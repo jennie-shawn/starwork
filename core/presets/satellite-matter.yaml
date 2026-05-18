@@ -1,5 +1,5 @@
-id: zh-satellite-matter
-name: 中文卫星项目 Matter 版
+id: satellite-matter
+name: 卫星项目 Matter 版
 core: "0.1"
 profile: zh
 capabilities:

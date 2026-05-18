@@ -1,6 +1,6 @@
 # English Local Starter Kit
 
-Preset: `en-local-starter`
+Preset: `local-starter`
 
 For lightweight English workspaces.
 

@@ -1,5 +1,5 @@
-id: zh-satellite-starter
-name: 中文卫星项目 Starter 版
+id: satellite-starter
+name: 卫星项目 Starter 版
 core: "0.1"
 profile: zh
 capabilities:
