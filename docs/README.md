@@ -3,6 +3,7 @@
 这里存放正式产品文档、规格说明、发布说明和对外说明。
 
 - [product-direction.md](product-direction.md)：StarWork 产品方向、四层结构和关键约束
+- [agent-install-guide.md](agent-install-guide.md)：面向用户 Agent 的 StarWork CLI 与 Skills 安装指导
 - [alpha-test-guide.md](alpha-test-guide.md)：StarWork A 测 CLI 与 Skills 安装、测试和反馈指南
 - [index.html](index.html)：StarWork HTML 文档中心，统一挂载所有 HTML 阅读稿
 - [hub-management.html](hub-management.html)：多项目中枢管理机制 HTML 阅读版，解释 Hub + Satellite、项目注册表和回写边界
