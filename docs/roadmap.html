@@ -600,7 +600,7 @@
             <text x="44" y="38" text-anchor="middle" font-size="12" fill="#2f6286">稳定</text>
           </g>
 
-          <text x="36" y="682" font-size="13" fill="#61675f">当前重心：M3 Content Creator Pack v0.1。</text>
+          <text x="36" y="682" font-size="13" fill="#61675f">当前重心：M2.5 公开 A 测分发与安装验证。</text>
         </svg>
       </div>
     </section>
@@ -658,6 +658,20 @@
         </article>
 
         <article class="milestone now">
+          <div class="milestone-top">
+            <div class="code">M2.5</div>
+            <span class="status">进行中</span>
+          </div>
+          <h3>公开 A 测分发</h3>
+          <p>让外部用户可以通过 GitHub、npm 和 skills 命令安装并验证最小流程。</p>
+          <ul>
+            <li>CLI 公开安装</li>
+            <li>Skills 公开安装</li>
+            <li>init / doctor / spawn 最小流程</li>
+          </ul>
+        </article>
+
+        <article class="milestone future">
           <div class="milestone-top">
             <div class="code">M3</div>
             <span class="status">下一阶段</span>
@@ -751,30 +765,30 @@
 
       <div class="focus-layout">
         <div class="focus-copy">
-          <h3>进入 M3：首个场景 Pack</h3>
+          <h3>进入 M2.5：公开 A 测分发</h3>
           <p>
             CLI v0.1 最小闭环已经完成，StarWork 现在具备了生成、检查、适配和补装 Pack 的基本工具链。
           </p>
           <p>
-            M2 之后新增了一条定制生成线索：<code>starworkSpawn</code> skill 负责生成工作台定制单，<code>spawn --blueprint</code> 已能按定制单创建卫星项目。
+            现在要先确认外部用户能从公开入口安装 CLI 与 Skills，并跑通 <code>init</code>、<code>doctor</code>、<code>spawn</code> 的最小流程。
           </p>
           <p>
-            下一步要把工具链放进真实场景里检验：用 Content Creator Pack 跑出一个能被用户理解、能被 Agent 接力的内容生产工作台。
+            内容创作者 Pack 仍是下一阶段的场景验证方向，但它应该等安装链路稳定后再启动。
           </p>
 
           <div class="priority" aria-label="下一步优先级">
             <div class="priority-item">
               <div class="priority-number">1</div>
               <div>
-                <b>新建 Content Creator Pack matter</b>
-                <span>把首个场景 Pack 的目录、规则、模板和 Demo 定下来。</span>
+                <b>确认 alpha.3 发布</b>
+                <span>让 npm <code>latest</code> 从 <code>0.1.0-alpha.2</code> 更新到本地已准备的 <code>0.1.0-alpha.3</code>。</span>
               </div>
             </div>
             <div class="priority-item">
               <div class="priority-number">2</div>
               <div>
-                <b>生成 Demo 工作区</b>
-                <span>验证 <code>init</code>、<code>doctor</code>、<code>adapt</code>、<code>pack install</code> 是否真的顺。</span>
+                <b>收集 A 测反馈</b>
+                <span>观察 CLI 安装、Skills 安装、<code>init</code>、<code>doctor</code>、<code>spawn</code> 是否真的顺。</span>
               </div>
             </div>
           </div>
@@ -783,7 +797,7 @@
         <div class="focus-svg" aria-label="当前优先级依赖图">
           <svg viewBox="0 0 640 440" role="img" aria-labelledby="focus-svg-title focus-svg-desc">
             <title id="focus-svg-title">当前工作依赖图</title>
-            <desc id="focus-svg-desc">Core 和 CLI 最小闭环已经形成，下一步进入 Content Creator Pack 和 Demo 工作区验证。</desc>
+            <desc id="focus-svg-desc">Core 和 CLI 最小闭环已经形成，下一步先完成公开 A 测安装验证，再进入内容创作者 Pack。</desc>
             <defs>
               <marker id="arrow2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
                 <path d="M 0 0 L 10 5 L 0 10 z" fill="#3e473e"></path>
@@ -863,7 +877,7 @@
         <div class="release-block">
           <h3>v0.1 要交付什么</h3>
           <p>
-            Core v0.1 协议、CLI v0.1、General Pack、Hub Management Pack、Content Creator Pack v0.1、Demo 工作区和入门文档。
+            Core v0.1 协议、CLI v0.1、General Pack、Hub Management Pack、公开 A 测安装文档、Content Creator Pack v0.1、Demo 工作区和入门文档。
           </p>
           <div class="tag-list">
             <span>Core</span>
@@ -877,7 +891,7 @@
         <div class="release-block">
           <h3>v0.1 怎么算成功</h3>
           <p>
-            用户能知道 StarWork 是什么，能按文档初始化一个工作台，能理解 Core、Kit、CLI、Pack 的关系，并能用 Content Creator Pack 跑一次最小内容生产闭环。
+            用户能知道 StarWork 是什么，能按文档安装 CLI 与 Skills，能初始化一个工作台，能理解 Core、Kit、CLI、Pack 的关系，并能用 Content Creator Pack 跑一次最小内容生产闭环。
           </p>
           <div class="tag-list">
             <span>能看懂</span>

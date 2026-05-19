@@ -51,6 +51,7 @@ npx skills add jennie-shawn/starwork --skill starworkSpawn -g -a codex -y
 starwork init \
   --type single-matter \
   --pack general \
+  --language zh \
   --name "StarWork A Test" \
   --target ~/Desktop/starwork-a-test \
   --yes
@@ -67,6 +68,7 @@ starwork doctor --target ~/Desktop/starwork-a-test
 ```bash
 starwork init \
   --type hub \
+  --language zh \
   --name "StarWork Hub A Test" \
   --target ~/Desktop/starwork-hub-a-test \
   --yes

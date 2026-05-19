@@ -21,7 +21,7 @@ StarWork 现在不缺想法，缺的是一条清晰的主线。
 - `starwork pack install` 第一版已经可以在健康工作台上补装 Pack。
 - `starwork spawn --blueprint` 第一版已经可以按工作台定制单生成定制化卫星项目；`starworkSpawn` skill 第一版用于生成工作台定制单。
 
-所以，下一步不应该继续扩张 Core 或 CLI，而应该进入第一个场景 Pack 与 Demo 验证。
+所以，下一步不应该继续扩张 Core 或 CLI。当前应先完成公开 A 测分发和安装反馈收集，再进入第一个场景 Pack 与 Demo 验证。
 
 ## 总路线
 
@@ -31,6 +31,8 @@ M0 项目地基
 M1 Core v0.1 封版
   ↓
 M2 CLI v0.1 最小闭环
+  ↓
+M2.5 公开 A 测分发与安装验证
   ↓
 M3 Content Creator Pack v0.1
   ↓
@@ -121,9 +123,31 @@ M8 v1.0 稳定产品
 - 用户可以为当前 Agent 生成或更新适配文件。
 - 用户可以安装或更新 Pack，并且不会覆盖已有内容。
 
+## M2.5 公开 A 测分发与安装验证
+
+状态：进行中。
+
+目标：让外部 A 测用户可以通过公开 GitHub 与 npm 入口安装 StarWork，并验证 CLI 与 Skills 的最小流程。
+
+当前成果：
+
+- GitHub 仓库已推送到 `jennie-shawn/starwork`。
+- npm 包名为 `@jennie-shawn/starwork`。
+- `starworkInit` 与 `starworkSpawn` 可通过 `npx skills add jennie-shawn/starwork --skill '*' -g -a codex -y` 安装。
+- 公开 README 已改为中文首页。
+- 已新增面向 Agent 的安装指南：`product/docs/agent-install-guide.md`。
+- 本地产品仓库已准备 `0.1.0-alpha.3`；清理时 npm `latest` 仍是 `0.1.0-alpha.2`，需要手动发布后再确认。
+
+验收标准：
+
+- A 测用户能安装 CLI 并看到 `starwork --help`。
+- A 测用户能安装 Skills，并让 Agent 识别 `starworkInit` 与 `starworkSpawn`。
+- `init -> doctor -> hub init -> spawn -> doctor` 的最小流程能被外部用户跑通。
+- A 测反馈中暴露的安装和 skill 调用问题被记录到 matter。
+
 ## M3 Content Creator Pack v0.1
 
-状态：下一阶段。
+状态：下一阶段，等待 A 测安装链路稳定后启动。
 
 目标：做出第一个真正能解决场景问题的 Pack，而不是只有目录结构。
 
@@ -147,7 +171,7 @@ Pack 应覆盖的最小内容闭环：
 
 还需要做：
 
-- 创建自媒体内容创作者 Pack v0.1 matter。
+- 创建内容创作者 Pack v0.1 matter。
 - 确认目录结构。
 - 确认每个目录下的 Agent 规则。
 - 确认模板和 seed 示例。
@@ -262,11 +286,12 @@ v1.0 应具备：
 
 ## 当前下一步
 
-当前最应该做的不是重开 Core 或继续扩张 CLI，而是进入 M3：
+当前最应该做的不是重开 Core 或继续扩张 CLI，而是先完成 M2.5：
 
-1. 新建 Content Creator Pack v0.1 matter：把首个场景 Pack 的目录、规则、模板和 Demo 定下来。
-2. 用已完成的 CLI 最小闭环生成 Demo 工作区，验证 `init -> doctor -> adapt -> pack install` 是否真的顺。
+1. 手动发布并验证 `@jennie-shawn/starwork@0.1.0-alpha.3`。
+2. 收集 A 测用户对 CLI 安装、Skills 安装、`init`、`doctor`、`spawn` 的反馈。
+3. 安装链路稳定后，新建 Content Creator Pack v0.1 matter，把首个场景 Pack 的目录、规则、模板和 Demo 定下来。
 
-如果只能选一个，先做 Content Creator Pack v0.1 matter。
+如果只能选一个，先确认 `0.1.0-alpha.3` 已经成为 npm `latest` 并跑通公开安装。
 
-原因：M2 已经提供了最小 CLI 工具链，下一步需要用真实场景检验产品价值。
+原因：M2 已经提供了最小 CLI 工具链，但外部用户能否顺利安装和调用 Skills，是进入场景 Pack 前必须先压实的入口问题。
