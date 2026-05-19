@@ -432,6 +432,169 @@ test("doctor reports legacy signals for a Chinese matter legacy template", () =>
   assert.doesNotMatch(result.stdout, /下一步/);
 });
 
+test("upgrade blueprint dry-run does not write files", () => {
+  const dir = tempDir();
+  const blueprintDir = tempDir();
+  fs.writeFileSync(path.join(dir, "AGENTS.md"), "# Existing Agent\n", "utf8");
+  fs.mkdirSync(path.join(dir, "资料库"), { recursive: true });
+  fs.mkdirSync(path.join(dir, "成稿"), { recursive: true });
+  fs.writeFileSync(path.join(blueprintDir, "upgrade-blueprint.json"), `${JSON.stringify({
+    schema: "starwork.upgrade_blueprint.v0.1",
+    generated_by: "starworkUpgrade",
+    source: {
+      doctor_schema: "starwork.doctor.result.v0.1",
+      diagnosis: "legacy-template",
+      core_fit: "medium"
+    },
+    base: {
+      workspace_type: "single-light",
+      kit: "local-starter",
+      language: "zh",
+      pack: "general"
+    },
+    strategy: "preserve-names",
+    paths: {
+      formal_source: "成稿/",
+      business_work_area: "资料库/"
+    },
+    core_role_mapping: [],
+    actions: [
+      { type: "ensure_dir", path: ".starwork/" },
+      { type: "write_workspace_state" },
+      { type: "copy_kit_missing_files" }
+    ]
+  }, null, 2)}\n`, "utf8");
+
+  const result = runCommand(["upgrade", "--target", dir, "--blueprint", path.join(blueprintDir, "upgrade-blueprint.json"), "--dry-run"]);
+
+  assert.equal(result.status, 0);
+  assert.match(result.stdout, /升级预览/);
+  assert.equal(fs.existsSync(path.join(dir, ".starwork", "workspace.json")), false);
+});
+
+test("upgrade applies a blueprint and keeps existing files", () => {
+  const dir = tempDir();
+  const blueprintDir = tempDir();
+  fs.mkdirSync(path.join(blueprintDir, "rules"), { recursive: true });
+  fs.writeFileSync(path.join(dir, "AGENTS.md"), "# Existing Agent\n\nKeep me.\n", "utf8");
+  fs.mkdirSync(path.join(dir, "资料库"), { recursive: true });
+  fs.mkdirSync(path.join(dir, "成稿"), { recursive: true });
+  fs.mkdirSync(path.join(dir, "事项"), { recursive: true });
+  fs.writeFileSync(path.join(blueprintDir, "rules", "core-boundaries.md"), "正式成果：{{paths.formal_source}}\n当前工作：{{paths.business_work_area}}\n", "utf8");
+  fs.writeFileSync(path.join(blueprintDir, "upgrade-blueprint.json"), `${JSON.stringify({
+    schema: "starwork.upgrade_blueprint.v0.1",
+    target: ".",
+    generated_by: "starworkUpgrade",
+    source: {
+      doctor_schema: "starwork.doctor.result.v0.1",
+      diagnosis: "legacy-template",
+      core_fit: "medium"
+    },
+    base: {
+      workspace_type: "single-matter",
+      kit: "local-matter",
+      language: "zh",
+      pack: "general"
+    },
+    strategy: "preserve-names",
+    paths: {
+      formal_source: "成稿/",
+      business_work_area: "事项/"
+    },
+    core_role_mapping: [
+      { role: "references", path: "资料库/", confidence: "high", reason: "用户确认" },
+      { role: "formal_source", path: "成稿/", confidence: "high", reason: "用户确认" }
+    ],
+    actions: [
+      { type: "ensure_dir", path: ".starwork/" },
+      { type: "write_workspace_state" },
+      { type: "copy_kit_missing_files" },
+      { type: "inject_agent_rules", target: "AGENTS.md", from: "rules/core-boundaries.md", slot: "upgrade.core_boundaries" }
+    ],
+    preserve: ["资料库/", "成稿/", "事项/"],
+    verification: {
+      run_doctor_after: true,
+      expected_workspace_type: "single-matter"
+    }
+  }, null, 2)}\n`, "utf8");
+
+  const result = runCommand(["upgrade", "--target", dir, "--blueprint", path.join(blueprintDir, "upgrade-blueprint.json"), "--yes"]);
+  const state = readJson(path.join(dir, ".starwork", "workspace.json"));
+  const agents = fs.readFileSync(path.join(dir, "AGENTS.md"), "utf8");
+  const doctor = runDoctor(["--target", dir, "--json"]);
+  const report = JSON.parse(doctor.stdout);
+
+  assert.equal(result.status, 0);
+  assert.equal(state.workspace_type, "single-matter");
+  assert.equal(state.kit, "local-matter");
+  assert.equal(state.paths.formal_source, "成稿/");
+  assert.equal(state.paths.business_work_area, "事项/");
+  assert.equal(state.upgrade.type, "upgrade_blueprint");
+  assert.match(agents, /Keep me/);
+  assert.match(agents, /StarWork Upgrade: upgrade\.core_boundaries/);
+  assert.match(agents, /正式成果：成稿\//);
+  assert.equal(fs.existsSync(path.join(dir, "_系统", "上下文", "项目状态.md")), true);
+  assert.equal(doctor.status, 0);
+  assert.equal(report.ok, true);
+});
+
+test("upgrade refuses existing StarWork workspaces", () => {
+  const dir = tempDir();
+  const blueprintDir = tempDir();
+  runInit(["--type", "single-light", "--pack", "general", "--target", dir, "--yes"]);
+  fs.writeFileSync(path.join(blueprintDir, "upgrade-blueprint.json"), `${JSON.stringify({
+    schema: "starwork.upgrade_blueprint.v0.1",
+    base: {
+      workspace_type: "single-light",
+      kit: "local-starter",
+      language: "zh",
+      pack: "general"
+    },
+    strategy: "preserve-names",
+    paths: {
+      formal_source: "输出/确认成果/",
+      business_work_area: "输出/草稿/"
+    },
+    actions: [
+      { type: "ensure_dir", path: ".starwork/" },
+      { type: "write_workspace_state" }
+    ]
+  }, null, 2)}\n`, "utf8");
+
+  const result = runCommand(["upgrade", "--target", dir, "--blueprint", path.join(blueprintDir, "upgrade-blueprint.json"), "--yes"]);
+
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /已经是 StarWork 工作台/);
+});
+
+test("upgrade rejects unsafe blueprint paths", () => {
+  const dir = tempDir();
+  const blueprintDir = tempDir();
+  fs.writeFileSync(path.join(blueprintDir, "upgrade-blueprint.json"), `${JSON.stringify({
+    schema: "starwork.upgrade_blueprint.v0.1",
+    base: {
+      workspace_type: "single-light",
+      kit: "local-starter",
+      language: "zh",
+      pack: "general"
+    },
+    strategy: "preserve-names",
+    paths: {
+      formal_source: "../escape/",
+      business_work_area: "参考资料/"
+    },
+    actions: [
+      { type: "ensure_dir", path: ".starwork/" },
+      { type: "write_workspace_state" }
+    ]
+  }, null, 2)}\n`, "utf8");
+
+  const result = runCommand(["upgrade", "--target", dir, "--blueprint", path.join(blueprintDir, "upgrade-blueprint.json"), "--yes"]);
+
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /不能跳出工作区/);
+});
+
 test("adapt creates a Claude adapter and records it in workspace state", () => {
   const dir = tempDir();
   runInit(["--type", "single-light", "--pack", "general", "--target", dir, "--yes"]);

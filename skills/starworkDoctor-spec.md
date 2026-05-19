@@ -280,7 +280,7 @@ starwork init --target <path> --type <single-light|single-matter> --pack general
 - 不鼓励用户立即执行破坏性迁移。
 - 不读取大量内容文件，除非用户明确要求深入审计。
 - 不把 `doctor` 的 legacy 判断当作最终结论；它只是信号。
-- 当前没有正式 `starwork upgrade` 命令时，只输出整理建议和可选 dry-run。
+- 用户需要落地升级时，转入 `starworkUpgrade`：由该 skill 生成升级蓝图，再交给 `starwork upgrade --blueprint` 执行。
 
 ## 与未来 CLI 的关系
 
@@ -288,4 +288,5 @@ starwork init --target <path> --type <single-light|single-matter> --pack general
 
 1. `doctor --json` 持续增强 `inventory` 和 `signals` 输出。
 2. `starworkDoctor` 基于这些信息输出诊断建议。
-3. 新增 `starwork upgrade` 或 `starwork repair`，在用户确认后执行迁移计划。
+3. `starworkUpgrade` 基于诊断建议生成升级蓝图。
+4. `starwork upgrade --blueprint` 在用户确认后执行低风险升级动作。

@@ -90,6 +90,11 @@ async function run(argv) {
     return;
   }
 
+  if (command === "upgrade") {
+    await upgradeWorkspace(argv.slice(1));
+    return;
+  }
+
   if (command === "adapt") {
     await adapt(argv.slice(1));
     return;
@@ -368,6 +373,52 @@ async function packInstall(argv) {
   console.log("下一步建议：运行 starwork doctor 检查 Pack 落地结果。");
 }
 
+async function upgradeWorkspace(argv) {
+  const options = parseArgs(argv);
+  if (options.help) {
+    printUpgradeHelp();
+    return;
+  }
+
+  if (!options.blueprint) {
+    throw new Error("upgrade v0.1 必须传入 --blueprint <upgrade-blueprint.json>。请先用 starworkUpgrade skill 生成升级蓝图。");
+  }
+
+  const targetDir = path.resolve(options.target || process.cwd());
+  if (!fs.existsSync(targetDir) || !fs.statSync(targetDir).isDirectory()) {
+    throw new Error(`upgrade 目标目录不存在或不是目录：${targetDir}`);
+  }
+  if (findWorkspaceRoot(targetDir)) {
+    throw new Error("当前目录已经是 StarWork 工作台，不应使用 upgrade。后续请使用 update 或 repair。");
+  }
+
+  const blueprint = loadUpgradeBlueprint(options.blueprint);
+  const plan = buildUpgradePlan({ targetDir, blueprint });
+
+  if (options.json && options.dryRun) {
+    console.log(JSON.stringify(renderUpgradePlanJson(plan, true), null, 2));
+    return;
+  }
+
+  if (!options.json) {
+    printUpgradePlan(plan, options.dryRun);
+  }
+  if (options.dryRun) return;
+
+  await confirmOrThrow(options, "是否按 upgrade blueprint 执行升级？");
+  applyPlan(plan);
+
+  if (options.json) {
+    console.log(JSON.stringify(renderUpgradeExecutionJson(plan), null, 2));
+    return;
+  }
+
+  console.log("");
+  console.log("StarWork 工作台升级已完成。");
+  console.log("");
+  console.log(`下一步建议：运行 starwork doctor --target ${plan.targetDir}`);
+}
+
 function doctor(argv) {
   const options = parseArgs(argv);
   if (options.help) {
@@ -619,6 +670,241 @@ function buildPackInstallPlan({ workspaceRoot, state, pack }) {
   };
 }
 
+function loadUpgradeBlueprint(blueprintPath) {
+  const filePath = path.resolve(blueprintPath);
+  let blueprint;
+  try {
+    blueprint = JSON.parse(fs.readFileSync(filePath, "utf8"));
+  } catch (error) {
+    throw new Error(`无法读取 upgrade blueprint：${error.message}`);
+  }
+  if (blueprint.schema !== "starwork.upgrade_blueprint.v0.1") {
+    throw new Error("upgrade blueprint schema 必须是 starwork.upgrade_blueprint.v0.1。");
+  }
+  if (!blueprint.base || typeof blueprint.base !== "object") {
+    throw new Error("upgrade blueprint 缺少 base 配置。");
+  }
+  const workspaceType = blueprint.base.workspace_type;
+  const kit = blueprint.base.kit;
+  const allowedKits = {
+    "single-light": "local-starter",
+    "single-matter": "local-matter"
+  };
+  if (!allowedKits[workspaceType]) {
+    throw new Error("upgrade blueprint base.workspace_type 只支持 single-light 或 single-matter。");
+  }
+  if (kit !== allowedKits[workspaceType]) {
+    throw new Error(`upgrade blueprint base.kit (${kit}) 与 ${workspaceType} 不匹配，应为 ${allowedKits[workspaceType]}。`);
+  }
+  if (!["zh", "en"].includes(blueprint.base.language)) {
+    throw new Error("upgrade blueprint base.language 只支持 zh 或 en。");
+  }
+  if (!["preserve-names", "add-standard-shell", "standardize-empty-paths"].includes(blueprint.strategy)) {
+    throw new Error("upgrade blueprint strategy 暂只支持 preserve-names、add-standard-shell 或 standardize-empty-paths。");
+  }
+  if (!blueprint.paths?.formal_source || !blueprint.paths?.business_work_area) {
+    throw new Error("upgrade blueprint 缺少 paths.formal_source 或 paths.business_work_area。");
+  }
+  normalizeSafeRelativePath(blueprint.paths.formal_source, "upgrade paths.formal_source");
+  normalizeSafeRelativePath(blueprint.paths.business_work_area, "upgrade paths.business_work_area");
+  if (!Array.isArray(blueprint.actions) || blueprint.actions.length === 0) {
+    throw new Error("upgrade blueprint 必须包含 actions。");
+  }
+  validateUpgradeBlueprintActions(blueprint, path.dirname(filePath));
+  for (const preserved of blueprint.preserve || []) {
+    normalizeSafeRelativePath(preserved, "upgrade preserve");
+  }
+  return {
+    ...blueprint,
+    __path: filePath,
+    __dir: path.dirname(filePath)
+  };
+}
+
+function validateUpgradeBlueprintActions(blueprint, blueprintDir) {
+  const supported = new Set([
+    "ensure_dir",
+    "write_workspace_state",
+    "copy_kit_missing_files",
+    "inject_agent_rules",
+    "write_file",
+    "copy_seed"
+  ]);
+  for (const action of blueprint.actions) {
+    if (!supported.has(action?.type)) {
+      throw new Error(`upgrade blueprint 不支持 action.type：${action?.type || "(missing)"}`);
+    }
+    if (action.path) {
+      normalizeSafeRelativePath(action.path, `upgrade action ${action.type}.path`);
+    }
+    if (action.target) {
+      normalizeSafeRelativePath(action.target, `upgrade action ${action.type}.target`);
+    }
+    if (action.to) {
+      normalizeSafeRelativePath(action.to, `upgrade action ${action.type}.to`);
+    }
+    if (action.from) {
+      normalizeSafeSourcePath(action.from, blueprintDir, `upgrade action ${action.type}.from`);
+    }
+    if (action.type === "inject_agent_rules" && (!action.slot || typeof action.slot !== "string")) {
+      throw new Error("upgrade inject_agent_rules action 必须包含 slot。");
+    }
+    if (action.type === "write_file" && typeof action.content !== "string") {
+      throw new Error("upgrade write_file action 必须包含 content 字符串。");
+    }
+    if (action.type === "copy_seed") {
+      const conflict = action.on_conflict || "error";
+      if (!["error", "skip"].includes(conflict)) {
+        throw new Error("upgrade copy_seed on_conflict 只支持 error 或 skip。");
+      }
+    }
+  }
+}
+
+function buildUpgradePlan({ targetDir, blueprint }) {
+  const kitDir = path.join(PRODUCT_ROOT, "core", "kits", blueprint.base.kit);
+  if (!fs.existsSync(kitDir)) {
+    throw new Error(`找不到 Kit：${blueprint.base.kit}`);
+  }
+
+  const packId = blueprint.base.pack || "general";
+  const pack = packId ? loadPack(packId, blueprint.base.language) : null;
+  if (pack) validatePack(pack, blueprint.base.workspace_type);
+
+  const now = new Date().toISOString();
+  const variables = buildUpgradeVariables(blueprint, { targetDir, pack });
+  const actions = [];
+  const injectedTargets = new Set((blueprint.actions || [])
+    .filter((action) => action.type === "inject_agent_rules")
+    .map((action) => normalizeSafeRelativePath(action.target || "AGENTS.md", "upgrade inject target")));
+
+  for (const action of blueprint.actions) {
+    if (action.type === "ensure_dir") {
+      actions.push(directoryAction(targetDir, normalizeSafeRelativePath(action.path, "upgrade ensure_dir.path")));
+    } else if (action.type === "write_workspace_state") {
+      actions.push(strictFileAction(targetDir, path.join(".starwork", "workspace.json"), renderUpgradeWorkspaceState(blueprint, pack, now)));
+    } else if (action.type === "copy_kit_missing_files") {
+      actions.push(...buildUpgradeKitActions(targetDir, kitDir, injectedTargets));
+    } else if (action.type === "inject_agent_rules") {
+      actions.push(buildUpgradeAgentRuleAction(targetDir, kitDir, blueprint, action, variables));
+    } else if (action.type === "write_file") {
+      const target = normalizeSafeRelativePath(action.path, "upgrade write_file.path");
+      actions.push(strictFileAction(targetDir, target, renderText(action.content, variables)));
+    } else if (action.type === "copy_seed") {
+      const source = normalizeSafeSourcePath(action.from, blueprint.__dir, "upgrade copy_seed.from");
+      const target = normalizeSafeRelativePath(action.to, "upgrade copy_seed.to");
+      const targetPath = path.join(targetDir, target);
+      if (fs.existsSync(targetPath)) {
+        if ((action.on_conflict || "error") === "skip") continue;
+        throw new Error(`upgrade copy_seed 目标已存在：${target}`);
+      }
+      actions.push(strictFileAction(targetDir, target, renderText(fs.readFileSync(source, "utf8"), variables)));
+    }
+  }
+
+  actions.push(directoryAction(targetDir, normalizeSafeRelativePath(blueprint.paths.formal_source, "paths.formal_source")));
+  actions.push(directoryAction(targetDir, normalizeSafeRelativePath(blueprint.paths.business_work_area, "paths.business_work_area")));
+  if (pack) {
+    for (const rolePath of Object.values(pack.paths || {})) {
+      actions.push(directoryAction(targetDir, normalizeSafeRelativePath(rolePath, "pack.paths")));
+    }
+  }
+
+  return {
+    targetDir,
+    blueprint,
+    strategy: blueprint.strategy,
+    workspaceType: blueprint.base.workspace_type,
+    kit: blueprint.base.kit,
+    language: blueprint.base.language,
+    pack,
+    actions: dedupeActions(actions.filter(Boolean))
+  };
+}
+
+function buildUpgradeKitActions(targetDir, kitDir, injectedTargets) {
+  const actions = [];
+  for (const source of walkFiles(kitDir)) {
+    const relativePath = normalizeRelativePath(path.relative(kitDir, source));
+    if (injectedTargets.has(relativePath)) continue;
+    const target = path.join(targetDir, relativePath);
+    if (fs.existsSync(target)) continue;
+    actions.push(strictFileAction(targetDir, relativePath, fs.readFileSync(source, "utf8")));
+  }
+  return actions;
+}
+
+function buildUpgradeAgentRuleAction(targetDir, kitDir, blueprint, action, variables) {
+  const target = normalizeSafeRelativePath(action.target || "AGENTS.md", "upgrade inject_agent_rules.target");
+  const source = normalizeSafeSourcePath(action.from, blueprint.__dir, "upgrade inject_agent_rules.from");
+  const slot = action.slot;
+  const marker = `StarWork Upgrade: ${slot}`;
+  const targetPath = path.join(targetDir, target);
+  const kitDefaultPath = path.join(kitDir, target);
+  const existing = fs.existsSync(targetPath)
+    ? fs.readFileSync(targetPath, "utf8")
+    : fs.existsSync(kitDefaultPath)
+      ? fs.readFileSync(kitDefaultPath, "utf8")
+      : "";
+  if (existing.includes(marker)) return null;
+
+  const ruleContent = renderText(fs.readFileSync(source, "utf8"), variables).trim();
+  if (!ruleContent) return null;
+  const content = `${existing.trim()}\n\n## StarWork 升级规则\n\n<!-- ${marker} -->\n\n${ruleContent}\n`;
+  return fs.existsSync(targetPath)
+    ? overwriteFileAction(targetDir, target, content)
+    : strictFileAction(targetDir, target, content);
+}
+
+function renderUpgradeWorkspaceState(blueprint, pack, now) {
+  const packRecord = pack ? [{
+    id: pack.id,
+    version: pack.version || "0.1.0",
+    installed_at: now
+  }] : [];
+  const state = {
+    schema: "starwork.workspace.v0.1",
+    core: "0.1",
+    workspace_type: blueprint.base.workspace_type,
+    kit: blueprint.base.kit,
+    packs: packRecord,
+    language: blueprint.base.language,
+    paths: {
+      formal_source: normalizeSafeRelativePath(blueprint.paths.formal_source, "paths.formal_source"),
+      business_work_area: normalizeSafeRelativePath(blueprint.paths.business_work_area, "paths.business_work_area")
+    },
+    upgrade: {
+      type: "upgrade_blueprint",
+      schema: blueprint.schema,
+      source: path.basename(blueprint.__path),
+      strategy: blueprint.strategy,
+      generated_by: blueprint.generated_by || "starworkUpgrade",
+      core_role_mapping: Array.isArray(blueprint.core_role_mapping) ? blueprint.core_role_mapping : [],
+      upgraded_at: now
+    },
+    created_by: "starwork upgrade"
+  };
+  return `${JSON.stringify(state, null, 2)}\n`;
+}
+
+function buildUpgradeVariables(blueprint, { targetDir, pack }) {
+  return {
+    blueprint,
+    workspace: {
+      name: path.basename(targetDir),
+      type: blueprint.base.workspace_type
+    },
+    paths: {
+      formal_source: normalizeSafeRelativePath(blueprint.paths.formal_source, "paths.formal_source"),
+      business_work_area: normalizeSafeRelativePath(blueprint.paths.business_work_area, "paths.business_work_area")
+    },
+    upgrade: {
+      strategy: blueprint.strategy
+    },
+    pack: pack || null
+  };
+}
+
 function renderInstalledPackRules(pack, variables) {
   const rules = renderPackRules(pack, variables);
   if (!rules.trim()) return "";
@@ -863,6 +1149,9 @@ function normalizeSafeRelativePath(relativePath, label) {
   }
   if (normalized === ".git" || normalized.startsWith(".git/")) {
     throw new Error(`${label} 不能写入 .git：${relativePath}`);
+  }
+  if (normalized === "node_modules" || normalized.startsWith("node_modules/")) {
+    throw new Error(`${label} 不能写入 node_modules：${relativePath}`);
   }
   return normalized;
 }
@@ -2013,6 +2302,14 @@ function fileAction(targetDir, relativePath, content) {
   return { type: "file", mode: "create-new", target: alternate, originalTarget: target, relativePath: path.relative(targetDir, alternate), content };
 }
 
+function strictFileAction(targetDir, relativePath, content) {
+  const target = path.join(targetDir, relativePath);
+  if (fs.existsSync(target)) {
+    throw new Error(`目标文件已存在，upgrade 不会覆盖：${relativePath}`);
+  }
+  return { type: "file", mode: "create", target, relativePath, content };
+}
+
 function overwriteFileAction(targetDir, relativePath, content) {
   const target = path.join(targetDir, relativePath);
   return { type: "file", mode: "overwrite", target, relativePath, content };
@@ -2054,7 +2351,7 @@ function dedupeActions(actions) {
 
 function applyPlan(plan) {
   for (const action of plan.actions) {
-    if (action.mode === "exists") continue;
+    if (action.mode === "exists" || action.mode === "skip") continue;
     if (action.type === "directory") {
       fs.mkdirSync(action.target, { recursive: true });
       continue;
@@ -2180,6 +2477,101 @@ function printSpawnPlan(plan, dryRun) {
   }
 }
 
+function printUpgradePlan(plan, dryRun) {
+  const creates = plan.actions.filter((action) => action.type === "file" && action.mode === "create");
+  const overwrites = plan.actions.filter((action) => action.type === "file" && action.mode === "overwrite");
+  const dirs = plan.actions.filter((action) => action.type === "directory" && action.mode === "create");
+  const existingDirs = plan.actions.filter((action) => action.type === "directory" && action.mode === "exists");
+
+  console.log("");
+  console.log(dryRun ? "升级预览（dry run）：" : "升级计划：");
+  console.log("");
+  console.log(`目标目录：${plan.targetDir}`);
+  console.log(`Blueprint：${plan.blueprint.__path}`);
+  console.log(`策略：${plan.strategy}`);
+  console.log(`工作区类型：${plan.workspaceType}`);
+  console.log(`Kit：${plan.kit}`);
+  console.log(`语言：${plan.language}`);
+  console.log(`Pack：${plan.pack ? `${plan.pack.name || plan.pack.id} (${plan.pack.id})` : "(none)"}`);
+  console.log(`正式事实源：${plan.blueprint.paths.formal_source}`);
+  console.log(`当前工作区：${plan.blueprint.paths.business_work_area}`);
+  console.log("");
+
+  if (dirs.length) {
+    console.log("将创建目录：");
+    dirs.forEach((action) => console.log(`- ${action.relativePath}`));
+    console.log("");
+  }
+  if (creates.length) {
+    console.log("将创建文件：");
+    creates.slice(0, 60).forEach((action) => console.log(`- ${action.relativePath}`));
+    if (creates.length > 60) console.log(`- ... 另有 ${creates.length - 60} 项`);
+    console.log("");
+  }
+  if (overwrites.length) {
+    console.log("将注入或更新文件：");
+    overwrites.forEach((action) => console.log(`- ${action.relativePath}`));
+    console.log("");
+  }
+  if (existingDirs.length) {
+    console.log("会保留并复用已有目录：");
+    existingDirs.forEach((action) => console.log(`- ${action.relativePath}`));
+    console.log("");
+  }
+  if (plan.blueprint.preserve?.length) {
+    console.log("明确保留不移动：");
+    plan.blueprint.preserve.forEach((item) => console.log(`- ${item}`));
+    console.log("");
+  }
+}
+
+function renderUpgradePlanJson(plan, dryRun) {
+  return {
+    schema: "starwork.upgrade.plan_result.v0.1",
+    target: plan.targetDir,
+    dry_run: Boolean(dryRun),
+    ok: true,
+    strategy: plan.strategy,
+    workspace_type: plan.workspaceType,
+    kit: plan.kit,
+    language: plan.language,
+    pack: plan.pack?.id || null,
+    actions: plan.actions.map((action) => ({
+      type: action.type,
+      mode: action.mode,
+      path: action.relativePath,
+      status: action.mode === "exists" ? "exists" : "planned"
+    })),
+    blocked: [],
+    warnings: []
+  };
+}
+
+function renderUpgradeExecutionJson(plan) {
+  return {
+    schema: "starwork.upgrade.execution_result.v0.1",
+    target: plan.targetDir,
+    ok: true,
+    executed: plan.actions
+      .filter((action) => action.mode !== "exists" && action.mode !== "skip")
+      .map((action) => ({
+        type: action.type,
+        mode: action.mode,
+        path: action.relativePath,
+        status: "done"
+      })),
+    skipped: plan.actions
+      .filter((action) => action.mode === "exists" || action.mode === "skip")
+      .map((action) => ({
+        type: action.type,
+        mode: action.mode,
+        path: action.relativePath,
+        status: "skipped"
+      })),
+    next_check: `starwork doctor --target ${plan.targetDir}`
+  };
+}
+
 function walkFiles(dir) {
   const entries = fs.readdirSync(dir, { withFileTypes: true });
   const result = [];
@@ -2221,6 +2613,7 @@ function printHelp() {
 Usage:
   starwork init [options]
   starwork spawn [options]
+  starwork upgrade [options]
   starwork doctor [options]
   starwork adapt [agent] [options]
   starwork pack install <pack> [options]
@@ -2279,6 +2672,22 @@ Options:
   --verbose
   --inventory-depth <number|all>
   --inventory-limit <number>
+`);
+}
+
+function printUpgradeHelp() {
+  console.log(`StarWork Upgrade
+
+Usage:
+  starwork upgrade --target <path> --blueprint <upgrade-blueprint.json> --dry-run
+  starwork upgrade --target <path> --blueprint <upgrade-blueprint.json> --yes
+
+Options:
+  --target <path>
+  --blueprint <upgrade-blueprint.json>
+  --dry-run
+  --json
+  --yes, -y
 `);
 }
 
