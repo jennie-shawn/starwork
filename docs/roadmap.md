@@ -136,7 +136,7 @@ M8 v1.0 稳定产品
 - `starworkInit` 与 `starworkSpawn` 可通过 `npx skills add jennie-shawn/starwork --skill '*' -g -a codex -y` 安装。
 - 公开 README 已改为中文首页。
 - 已新增面向 Agent 的安装指南：`product/docs/agent-install-guide.md`。
-- 本地产品仓库已准备 `0.1.0-alpha.3`；清理时 npm `latest` 仍是 `0.1.0-alpha.2`，需要手动发布后再确认。
+- npm `latest` 已发布到 `0.1.0-alpha.3`。
 
 验收标准：
 
@@ -288,10 +288,10 @@ v1.0 应具备：
 
 当前最应该做的不是重开 Core 或继续扩张 CLI，而是先完成 M2.5：
 
-1. 手动发布并验证 `@jennie-shawn/starwork@0.1.0-alpha.3`。
-2. 收集 A 测用户对 CLI 安装、Skills 安装、`init`、`doctor`、`spawn` 的反馈。
-3. 安装链路稳定后，新建 Content Creator Pack v0.1 matter，把首个场景 Pack 的目录、规则、模板和 Demo 定下来。
+1. 继续优化 CLI 与 `starworkInit` / `starworkSpawn` skills 的体验。
+2. 慢慢收集 A 测用户对 CLI 安装、Skills 安装、`init`、`doctor`、`spawn` 的反馈。
+3. 等 GFM 新一期课程敲定时，再启动 Content Creator Pack v0.1 matter，把首个场景 Pack 的目录、规则、模板和 Demo 定下来。
 
-如果只能选一个，先确认 `0.1.0-alpha.3` 已经成为 npm `latest` 并跑通公开安装。
+如果只能选一个，先优化 `init` 与对应 skill 的真实用户入口体验。
 
-原因：M2 已经提供了最小 CLI 工具链，但外部用户能否顺利安装和调用 Skills，是进入场景 Pack 前必须先压实的入口问题。
+原因：M2 已经提供了最小 CLI 工具链，A 测版本也已发布；现在最容易产生体验落差的是 CLI 与 Skill 之间的协同、提示和容错。
