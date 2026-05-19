@@ -241,6 +241,10 @@ function parseArgs(argv) {
       options.strict = true;
     } else if (arg === "--verbose") {
       options.verbose = true;
+    } else if (arg === "--inventory-depth") {
+      options.inventoryDepth = readValue(argv, ++i, arg);
+    } else if (arg === "--inventory-limit") {
+      options.inventoryLimit = readValue(argv, ++i, arg);
     } else if (arg === "--agent") {
       options.agent = readValue(argv, ++i, arg);
     } else if (arg === "--hub") {
@@ -379,9 +383,12 @@ function doctor(argv) {
     return finishDoctor(result, options);
   }
 
+  result.inventory = collectInventory(targetDir, options);
+  result.signals = detectWorkspaceSignals(result.inventory);
+
   const workspaceRoot = findWorkspaceRoot(targetDir);
   if (!workspaceRoot) {
-    const legacy = detectLegacyWorkspace(targetDir);
+    const legacy = detectLegacyWorkspace(targetDir, result.signals);
     if (legacy.candidate) {
       result.upgrade = buildUpgradeGuidance(targetDir, legacy);
       addCheck(result, "workspace.state.exists", "fail", "这是一个可升级的历史模板工作区，但缺少 .starwork/workspace.json。", legacy.primaryTrace);
@@ -469,6 +476,8 @@ function createDoctorResult(targetDir) {
     target: targetDir,
     workspace: null,
     upgrade: null,
+    inventory: null,
+    signals: null,
     summary: {
       pass: 0,
       info: 0,
@@ -887,14 +896,209 @@ function findStarWorkTrace(dir) {
   return traces.find((trace) => fs.existsSync(path.join(dir, trace))) || null;
 }
 
-function detectLegacyWorkspace(dir) {
+function collectInventory(root, options = {}) {
+  const maxDepth = parseInventoryDepth(options.inventoryDepth);
+  const maxEntries = parseInventoryLimit(options.inventoryLimit);
+  const directories = [];
+  const files = [];
+  const omitted = {
+    directories: 0,
+    files: 0,
+    reason: null
+  };
+  let totalEntries = 0;
+
+  function walk(current, depth) {
+    if (totalEntries >= maxEntries) {
+      omitted.reason = "count_limit";
+      return;
+    }
+
+    let entries;
+    try {
+      entries = fs.readdirSync(current, { withFileTypes: true })
+        .filter((entry) => !shouldOmitInventoryEntry(entry.name))
+        .sort((a, b) => a.name.localeCompare(b.name, "zh-Hans-CN"));
+    } catch {
+      return;
+    }
+
+    for (const entry of entries) {
+      if (totalEntries >= maxEntries) {
+        if (entry.isDirectory()) omitted.directories += 1;
+        else if (entry.isFile()) omitted.files += 1;
+        omitted.reason = "count_limit";
+        continue;
+      }
+
+      const absolute = path.join(current, entry.name);
+      const relativePath = normalizeRelativePath(path.relative(root, absolute));
+      if (!relativePath) continue;
+
+      if (entry.isDirectory()) {
+        const childCount = safeChildCount(absolute);
+        directories.push({
+          path: relativePath,
+          depth: depth + 1,
+          children_count: childCount
+        });
+        totalEntries += 1;
+        if (depth + 1 < maxDepth) {
+          walk(absolute, depth + 1);
+        } else if (childCount > 0) {
+          omitted.directories += 1;
+          omitted.reason = omitted.reason || "depth_limit";
+        }
+      } else if (entry.isFile()) {
+        files.push({
+          path: relativePath,
+          depth: depth + 1,
+          size: safeFileSize(absolute)
+        });
+        totalEntries += 1;
+      }
+    }
+  }
+
+  walk(root, 0);
+
+  return {
+    root,
+    max_depth: Number.isFinite(maxDepth) ? maxDepth : "all",
+    max_entries: maxEntries,
+    directories,
+    files,
+    omitted
+  };
+}
+
+function parseInventoryDepth(value) {
+  if (!value) return 8;
+  if (String(value).toLowerCase() === "all") return Infinity;
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 1) {
+    throw new Error("--inventory-depth 必须是正整数或 all。");
+  }
+  return parsed;
+}
+
+function parseInventoryLimit(value) {
+  if (!value) return 5000;
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 100) {
+    throw new Error("--inventory-limit 必须是大于等于 100 的整数。");
+  }
+  return parsed;
+}
+
+function shouldOmitInventoryEntry(name) {
+  return [
+    ".git",
+    "node_modules",
+    ".DS_Store",
+    ".cache",
+    ".next",
+    "dist",
+    "build",
+    "coverage"
+  ].includes(name);
+}
+
+function safeChildCount(dir) {
+  try {
+    return fs.readdirSync(dir).filter((name) => !shouldOmitInventoryEntry(name)).length;
+  } catch {
+    return 0;
+  }
+}
+
+function safeFileSize(file) {
+  try {
+    return fs.statSync(file).size;
+  } catch {
+    return 0;
+  }
+}
+
+function detectWorkspaceSignals(inventory) {
+  const directories = inventory?.directories || [];
+  const files = inventory?.files || [];
+  return {
+    agent_entry: files.filter((file) => isAgentEntryFile(file.path)).map((file) => file.path),
+    system_dirs: directories.filter((dir) => isSystemDirectory(dir.path)).map((dir) => dir.path),
+    matter_dirs: directories.filter((dir) => isMatterDirectory(dir.path)).map((dir) => dir.path),
+    possible_reference_dirs: directories.filter((dir) => isPossibleReferenceDirectory(dir.path)).map((dir) => dir.path),
+    possible_output_dirs: directories.filter((dir) => isPossibleOutputDirectory(dir.path)).map((dir) => dir.path),
+    possible_draft_dirs: directories.filter((dir) => isPossibleDraftDirectory(dir.path)).map((dir) => dir.path),
+    possible_current_work_dirs: directories.filter((dir) => isPossibleCurrentWorkDirectory(dir.path)).map((dir) => dir.path),
+    identity_dirs: directories.filter((dir) => isIdentityDirectory(dir.path)).map((dir) => dir.path),
+    lessons_dirs: directories.filter((dir) => isLessonsDirectory(dir.path)).map((dir) => dir.path),
+    readme_files: files.filter((file) => /^README(\.[a-z0-9]+)?$/i.test(path.basename(file.path))).map((file) => file.path)
+  };
+}
+
+function isAgentEntryFile(relativePath) {
+  return ["AGENTS.md", "CLAUDE.md", ".cursorrules"].includes(relativePath)
+    || relativePath.endsWith("/AGENTS.md")
+    || relativePath.endsWith("/CLAUDE.md");
+}
+
+function isSystemDirectory(relativePath) {
+  const base = basenameLower(relativePath);
+  return ["_系统", "_system", "system"].includes(base);
+}
+
+function isMatterDirectory(relativePath) {
+  const base = basenameLower(relativePath);
+  return includesAny(base, ["事项", "matter", "matters"]);
+}
+
+function isPossibleReferenceDirectory(relativePath) {
+  const base = basenameLower(relativePath);
+  return includesAny(base, ["参考", "资料", "素材", "知识", "reference", "references", "ref", "source", "material", "materials", "knowledge"]);
+}
+
+function isPossibleOutputDirectory(relativePath) {
+  const base = basenameLower(relativePath);
+  return includesAny(base, ["输出", "成果", "成稿", "终稿", "交付", "发布", "确认", "output", "outputs", "final", "deliverable", "deliverables", "published", "release"]);
+}
+
+function isPossibleDraftDirectory(relativePath) {
+  const base = basenameLower(relativePath);
+  return includesAny(base, ["草稿", "初稿", "脚本", "draft", "drafts", "script", "scripts"]);
+}
+
+function isPossibleCurrentWorkDirectory(relativePath) {
+  const base = basenameLower(relativePath);
+  return includesAny(base, ["推进", "当前", "任务", "工作台", "work", "working", "tasks", "todo"]);
+}
+
+function isIdentityDirectory(relativePath) {
+  const base = basenameLower(relativePath);
+  return includesAny(base, ["身份", "identity", "profile", "persona"]);
+}
+
+function isLessonsDirectory(relativePath) {
+  const base = basenameLower(relativePath);
+  return includesAny(base, ["教训", "经验", "复盘", "lessons", "learning", "retrospective"]);
+}
+
+function basenameLower(relativePath) {
+  return path.basename(relativePath).toLowerCase();
+}
+
+function includesAny(value, needles) {
+  return needles.some((needle) => value.includes(needle));
+}
+
+function detectLegacyWorkspace(dir, signals = null) {
   const groups = {
     entryRules: ["AGENTS.md", "CLAUDE.md", ".cursorrules"],
     system: ["_系统", "_system", "system"],
     matters: ["事项", "matters"],
-    referencesZh: ["参考资料", "资料", "素材"],
+    referencesZh: ["参考资料", "资料", "资料库", "素材", "素材库", "知识"],
     referencesEn: ["references", "reference"],
-    outputsZh: ["输出", "成果"],
+    outputsZh: ["输出", "成果", "成稿", "终稿", "交付物", "发布记录"],
     outputsEn: ["outputs", "output"],
     identityRoot: ["identity"],
     lessonsRoot: ["lessons"],
@@ -910,6 +1114,13 @@ function detectLegacyWorkspace(dir) {
 
   const references = [...found.referencesZh, ...found.referencesEn];
   const outputs = [...found.outputsZh, ...found.outputsEn];
+  const signalReferences = signals?.possible_reference_dirs || [];
+  const signalOutputs = signals?.possible_output_dirs || [];
+  const signalMatters = signals?.matter_dirs || [];
+  const signalEntries = signals?.agent_entry || [];
+  const signalSystems = signals?.system_dirs || [];
+  const signalIdentity = signals?.identity_dirs || [];
+  const signalLessons = signals?.lessons_dirs || [];
   const hasSystem = found.system.length > 0;
   const hasEntry = found.entryRules.length > 0;
   const hasMatters = found.matters.length > 0;
@@ -922,36 +1133,45 @@ function detectLegacyWorkspace(dir) {
     ...found.lessonsSystemEn
   ].length > 0;
 
-  const signals = [
-    hasEntry,
-    hasSystem,
-    hasMatters,
-    references.length > 0,
-    outputs.length > 0,
-    hasIdentityOrLessons
+  const signalCount = [
+    hasEntry || signalEntries.length > 0,
+    hasSystem || signalSystems.length > 0,
+    hasMatters || signalMatters.length > 0,
+    references.length > 0 || signalReferences.length > 0,
+    outputs.length > 0 || signalOutputs.length > 0,
+    hasIdentityOrLessons || signalIdentity.length > 0 || signalLessons.length > 0
   ].filter(Boolean).length;
-  const candidate = signals >= 2 || (references.length > 0 && outputs.length > 0);
+  const candidate = signalCount >= 2 || ((references.length > 0 || signalReferences.length > 0) && (outputs.length > 0 || signalOutputs.length > 0));
   const language = inferLegacyLanguage(found);
-  const workspaceType = hasMatters ? "single-matter" : "single-light";
+  const workspaceType = hasMatters || signalMatters.length > 0 ? "single-matter" : "single-light";
   const primaryTrace = [
     ...found.entryRules,
+    ...signalEntries,
     ...found.system,
+    ...signalSystems,
     ...found.matters,
+    ...signalMatters,
     ...references,
-    ...outputs
+    ...signalReferences,
+    ...outputs,
+    ...signalOutputs
   ][0] || null;
 
   return {
     candidate,
-    confidence: signals >= 4 ? "high" : "medium",
+    confidence: signalCount >= 4 ? "high" : "medium",
     language,
     workspaceType,
     pack: "general",
     primaryTrace,
     found,
-    references,
-    outputs
+    references: uniqueList([...references, ...signalReferences]),
+    outputs: uniqueList([...outputs, ...signalOutputs])
   };
+}
+
+function uniqueList(items) {
+  return [...new Set(items.filter(Boolean))];
 }
 
 function existingRelativePaths(root, candidates) {
@@ -1053,7 +1273,7 @@ function finishDoctor(result, options) {
 }
 
 function doctorPublicResult(result) {
-  const { exitCode, target, ...publicResult } = result;
+  const { exitCode, ...publicResult } = result;
   return publicResult;
 }
 
@@ -2083,6 +2303,8 @@ Options:
   --json
   --strict
   --verbose
+  --inventory-depth <number|all>
+  --inventory-limit <number>
 `);
 }
 

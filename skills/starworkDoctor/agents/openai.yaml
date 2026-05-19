@@ -1,0 +1,7 @@
+interface:
+  display_name: "StarWork Doctor"
+  short_description: "诊断 StarWork 工作台或历史模板"
+  default_prompt: "Use $starworkDoctor to interpret starwork doctor output and recommend a safe upgrade path."
+
+policy:
+  allow_implicit_invocation: true

@@ -68,7 +68,7 @@ starwork init / future upgrade = 执行器
 
 ### 必须输出的结构探测信息
 
-后续 `doctor` JSON 应新增或保留类似字段：
+`doctor` JSON 应输出或保留类似字段：
 
 ```json
 {
@@ -164,7 +164,7 @@ starwork doctor --target <target> --json
 - 是否有 legacy / signals
 - fail 是结构缺失，还是非 StarWork 目录
 
-如果当前 `doctor` 版本还没有输出全量 `inventory`，skill 可以临时通过只读命令补充：
+如果当前 `doctor` 版本没有输出足够完整的 `inventory`，skill 可以临时通过只读命令补充：
 
 ```bash
 find <target> -maxdepth 3 -not -path '*/.git/*'
@@ -380,7 +380,7 @@ starwork init --target <path> --type single-matter --pack general --language zh 
 
 后续可以有三层演进：
 
-1. `doctor --json` 增强 `inventory` 和 `signals` 输出。
+1. `doctor --json` 持续增强 `inventory` 和 `signals` 输出。
 2. `starworkDoctor` 基于这些信息输出诊断建议。
 3. 新增 `starwork upgrade` 或 `starwork repair`，在用户确认后执行迁移计划。
 

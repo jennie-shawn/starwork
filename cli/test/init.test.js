@@ -388,8 +388,29 @@ test("doctor reports upgrade guidance for an English legacy template", () => {
   assert.equal(report.upgrade.inferred.language, "en");
   assert.equal(report.upgrade.inferred.workspace_type, "single-light");
   assert.deepEqual(report.upgrade.inferred.references, ["references"]);
-  assert.deepEqual(report.upgrade.inferred.outputs, ["outputs"]);
+  assert(report.upgrade.inferred.outputs.includes("outputs"));
   assert(report.checks.some((check) => check.id === "legacy.references.detected" && check.level === "info"));
+});
+
+test("doctor exposes inventory and semantic signals for non-standard legacy folders", () => {
+  const dir = tempDir();
+  fs.writeFileSync(path.join(dir, "README.md"), "# Custom Workspace\n", "utf8");
+  fs.mkdirSync(path.join(dir, "资料库", "文章"), { recursive: true });
+  fs.mkdirSync(path.join(dir, "成稿"), { recursive: true });
+  fs.mkdirSync(path.join(dir, "推进"), { recursive: true });
+
+  const result = runDoctor(["--target", dir, "--json"]);
+  const report = JSON.parse(result.stdout);
+
+  assert.equal(result.status, 1);
+  assert.equal(report.target, path.resolve(dir));
+  assert(report.inventory.directories.some((item) => item.path === "资料库"));
+  assert(report.inventory.directories.some((item) => item.path === "成稿"));
+  assert(report.inventory.files.some((item) => item.path === "README.md"));
+  assert(report.signals.possible_reference_dirs.includes("资料库"));
+  assert(report.signals.possible_output_dirs.includes("成稿"));
+  assert(report.signals.possible_current_work_dirs.includes("推进"));
+  assert.equal(report.upgrade.candidate, true);
 });
 
 test("doctor reports upgrade guidance for a Chinese matter legacy template", () => {

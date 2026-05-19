@@ -366,7 +366,7 @@
           <div class="quick"><b>健康检查</b><span>检查 state、Core 文件、Kit、Pack、正式事实源和业务工作区。</span></div>
           <div class="quick"><b>升级诊断</b><span>识别历史模板，推断语言、工作区类型和默认升级路径。</span></div>
           <div class="quick"><b>人类报告</b><span>默认输出给普通用户看的体检结果和下一步建议。</span></div>
-          <div class="quick"><b>机器输出</b><span><code>--json</code> 输出稳定结构，给 skill、脚本和后续 repair 使用。</span></div>
+          <div class="quick"><b>机器输出</b><span><code>--json</code> 输出 <code>inventory</code> 和 <code>signals</code>，给 skill、脚本和后续 repair 使用。</span></div>
         </div>
       </div>
 
@@ -512,7 +512,7 @@
       </div>
       <div class="callout">
         <strong>关键边界</strong>
-        Doctor 不会自动改历史模板。它只告诉用户：这个目录像不像可升级模板、建议按哪种类型升级、先运行哪条 dry-run 命令。真正写入仍由用户确认后的 <code>starwork init --yes</code> 执行。
+        Doctor 不会自动改历史模板。它负责把目录结构和候选信号暴露出来；<code>starworkDoctor</code> skill 负责结合上下文做理性判断。真正写入仍由用户确认后的 <code>starwork init --yes</code> 或未来升级命令执行。
       </div>
     </section>
 
@@ -550,6 +550,19 @@
     "packs": ["general"]
   },
   "upgrade": null,
+  "inventory": {
+    "directories": [
+      { "path": "资料库", "depth": 1, "children_count": 3 }
+    ],
+    "files": [
+      { "path": "README.md", "depth": 1, "size": 2048 }
+    ]
+  },
+  "signals": {
+    "possible_reference_dirs": ["资料库"],
+    "possible_output_dirs": [],
+    "possible_current_work_dirs": []
+  },
   "summary": { "pass": 18, "info": 0, "warn": 0, "fail": 0 },
   "checks": []
 }</pre>
@@ -572,6 +585,14 @@
       "references": ["参考资料"],
       "outputs": ["输出"]
     }
+  },
+  "inventory": {
+    "directories": ["资料库", "成稿", "推进"]
+  },
+  "signals": {
+    "possible_reference_dirs": ["资料库"],
+    "possible_output_dirs": ["成稿"],
+    "possible_current_work_dirs": ["推进"]
   }
 }</pre>
         </div>

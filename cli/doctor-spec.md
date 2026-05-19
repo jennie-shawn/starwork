@@ -6,7 +6,7 @@
 - 所属模块：StarWork CLI
 - 命令：`starwork doctor`
 - 前置状态：Core v0.1 已封版，`starwork init` 第一版已落地
-- 实现状态：v0.1 最小实现已落地；历史模板升级诊断已进入 alpha
+- 实现状态：v0.1 最小实现已落地；历史模板升级诊断、目录 inventory 和 signals 已进入 alpha
 - 目标：检查一个 StarWork 工作台是否健康，并告诉用户问题在哪里、严重到什么程度、下一步该做什么；对历史模板用户给出平滑升级建议
 
 ## 一句话定义
@@ -92,6 +92,8 @@ starwork doctor --verbose
 | `--json` | 输出机器可读 JSON。 |
 | `--strict` | 将部分 warning 视为失败，适合测试和发布前检查。 |
 | `--verbose` | 显示通过项、检查来源和路径解析细节。 |
+| `--inventory-depth <number\|all>` | 控制目录结构探测深度，默认用于保护过大的工作区。 |
+| `--inventory-limit <number>` | 控制最多输出多少个目录和文件条目。 |
 | `--help` | 显示帮助。 |
 
 v0.1 暂不提供 `--fix`。修复动作后续可以单独设计为 `starwork doctor --fix` 或 `starwork repair`，但第一版不要混入。
