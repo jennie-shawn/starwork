@@ -390,7 +390,7 @@ function doctor(argv) {
   if (!workspaceRoot) {
     const legacy = detectLegacyWorkspace(targetDir, result.signals);
     if (legacy.candidate) {
-      result.upgrade = buildUpgradeGuidance(targetDir, legacy);
+      result.upgrade = buildLegacySignals(legacy);
       addCheck(result, "workspace.state.exists", "fail", "这是一个可升级的历史模板工作区，但缺少 .starwork/workspace.json。", legacy.primaryTrace);
       addLegacyChecks(result, legacy);
     } else {
@@ -1162,7 +1162,6 @@ function detectLegacyWorkspace(dir, signals = null) {
     confidence: signalCount >= 4 ? "high" : "medium",
     language,
     workspaceType,
-    pack: "general",
     primaryTrace,
     found,
     references: uniqueList([...references, ...signalReferences]),
@@ -1194,14 +1193,7 @@ function inferLegacyLanguage(found) {
   return enScore > zhScore ? "en" : "zh";
 }
 
-function buildUpgradeGuidance(targetDir, legacy) {
-  const command = [
-    "starwork init",
-    `--target ${shellQuote(targetDir)}`,
-    `--type ${legacy.workspaceType}`,
-    `--pack ${legacy.pack}`,
-    `--language ${legacy.language}`
-  ].join(" ");
+function buildLegacySignals(legacy) {
   return {
     candidate: true,
     source: "legacy-template",
@@ -1209,23 +1201,10 @@ function buildUpgradeGuidance(targetDir, legacy) {
     inferred: {
       language: legacy.language,
       workspace_type: legacy.workspaceType,
-      pack: legacy.pack,
       references: legacy.references,
       outputs: legacy.outputs
-    },
-    next_steps: [
-      "先不要移动或删除历史文件。",
-      `先运行预览：${command} --dry-run`,
-      `确认后再执行：${command} --yes`,
-      "执行后重新运行 starwork doctor，检查新增 state、Core 角色和目录边界。"
-    ]
+    }
   };
-}
-
-function shellQuote(value) {
-  const text = String(value);
-  if (/^[A-Za-z0-9_@%+=:,./-]+$/.test(text)) return text;
-  return `'${text.replace(/'/g, "'\\''")}'`;
 }
 
 function addLegacyChecks(result, legacy) {
@@ -1311,15 +1290,10 @@ function printDoctorResult(result, options) {
   }
 
   if (result.upgrade?.candidate) {
-    console.log("Upgrade guidance:");
-    console.log(`  检测为：历史模板升级候选（${result.upgrade.confidence} confidence）`);
-    console.log(`  建议类型：${result.upgrade.inferred.workspace_type}`);
-    console.log(`  建议语言：${result.upgrade.inferred.language}`);
-    console.log(`  建议 Pack：${result.upgrade.inferred.pack}`);
-    console.log("  下一步：");
-    for (const step of result.upgrade.next_steps) {
-      console.log(`  - ${step}`);
-    }
+    console.log("Legacy signals:");
+    console.log(`  检测为：历史模板候选（${result.upgrade.confidence} confidence）`);
+    console.log(`  推测类型：${result.upgrade.inferred.workspace_type}`);
+    console.log(`  推测语言：${result.upgrade.inferred.language}`);
     console.log("");
   }
 

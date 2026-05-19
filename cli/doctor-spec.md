@@ -7,7 +7,7 @@
 - 命令：`starwork doctor`
 - 前置状态：Core v0.1 已封版，`starwork init` 第一版已落地
 - 实现状态：v0.1 最小实现已落地；历史模板升级诊断、目录 inventory 和 signals 已进入 alpha
-- 目标：检查一个 StarWork 工作台是否健康，并告诉用户问题在哪里、严重到什么程度、下一步该做什么；对历史模板用户给出平滑升级建议
+- 目标：检查一个 StarWork 工作台是否健康，并把结构事实、风险和候选信号暴露出来；对历史模板用户只输出可供 AI 判断的诊断信号，不直接生成行动建议
 
 ## 一句话定义
 
@@ -15,7 +15,7 @@
 
 它不负责创建工作台，不负责升级工作台，也不默认修复文件。它只做一件事：把 Core、Kit、Pack 和 Agent 适配文件之间的不一致检查出来，用人能看懂的方式报告。
 
-从 alpha.4 起，`doctor` 还承担一个轻量迁移入口职责：当目录不是标准 StarWork 工作台，但看起来像用户正在使用的历史模板时，它不会只说“不是工作台”，而是输出历史模板识别结果和下一步升级建议。
+从 alpha.4 起，`doctor` 还承担一个轻量探测入口职责：当目录不是标准 StarWork 工作台，但看起来像用户正在使用的历史模板时，它不会只说“不是工作台”，而是输出历史模板识别结果、目录 inventory 和 semantic signals，交给 `starworkDoctor` 做后续判断。
 
 ## 为什么先做 doctor
 
@@ -146,7 +146,7 @@ v0.1 暂不提供 `--fix`。修复动作后续可以单独设计为 `starwork do
 结果：
 
 - 找到：使用该目录作为工作区根目录。
-- 未找到但当前目录有 StarWork 或历史模板痕迹：报告缺少 workspace state，同时给出历史模板升级建议。
+- 未找到但当前目录有 StarWork 或历史模板痕迹：报告缺少 workspace state，同时输出历史模板候选信号。
 - 未找到且无 StarWork 痕迹：报告不是 StarWork 工作台。
 
 v0.1 判断标准：
@@ -154,7 +154,7 @@ v0.1 判断标准：
 | 情况 | 结果 |
 |---|---|
 | 找到 `.starwork/workspace.json` | 继续检查。 |
-| 未找到 state，但有 `AGENTS.md` 和 `_系统/` / `_system/` | `fail`：缺少 workspace state，并输出升级建议。 |
+| 未找到 state，但有 `AGENTS.md` 和 `_系统/` / `_system/` | `fail`：缺少 workspace state，并输出候选信号。 |
 | 未找到 state，但有 `references/outputs` 或 `参考资料/输出` | `fail`：识别为历史模板升级候选。 |
 | 完全没有 StarWork 痕迹 | `fail`：不是 StarWork 工作台。 |
 
@@ -179,25 +179,15 @@ v0.1 判断标准：
 |---|---|
 | `language` | 中文路径多则 `zh`，英文路径多则 `en`，不确定时默认为 `zh`。 |
 | `workspace_type` | 存在 `事项/` 或 `matters/` 时推断为 `single-matter`，否则推断为 `single-light`。 |
-| `pack` | 历史模板升级默认建议 `general`，不引导用户选择未定稿场景 Pack。 |
-
 输出内容：
 
 - `upgrade.candidate: true`
 - `upgrade.source: legacy-template`
 - `upgrade.inferred.language`
 - `upgrade.inferred.workspace_type`
-- `upgrade.inferred.pack`
 - 检测到的参考资料目录和输出目录
-- 下一步命令建议：
 
-```bash
-starwork init --target <legacy-workspace> --type <single-light|single-matter> --pack general --language <zh|en> --dry-run
-starwork init --target <legacy-workspace> --type <single-light|single-matter> --pack general --language <zh|en> --yes
-starwork doctor --target <legacy-workspace>
-```
-
-注意：在没有正式 `starwork upgrade` 命令前，`doctor` 只提供诊断和建议，不执行迁移。
+注意：`doctor --json` 不输出 `next_steps`，也不输出 Pack 建议，避免影响 `starworkDoctor` 基于上下文做独立判断。在没有正式 `starwork upgrade` 命令前，`doctor` 只提供事实和信号，不执行迁移。
 
 ### Step 2：读取 workspace state
 
@@ -468,16 +458,9 @@ Result:
     "inferred": {
       "language": "zh",
       "workspace_type": "single-matter",
-      "pack": "general",
       "references": ["参考资料"],
       "outputs": ["输出"]
-    },
-    "next_steps": [
-      "先不要移动或删除历史文件。",
-      "先运行预览：starwork init --target <path> --type single-matter --pack general --language zh --dry-run",
-      "确认后再执行：starwork init --target <path> --type single-matter --pack general --language zh --yes",
-      "执行后重新运行 starwork doctor，检查新增 state、Core 角色和目录边界。"
-    ]
+    }
   }
 }
 ```
@@ -584,7 +567,7 @@ legacy.*
 - 删除正式事实源目录后返回 fail。
 - 删除 Pack seed 文件后返回 fail。
 - 非 StarWork 目录返回 fail，并提示先运行 `starwork init`。
-- 对存在 `references/outputs` 的英文历史模板返回 fail，但输出 `upgrade` 升级建议。
+- 对存在 `references/outputs` 的英文历史模板返回 fail，但输出 `upgrade` 候选信号，不输出 `next_steps` 或 Pack 建议。
 - 对存在 `参考资料/输出/事项` 的中文历史模板返回 fail，但推断为 `single-matter` + `zh`。
 - `--json` 输出稳定结构。
 - 没有 fail 时退出码为 `0`，有 fail 时退出码为 `1`。

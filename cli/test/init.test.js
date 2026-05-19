@@ -372,7 +372,7 @@ test("doctor fails outside a StarWork workspace", () => {
   assert.match(result.stdout, /不是 StarWork 工作台/);
 });
 
-test("doctor reports upgrade guidance for an English legacy template", () => {
+test("doctor reports legacy signals for an English legacy template", () => {
   const dir = tempDir();
   fs.writeFileSync(path.join(dir, "AGENTS.md"), "# Legacy Agent Rules\n", "utf8");
   fs.mkdirSync(path.join(dir, "references"), { recursive: true });
@@ -387,6 +387,8 @@ test("doctor reports upgrade guidance for an English legacy template", () => {
   assert.equal(report.upgrade.source, "legacy-template");
   assert.equal(report.upgrade.inferred.language, "en");
   assert.equal(report.upgrade.inferred.workspace_type, "single-light");
+  assert.equal(Object.hasOwn(report.upgrade.inferred, "pack"), false);
+  assert.equal(Object.hasOwn(report.upgrade, "next_steps"), false);
   assert.deepEqual(report.upgrade.inferred.references, ["references"]);
   assert(report.upgrade.inferred.outputs.includes("outputs"));
   assert(report.checks.some((check) => check.id === "legacy.references.detected" && check.level === "info"));
@@ -413,7 +415,7 @@ test("doctor exposes inventory and semantic signals for non-standard legacy fold
   assert.equal(report.upgrade.candidate, true);
 });
 
-test("doctor reports upgrade guidance for a Chinese matter legacy template", () => {
+test("doctor reports legacy signals for a Chinese matter legacy template", () => {
   const dir = tempDir();
   fs.mkdirSync(path.join(dir, "_系统", "身份"), { recursive: true });
   fs.mkdirSync(path.join(dir, "事项"), { recursive: true });
@@ -423,10 +425,11 @@ test("doctor reports upgrade guidance for a Chinese matter legacy template", () 
   const result = runDoctor(["--target", dir]);
 
   assert.equal(result.status, 1);
-  assert.match(result.stdout, /历史模板升级候选/);
-  assert.match(result.stdout, /建议类型：single-matter/);
-  assert.match(result.stdout, /建议语言：zh/);
-  assert.match(result.stdout, /--dry-run/);
+  assert.match(result.stdout, /历史模板候选/);
+  assert.match(result.stdout, /推测类型：single-matter/);
+  assert.match(result.stdout, /推测语言：zh/);
+  assert.doesNotMatch(result.stdout, /--dry-run/);
+  assert.doesNotMatch(result.stdout, /下一步/);
 });
 
 test("adapt creates a Claude adapter and records it in workspace state", () => {
