@@ -1,0 +1,594 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>StarWork Doctor 能力说明</title>
+  <style>
+    :root {
+      --paper: #f7f4ec;
+      --paper-2: #ebe5d7;
+      --ink: #1d211d;
+      --muted: #62675f;
+      --line: #cfc7b7;
+      --white: #fffdf7;
+      --green: #286d4a;
+      --green-soft: #d8eadc;
+      --amber: #b36b19;
+      --amber-soft: #f3dfbd;
+      --blue: #2f6286;
+      --blue-soft: #d7e4ea;
+      --red: #9b3d2c;
+      --red-soft: #edd6cf;
+      --shadow: 0 18px 50px rgba(47, 43, 34, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        linear-gradient(90deg, rgba(62, 71, 62, 0.052) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(62, 71, 62, 0.045) 1px, transparent 1px),
+        var(--paper);
+      background-size: 34px 34px;
+      font-family: "Avenir Next", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      letter-spacing: 0;
+    }
+
+    code {
+      padding: 2px 6px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: rgba(29, 33, 29, 0.05);
+      font-family: "SFMono-Regular", "Menlo", "Consolas", monospace;
+      font-size: 0.92em;
+    }
+
+    pre {
+      margin: 0;
+      padding: 16px;
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #1f231f;
+      color: #f7f4ec;
+      font-family: "SFMono-Regular", "Menlo", "Consolas", monospace;
+      font-size: 13px;
+      line-height: 1.65;
+      white-space: pre-wrap;
+    }
+
+    .page {
+      width: min(1180px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 42px 0 72px;
+    }
+
+    .home-link {
+      display: inline-flex;
+      align-items: center;
+      min-height: 34px;
+      margin-bottom: 18px;
+      padding: 6px 11px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 253, 247, 0.75);
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 800;
+      text-decoration: none;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(360px, 0.9fr);
+      gap: 28px;
+      align-items: stretch;
+      min-height: 520px;
+    }
+
+    .hero-copy {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 34px 0 30px;
+      border-top: 2px solid var(--ink);
+      border-bottom: 2px solid var(--ink);
+    }
+
+    .kicker {
+      margin: 0 0 20px;
+      color: var(--green);
+      font-size: 13px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    h1, h2, h3 {
+      font-family: Georgia, "Times New Roman", "Songti SC", serif;
+      letter-spacing: 0;
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 820px;
+      font-size: clamp(44px, 7.2vw, 86px);
+      line-height: 0.98;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: clamp(30px, 4.4vw, 54px);
+      line-height: 1.03;
+    }
+
+    h3 {
+      margin: 0 0 12px;
+      font-size: 24px;
+      line-height: 1.18;
+    }
+
+    .subtitle {
+      max-width: 720px;
+      margin: 28px 0 0;
+      color: var(--muted);
+      font-size: 19px;
+      line-height: 1.78;
+    }
+
+    .quick-row, .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 34px;
+    }
+
+    .quick, .panel, .hero-board {
+      border-radius: 8px;
+      background: rgba(255, 253, 247, 0.82);
+    }
+
+    .quick {
+      min-height: 112px;
+      padding: 14px;
+      border: 1px solid var(--line);
+    }
+
+    .quick b {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--green);
+      font-size: 13px;
+    }
+
+    .quick span, .panel p, .panel li, td {
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.72;
+    }
+
+    .hero-board {
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      border: 2px solid var(--ink);
+      background: var(--white);
+      box-shadow: var(--shadow);
+    }
+
+    svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .section {
+      margin-top: 70px;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 24px;
+      margin-bottom: 24px;
+      padding-bottom: 14px;
+      border-bottom: 2px solid var(--ink);
+    }
+
+    .section-note {
+      max-width: 430px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .panel {
+      padding: 20px;
+      border: 2px solid var(--ink);
+    }
+
+    .panel.soft {
+      border-color: var(--line);
+    }
+
+    .panel p { margin: 0; }
+    .panel ul { margin: 12px 0 0; padding-left: 18px; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      margin-bottom: 14px;
+      padding: 4px 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--paper);
+      color: var(--green);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .flow-step {
+      min-height: 150px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 253, 247, 0.82);
+    }
+
+    .flow-step strong {
+      display: block;
+      color: var(--green);
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+
+    .flow-step span {
+      display: block;
+      font-family: Georgia, "Times New Roman", "Songti SC", serif;
+      font-size: 23px;
+      font-weight: 900;
+      line-height: 1.14;
+    }
+
+    .flow-step p {
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      background: var(--white);
+    }
+
+    th, td {
+      padding: 14px 15px;
+      border-bottom: 1px solid var(--line);
+      border-right: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+      font-size: 14px;
+      line-height: 1.62;
+    }
+
+    th {
+      background: var(--paper-2);
+      color: var(--ink);
+      font-weight: 900;
+    }
+
+    tr:last-child td { border-bottom: 0; }
+    th:last-child, td:last-child { border-right: 0; }
+
+    .level {
+      display: inline-flex;
+      min-width: 58px;
+      justify-content: center;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-weight: 900;
+      font-size: 12px;
+    }
+
+    .pass { background: var(--green-soft); color: var(--green); }
+    .info { background: var(--blue-soft); color: var(--blue); }
+    .warn { background: var(--amber-soft); color: var(--amber); }
+    .fail { background: var(--red-soft); color: var(--red); }
+
+    .callout {
+      margin-top: 16px;
+      padding: 18px 20px;
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      background: var(--amber-soft);
+      line-height: 1.72;
+    }
+
+    .callout strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 17px;
+    }
+
+    @media (max-width: 980px) {
+      .hero, .grid-2, .grid-3 { grid-template-columns: 1fr; }
+      .quick-row, .grid-4, .flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 640px) {
+      .page { width: min(100% - 24px, 1180px); padding-top: 24px; }
+      .quick-row, .grid-4, .flow { grid-template-columns: 1fr; }
+      .section-header { display: block; }
+      .section-note { margin-top: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <a class="home-link" href="index.html">返回文档中心</a>
+
+    <section class="hero" aria-labelledby="title">
+      <div class="hero-copy">
+        <div>
+          <p class="kicker">CLI / DOCTOR</p>
+          <h1 id="title">Doctor 是工作台体检单</h1>
+          <p class="subtitle"><code>starwork doctor</code> 回答两个问题：一个标准 StarWork 工作台是否健康；一个历史模板工作区能否平滑升级到 StarWork。</p>
+        </div>
+        <div class="quick-row">
+          <div class="quick"><b>健康检查</b><span>检查 state、Core 文件、Kit、Pack、正式事实源和业务工作区。</span></div>
+          <div class="quick"><b>升级诊断</b><span>识别历史模板，推断语言、工作区类型和默认升级路径。</span></div>
+          <div class="quick"><b>人类报告</b><span>默认输出给普通用户看的体检结果和下一步建议。</span></div>
+          <div class="quick"><b>机器输出</b><span><code>--json</code> 输出稳定结构，给 skill、脚本和后续 repair 使用。</span></div>
+        </div>
+      </div>
+
+      <div class="hero-board">
+        <svg viewBox="0 0 720 600" role="img" aria-labelledby="hero-svg-title hero-svg-desc">
+          <title id="hero-svg-title">Doctor 工作流</title>
+          <desc id="hero-svg-desc">Doctor 先定位 workspace state；存在则做标准健康检查，不存在但像历史模板则输出升级建议。</desc>
+          <defs>
+            <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="#3e473e"></path>
+            </marker>
+          </defs>
+          <rect x="24" y="24" width="672" height="552" rx="10" fill="#f7f4ec" stroke="#1d211d" stroke-width="3"></rect>
+          <text x="52" y="72" font-size="28" font-weight="900" fill="#1d211d">starwork doctor</text>
+          <text x="52" y="104" font-size="14" fill="#62675f">不是医生开药，而是先把问题说清楚。</text>
+          <rect x="84" y="150" width="210" height="78" rx="8" fill="#d7e4ea" stroke="#2f6286" stroke-width="2"></rect>
+          <text x="189" y="184" text-anchor="middle" font-size="17" font-weight="900" fill="#2f6286">定位工作区</text>
+          <text x="189" y="207" text-anchor="middle" font-size="12" fill="#2f6286">查找 .starwork/workspace.json</text>
+          <line x1="294" y1="189" x2="390" y2="189" stroke="#3e473e" stroke-width="3" marker-end="url(#arrow)"></line>
+          <rect x="390" y="150" width="246" height="78" rx="8" fill="#d8eadc" stroke="#286d4a" stroke-width="2"></rect>
+          <text x="513" y="184" text-anchor="middle" font-size="17" font-weight="900" fill="#286d4a">标准健康检查</text>
+          <text x="513" y="207" text-anchor="middle" font-size="12" fill="#286d4a">Core / Kit / Pack / 路径</text>
+          <line x1="189" y1="228" x2="189" y2="305" stroke="#3e473e" stroke-width="3" marker-end="url(#arrow)"></line>
+          <rect x="84" y="305" width="210" height="82" rx="8" fill="#f3dfbd" stroke="#b36b19" stroke-width="2"></rect>
+          <text x="189" y="340" text-anchor="middle" font-size="17" font-weight="900" fill="#b36b19">历史模板诊断</text>
+          <text x="189" y="363" text-anchor="middle" font-size="12" fill="#b36b19">references / 输出 / 事项</text>
+          <line x1="294" y1="346" x2="390" y2="346" stroke="#3e473e" stroke-width="3" marker-end="url(#arrow)"></line>
+          <rect x="390" y="305" width="246" height="82" rx="8" fill="#edd6cf" stroke="#9b3d2c" stroke-width="2"></rect>
+          <text x="513" y="340" text-anchor="middle" font-size="17" font-weight="900" fill="#9b3d2c">升级建议</text>
+          <text x="513" y="363" text-anchor="middle" font-size="12" fill="#9b3d2c">dry-run -> yes -> doctor</text>
+          <line x1="513" y1="228" x2="513" y2="462" stroke="#3e473e" stroke-width="3" marker-end="url(#arrow)"></line>
+          <line x1="513" y1="387" x2="513" y2="462" stroke="#3e473e" stroke-width="3" marker-end="url(#arrow)"></line>
+          <rect x="190" y="462" width="340" height="72" rx="8" fill="#fffdf7" stroke="#1d211d" stroke-width="2"></rect>
+          <text x="360" y="494" text-anchor="middle" font-size="17" font-weight="900" fill="#1d211d">输出报告</text>
+          <text x="360" y="517" text-anchor="middle" font-size="12" fill="#62675f">人类可读报告 + JSON 结构</text>
+        </svg>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <h2>两种使用场景</h2>
+        <p class="section-note">同一个命令，面对新 StarWork 工作台和历史模板时，回答的问题不一样。</p>
+      </div>
+      <div class="grid-2">
+        <article class="panel">
+          <span class="badge">标准工作台</span>
+          <h3>检查是否健康</h3>
+          <p>当目录里有 <code>.starwork/workspace.json</code>，doctor 会把它当成标准 StarWork 工作台，检查 state、Core、Kit、Pack、正式事实源和业务工作区。</p>
+          <ul>
+            <li>初始化后检查。</li>
+            <li>安装 Pack 前后检查。</li>
+            <li>Agent 接手项目前先跑一次。</li>
+          </ul>
+        </article>
+        <article class="panel">
+          <span class="badge">历史模板</span>
+          <h3>判断如何升级</h3>
+          <p>当目录没有 workspace state，但有旧模板的痕迹，doctor 会识别它是不是可升级候选，并给出 <code>init --dry-run</code> 的下一步建议。</p>
+          <ul>
+            <li>适合已经在使用旧模板的学员。</li>
+            <li>适合用户不确定自己目录结构属于哪一类。</li>
+            <li>适合后续设计 <code>upgrade</code> 或 <code>repair</code> 命令。</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <h2>执行步骤</h2>
+        <p class="section-note">Doctor 的顺序很克制：先确认身份，再检查结构，最后才给建议。</p>
+      </div>
+      <div class="flow">
+        <div class="flow-step"><strong>01</strong><span>定位目录</span><p>从 <code>--target</code> 或当前目录开始查找工作台根目录。</p></div>
+        <div class="flow-step"><strong>02</strong><span>识别状态</span><p>优先读取 <code>.starwork/workspace.json</code>；没有 state 时进入历史模板诊断。</p></div>
+        <div class="flow-step"><strong>03</strong><span>检查结构</span><p>检查 Core 角色、Kit 文件、Pack 路径、seed 和 templates。</p></div>
+        <div class="flow-step"><strong>04</strong><span>输出分级</span><p>每个检查项给出 <code>pass</code>、<code>info</code>、<code>warn</code> 或 <code>fail</code>。</p></div>
+        <div class="flow-step"><strong>05</strong><span>给出下一步</span><p>标准工作台给健康结论；历史模板给升级预览命令。</p></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <h2>检查范围</h2>
+        <p class="section-note">当前 doctor 以确定性结构检查为主，避免对用户内容做主观判断。</p>
+      </div>
+      <table>
+        <thead><tr><th>范围</th><th>检查什么</th><th>常见失败原因</th></tr></thead>
+        <tbody>
+          <tr><td><code>workspace state</code></td><td>schema、Core 版本、工作区类型、Kit、语言、Pack 列表、正式事实源、业务工作区。</td><td>缺少 <code>.starwork/workspace.json</code>，或 state 里缺少关键字段。</td></tr>
+          <tr><td><code>Core roles</code></td><td><code>AGENTS.md</code>、项目状态、当前工作、正式事实源、业务工作区。</td><td>Agent 入口规则被删，项目状态或当前工作文件缺失。</td></tr>
+          <tr><td><code>Kit</code></td><td>Kit 源目录是否存在，工作区类型和 Kit 是否匹配，Kit 文件是否完整。</td><td>把 <code>single-matter</code> 的 state 配成了 <code>local-starter</code>，或误删 Kit 文件。</td></tr>
+          <tr><td><code>Pack</code></td><td>Pack 是否兼容 Core，是否支持当前工作区类型，paths、seed、templates 是否落地。</td><td>Pack seed 文件被删，或 Pack 不支持当前 workspace type。</td></tr>
+          <tr><td><code>Blueprint</code></td><td>定制工作台的 blueprint schema、定制目录、seed、注入规则是否存在。</td><td>spawn blueprint 生成后，用户手动删除了定制目录或 AGENTS 规则块。</td></tr>
+          <tr><td><code>Legacy</code></td><td>历史模板里的入口规则、系统目录、事项、参考资料、输出、身份、教训。</td><td>目录可识别但缺少 workspace state，需要先升级或补齐。</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <h2>结果分级</h2>
+        <p class="section-note">分级决定用户看到的严重程度，也决定命令退出码。</p>
+      </div>
+      <table>
+        <thead><tr><th>级别</th><th>含义</th><th>是否影响退出码</th></tr></thead>
+        <tbody>
+          <tr><td><span class="level pass">pass</span></td><td>检查通过。</td><td>不影响。</td></tr>
+          <tr><td><span class="level info">info</span></td><td>提供上下文信息，例如推断出的语言、工作区类型、参考资料目录。</td><td>不影响。</td></tr>
+          <tr><td><span class="level warn">warn</span></td><td>有风险，但工作台仍可继续使用，例如历史模板缺少 Agent 入口规则。</td><td>默认不影响；<code>--strict</code> 下影响。</td></tr>
+          <tr><td><span class="level fail">fail</span></td><td>缺少关键结构或存在阻塞问题，例如没有 state、缺少正式事实源、Pack seed 丢失。</td><td>影响，退出码为 <code>1</code>。</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <h2>历史模板升级诊断</h2>
+        <p class="section-note">这是当前最重要的新能力：帮已有历史模板的用户找到温和迁移路径。</p>
+      </div>
+      <div class="grid-2">
+        <div class="panel soft">
+          <h3>识别信号</h3>
+          <ul>
+            <li><code>AGENTS.md</code>、<code>CLAUDE.md</code>、<code>.cursorrules</code></li>
+            <li><code>_系统/</code>、<code>_system/</code></li>
+            <li><code>事项/</code>、<code>matters/</code></li>
+            <li><code>参考资料/</code>、<code>references/</code></li>
+            <li><code>输出/</code>、<code>outputs/</code></li>
+            <li><code>identity/</code>、<code>lessons/</code></li>
+          </ul>
+        </div>
+        <div class="panel soft">
+          <h3>推断逻辑</h3>
+          <ul>
+            <li>中文路径更多，推断为 <code>zh</code>；英文路径更多，推断为 <code>en</code>。</li>
+            <li>存在 <code>事项/</code> 或 <code>matters/</code>，推断为 <code>single-matter</code>。</li>
+            <li>没有事项机制，推断为 <code>single-light</code>。</li>
+            <li>历史模板默认建议 <code>general</code> Pack，不引导未定稿场景。</li>
+          </ul>
+        </div>
+      </div>
+      <div class="callout">
+        <strong>关键边界</strong>
+        Doctor 不会自动改历史模板。它只告诉用户：这个目录像不像可升级模板、建议按哪种类型升级、先运行哪条 dry-run 命令。真正写入仍由用户确认后的 <code>starwork init --yes</code> 执行。
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <h2>怎么使用</h2>
+        <p class="section-note">A 测用户不需要懂 Core，先跑命令，看体检单即可。</p>
+      </div>
+      <div class="grid-2">
+        <div><h3>检查当前目录</h3><pre>starwork doctor</pre></div>
+        <div><h3>检查指定目录</h3><pre>starwork doctor --target ~/Desktop/my-workspace</pre></div>
+        <div><h3>给 Agent 或脚本读取</h3><pre>starwork doctor --target ~/Desktop/my-workspace --json</pre></div>
+        <div><h3>显示所有通过项</h3><pre>starwork doctor --target ~/Desktop/my-workspace --verbose</pre></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <h2>JSON 输出</h2>
+        <p class="section-note">JSON 是给 Skill、脚本和后续 repair/upgrade 读取的稳定接口。</p>
+      </div>
+      <div class="grid-2">
+        <div>
+          <h3>标准工作台</h3>
+          <pre>{
+  "schema": "starwork.doctor.result.v0.1",
+  "ok": true,
+  "strict_ok": true,
+  "workspace_root": "/path/to/workspace",
+  "workspace": {
+    "core": "0.1",
+    "workspace_type": "single-matter",
+    "kit": "local-matter",
+    "language": "zh",
+    "packs": ["general"]
+  },
+  "upgrade": null,
+  "summary": { "pass": 18, "info": 0, "warn": 0, "fail": 0 },
+  "checks": []
+}</pre>
+        </div>
+        <div>
+          <h3>历史模板</h3>
+          <pre>{
+  "schema": "starwork.doctor.result.v0.1",
+  "ok": false,
+  "workspace_root": null,
+  "workspace": null,
+  "upgrade": {
+    "candidate": true,
+    "source": "legacy-template",
+    "confidence": "medium",
+    "inferred": {
+      "language": "zh",
+      "workspace_type": "single-matter",
+      "pack": "general",
+      "references": ["参考资料"],
+      "outputs": ["输出"]
+    }
+  }
+}</pre>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <h2>当前不做什么</h2>
+        <p class="section-note">这些边界很重要，避免用户误以为 doctor 会替他动文件。</p>
+      </div>
+      <div class="grid-3">
+        <article class="panel soft"><h3>不自动修复</h3><p>当前没有 <code>--fix</code>。Doctor 只检查和建议，不会静默创建、移动、删除或合并文件。</p></article>
+        <article class="panel soft"><h3>不判断内容质量</h3><p>它不会评价文章、课程、业务材料好不好，只看结构和边界是否符合 StarWork。</p></article>
+        <article class="panel soft"><h3>不读取远程主库</h3><p>它只检查本地工作区，不去检查云端权限、消息平台、GitHub 状态或主库实时内容。</p></article>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

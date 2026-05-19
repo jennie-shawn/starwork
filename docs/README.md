@@ -8,6 +8,7 @@
 - [index.html](index.html)：StarWork HTML 文档中心，统一挂载所有 HTML 阅读稿
 - [hub-management.html](hub-management.html)：多项目中枢管理机制 HTML 阅读版，解释 Hub + Satellite、项目注册表和回写边界
 - [cli-capabilities.html](cli-capabilities.html)：StarWork CLI v0.1 能力说明 HTML 阅读版
+- [doctor-capabilities.html](doctor-capabilities.html)：StarWork Doctor 能力说明 HTML 阅读版，解释标准体检和历史模板升级诊断
 - [product-shape-business-model.html](product-shape-business-model.html)：StarWork 产品形态与商业模式 HTML 可视化阅读版
 - [roadmap.md](roadmap.md)：StarWork 从当前状态到 v0.1 发布、v0.2 扩展和 v1.0 稳定产品的里程碑
 - [roadmap.html](roadmap.html)：里程碑 HTML 阅读版，包含 SVG 总路线图和当前焦点图
