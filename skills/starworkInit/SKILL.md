@@ -1,6 +1,6 @@
 ---
 name: starworkInit
-description: Use this skill when a user wants to initialize a new StarWork workspace, choose between single-light, single-matter, and hub workspace types, decide whether matters or Packs are needed, design friendly init interview flows, draft init blueprints, and explain how `starwork init` should execute and validate the result.
+description: Use this skill when a user wants to initialize a new StarWork workspace, choose between single-light, single-matter, and hub workspace types, choose Chinese or English workspace language, decide whether matters are needed, design friendly init interview flows, draft init blueprints, and explain how `starwork init` should execute and validate the result.
 ---
 
 # starworkInit
@@ -10,8 +10,8 @@ description: Use this skill when a user wants to initialize a new StarWork works
 `starworkInit` 不是 `starwork init` 命令本身。它负责在命令执行前帮用户判断：
 
 - 应该建单项目工作台，还是多项目中枢
+- 使用中文工作台，还是英文工作台
 - 是否需要事项机制
-- 是否需要 Pack
 - 是否需要定制目录和 Agent 规则
 - 最终应该如何执行和检查
 
@@ -33,16 +33,16 @@ description: Use this skill when a user wants to initialize a new StarWork works
 
 ```text
 Step 1 判断工作台类型
-  ├─ hub：跳过 Step 2 / Step 3，直接给 Hub 初始化建议
-  └─ single：继续判断事项
+  ├─ hub：继续判断语言，然后直接给 Hub 初始化建议
+  └─ single：继续判断语言和事项
 
-Step 2 判断是否需要事项
+Step 2 判断语言
+  ├─ 中文：language=zh
+  └─ English：language=en
+
+Step 3 判断是否需要事项
   ├─ 需要：single-matter
   └─ 不需要：single-light
-
-Step 3 判断 Pack
-  ├─ general：可继续判断是否定制
-  └─ 其他现成 Pack：只安装现成 Pack，暂不深度定制
 
 Step 4 判断是否需要定制工作台
   ├─ 不需要：输出标准初始化建议
@@ -71,17 +71,34 @@ Step 7 采访额外固定区域和 Agent 规则
 
 ### Hub 分支
 
-如果判断为 `hub`，不要继续问“是否需要事项”和“选哪个 Pack”。
+如果判断为 `hub`，不要继续问“是否需要事项”和“选哪个 Pack”。仍然要问语言。
 
 直接输出 Hub 初始化建议：
 
 - 工作区类型：`hub`
 - 基础 Kit：`hub`
+- 语言：使用 Step 2 的选择
 - Pack：不让用户选择；Hub 使用中枢管理结构
 - 事项：不是 Hub 初始化必选项
 - 后续确认：Hub 名称、项目注册区域、是否预置 `skills/` 和 `.incoming/`
 
-## Step 2：判断是否需要事项
+## Step 2：判断语言
+
+工作台类型判断后，必须问语言：
+
+```text
+这个工作台你想用中文结构，还是英文结构？
+```
+
+判断：
+
+- 用户主要用中文工作：`language=zh`
+- 用户主要用英文协作或英文目录：`language=en`
+- 用户不确定：默认 `zh`
+
+不要跳过这一步。语言会影响目录名称、模板文字和 Agent 规则表达方式。
+
+## Step 3：判断是否需要事项
 
 仅当 Step 1 是单项目时才问：
 
@@ -95,27 +112,22 @@ Step 7 采访额外固定区域和 Agent 规则
 - 只是放资料、写草稿、收成果：`single-light`
 - 用户改口说要管理多个项目：回到 Step 1，改为 `hub`
 
-## Step 3：判断 Pack
+## Pack 选择规则
 
-仅当不是 Hub 时才问：
+v0.1 不采访用户选择场景 Pack。
 
-```text
-这个工作台主要用于什么场景？
-```
+原因：
 
-判断：
+- 目前只把 `general` 作为稳定的默认 Pack。
+- 内容创作者 Pack 还未完成产品定稿，不应在 init skill 中主动推荐。
+- 其他业务场景 Pack 还不存在，不应询问用户“其他场景”。
 
-- 泛用资料、草稿、项目推进：`general`
-- 内容创作、自媒体、发布复盘：`content-creator`
-- 其他场景：先说明 v0.1 没有专门 Pack，默认用 `general`
+默认规则：
 
-约束：
-
-- 通用工作也是 Pack：`general`
-- Hub 不在 init 里选择 Pack
+- 单项目工作台：`pack=general`
+- Hub：不让用户选择 Pack；使用 Hub 中枢管理结构
+- 用户主动提到某个业务场景时，只把它记录为定制需求，不把它映射成 Pack
 - 不把一次性目录偏好误判成新 Pack
-- v0.1 只支持基于 `general` Pack 做定制修改
-- 用户选择 `content-creator` 时，可以安装现成 Pack，但不进入自定义 Pack 结构采访
 
 ## Step 4：判断是否定制
 
@@ -206,6 +218,7 @@ Step 7 采访额外固定区域和 Agent 规则
 
 - 工作区类型：
 - Kit：
+- 语言：
 - Pack：
 - 正式成果：
 - 当前工作区：
@@ -284,6 +297,7 @@ starwork doctor --target <workspace-path>
 - 不用 init 创建卫星项目；已有 Hub 下创建项目应转向 `starworkSpawn`。
 - 不建议用户修改 `product/core/kits/`。
 - 不让 blueprint 决定真实 target 路径，目标路径必须来自命令参数或用户明确指定。
+- 不采访场景 Pack；v0.1 单项目默认 `general`。
 - 不把一次性偏好做成 Pack。
 - 不覆盖用户已有文件。
 - 一次只问一个问题；用户说不清时，用默认值推进并复述判断。

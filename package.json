@@ -1,6 +1,6 @@
 {
   "name": "@jennie-shawn/starwork",
-  "version": "0.1.0-alpha.1",
+  "version": "0.1.0-alpha.2",
   "description": "StarWork Core, CLI, Packs, and Agent skills for AI workspaces.",
   "type": "commonjs",
   "bin": {
