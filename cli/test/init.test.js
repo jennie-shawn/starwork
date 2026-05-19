@@ -372,6 +372,42 @@ test("doctor fails outside a StarWork workspace", () => {
   assert.match(result.stdout, /不是 StarWork 工作台/);
 });
 
+test("doctor reports upgrade guidance for an English legacy template", () => {
+  const dir = tempDir();
+  fs.writeFileSync(path.join(dir, "AGENTS.md"), "# Legacy Agent Rules\n", "utf8");
+  fs.mkdirSync(path.join(dir, "references"), { recursive: true });
+  fs.mkdirSync(path.join(dir, "outputs", "drafts"), { recursive: true });
+  fs.mkdirSync(path.join(dir, "outputs", "final"), { recursive: true });
+
+  const result = runDoctor(["--target", dir, "--json"]);
+  const report = JSON.parse(result.stdout);
+
+  assert.equal(result.status, 1);
+  assert.equal(report.upgrade.candidate, true);
+  assert.equal(report.upgrade.source, "legacy-template");
+  assert.equal(report.upgrade.inferred.language, "en");
+  assert.equal(report.upgrade.inferred.workspace_type, "single-light");
+  assert.deepEqual(report.upgrade.inferred.references, ["references"]);
+  assert.deepEqual(report.upgrade.inferred.outputs, ["outputs"]);
+  assert(report.checks.some((check) => check.id === "legacy.references.detected" && check.level === "info"));
+});
+
+test("doctor reports upgrade guidance for a Chinese matter legacy template", () => {
+  const dir = tempDir();
+  fs.mkdirSync(path.join(dir, "_系统", "身份"), { recursive: true });
+  fs.mkdirSync(path.join(dir, "事项"), { recursive: true });
+  fs.mkdirSync(path.join(dir, "参考资料"), { recursive: true });
+  fs.mkdirSync(path.join(dir, "输出", "确认成果"), { recursive: true });
+
+  const result = runDoctor(["--target", dir]);
+
+  assert.equal(result.status, 1);
+  assert.match(result.stdout, /历史模板升级候选/);
+  assert.match(result.stdout, /建议类型：single-matter/);
+  assert.match(result.stdout, /建议语言：zh/);
+  assert.match(result.stdout, /--dry-run/);
+});
+
 test("adapt creates a Claude adapter and records it in workspace state", () => {
   const dir = tempDir();
   runInit(["--type", "single-light", "--pack", "general", "--target", dir, "--yes"]);

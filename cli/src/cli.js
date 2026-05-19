@@ -381,11 +381,18 @@ function doctor(argv) {
 
   const workspaceRoot = findWorkspaceRoot(targetDir);
   if (!workspaceRoot) {
-    const trace = findStarWorkTrace(targetDir);
-    if (trace) {
-      addCheck(result, "workspace.state.exists", "fail", "疑似 StarWork 工作台，但缺少 .starwork/workspace.json。", trace);
+    const legacy = detectLegacyWorkspace(targetDir);
+    if (legacy.candidate) {
+      result.upgrade = buildUpgradeGuidance(targetDir, legacy);
+      addCheck(result, "workspace.state.exists", "fail", "这是一个可升级的历史模板工作区，但缺少 .starwork/workspace.json。", legacy.primaryTrace);
+      addLegacyChecks(result, legacy);
     } else {
-      addCheck(result, "workspace.state.exists", "fail", "当前目录不是 StarWork 工作台。请先运行 starwork init。");
+      const trace = findStarWorkTrace(targetDir);
+      if (trace) {
+        addCheck(result, "workspace.state.exists", "fail", "疑似 StarWork 工作台，但缺少 .starwork/workspace.json。", trace);
+      } else {
+        addCheck(result, "workspace.state.exists", "fail", "当前目录不是 StarWork 工作台。请先运行 starwork init。");
+      }
     }
     return finishDoctor(result, options);
   }
@@ -461,6 +468,7 @@ function createDoctorResult(targetDir) {
     workspace_root: null,
     target: targetDir,
     workspace: null,
+    upgrade: null,
     summary: {
       pass: 0,
       info: 0,
@@ -866,12 +874,160 @@ function normalizeSafeSourcePath(relativePath, sourceRoot, label) {
 function findStarWorkTrace(dir) {
   const traces = [
     "AGENTS.md",
+    "CLAUDE.md",
     "_系统",
     "_system",
     "事项",
-    "matters"
+    "matters",
+    "参考资料",
+    "references",
+    "输出",
+    "outputs"
   ];
   return traces.find((trace) => fs.existsSync(path.join(dir, trace))) || null;
+}
+
+function detectLegacyWorkspace(dir) {
+  const groups = {
+    entryRules: ["AGENTS.md", "CLAUDE.md", ".cursorrules"],
+    system: ["_系统", "_system", "system"],
+    matters: ["事项", "matters"],
+    referencesZh: ["参考资料", "资料", "素材"],
+    referencesEn: ["references", "reference"],
+    outputsZh: ["输出", "成果"],
+    outputsEn: ["outputs", "output"],
+    identityRoot: ["identity"],
+    lessonsRoot: ["lessons"],
+    identitySystemZh: ["_系统/身份"],
+    lessonsSystemZh: ["_系统/教训"],
+    identitySystemEn: ["_system/identity"],
+    lessonsSystemEn: ["_system/lessons"]
+  };
+  const found = {};
+  for (const [key, candidates] of Object.entries(groups)) {
+    found[key] = existingRelativePaths(dir, candidates);
+  }
+
+  const references = [...found.referencesZh, ...found.referencesEn];
+  const outputs = [...found.outputsZh, ...found.outputsEn];
+  const hasSystem = found.system.length > 0;
+  const hasEntry = found.entryRules.length > 0;
+  const hasMatters = found.matters.length > 0;
+  const hasIdentityOrLessons = [
+    ...found.identityRoot,
+    ...found.lessonsRoot,
+    ...found.identitySystemZh,
+    ...found.lessonsSystemZh,
+    ...found.identitySystemEn,
+    ...found.lessonsSystemEn
+  ].length > 0;
+
+  const signals = [
+    hasEntry,
+    hasSystem,
+    hasMatters,
+    references.length > 0,
+    outputs.length > 0,
+    hasIdentityOrLessons
+  ].filter(Boolean).length;
+  const candidate = signals >= 2 || (references.length > 0 && outputs.length > 0);
+  const language = inferLegacyLanguage(found);
+  const workspaceType = hasMatters ? "single-matter" : "single-light";
+  const primaryTrace = [
+    ...found.entryRules,
+    ...found.system,
+    ...found.matters,
+    ...references,
+    ...outputs
+  ][0] || null;
+
+  return {
+    candidate,
+    confidence: signals >= 4 ? "high" : "medium",
+    language,
+    workspaceType,
+    pack: "general",
+    primaryTrace,
+    found,
+    references,
+    outputs
+  };
+}
+
+function existingRelativePaths(root, candidates) {
+  return candidates.filter((relativePath) => fs.existsSync(path.join(root, relativePath)));
+}
+
+function inferLegacyLanguage(found) {
+  const zhScore = Number(found.system.includes("_系统"))
+    + Number(found.matters.includes("事项"))
+    + found.referencesZh.length
+    + found.outputsZh.length
+    + found.identitySystemZh.length
+    + found.lessonsSystemZh.length;
+  const enScore = Number(found.system.includes("_system"))
+    + Number(found.matters.includes("matters"))
+    + found.referencesEn.length
+    + found.outputsEn.length
+    + found.identitySystemEn.length
+    + found.lessonsSystemEn.length;
+  return enScore > zhScore ? "en" : "zh";
+}
+
+function buildUpgradeGuidance(targetDir, legacy) {
+  const command = [
+    "starwork init",
+    `--target ${shellQuote(targetDir)}`,
+    `--type ${legacy.workspaceType}`,
+    `--pack ${legacy.pack}`,
+    `--language ${legacy.language}`
+  ].join(" ");
+  return {
+    candidate: true,
+    source: "legacy-template",
+    confidence: legacy.confidence,
+    inferred: {
+      language: legacy.language,
+      workspace_type: legacy.workspaceType,
+      pack: legacy.pack,
+      references: legacy.references,
+      outputs: legacy.outputs
+    },
+    next_steps: [
+      "先不要移动或删除历史文件。",
+      `先运行预览：${command} --dry-run`,
+      `确认后再执行：${command} --yes`,
+      "执行后重新运行 starwork doctor，检查新增 state、Core 角色和目录边界。"
+    ]
+  };
+}
+
+function shellQuote(value) {
+  const text = String(value);
+  if (/^[A-Za-z0-9_@%+=:,./-]+$/.test(text)) return text;
+  return `'${text.replace(/'/g, "'\\''")}'`;
+}
+
+function addLegacyChecks(result, legacy) {
+  addCheck(result, "legacy.template.detected", "info", `检测到历史模板升级候选，置信度：${legacy.confidence}。`, legacy.primaryTrace);
+  addCheck(result, "legacy.language.inferred", "info", `推测语言：${legacy.language}。`);
+  addCheck(result, "legacy.workspace_type.inferred", "info", `推测工作区类型：${legacy.workspaceType}。`);
+
+  if (legacy.references.length) {
+    addCheck(result, "legacy.references.detected", "info", `检测到参考资料目录：${legacy.references.join(", ")}。`, legacy.references[0]);
+  } else {
+    addCheck(result, "legacy.references.detected", "warn", "未检测到常见参考资料目录，升级时可能需要手动指定资料区。");
+  }
+
+  if (legacy.outputs.length) {
+    addCheck(result, "legacy.outputs.detected", "info", `检测到输出目录：${legacy.outputs.join(", ")}。`, legacy.outputs[0]);
+  } else {
+    addCheck(result, "legacy.outputs.detected", "warn", "未检测到常见输出目录，升级时可能需要手动指定成果区。");
+  }
+
+  if (!legacy.found.entryRules.length) {
+    addCheck(result, "legacy.entry_rules.detected", "warn", "未检测到 AGENTS.md、CLAUDE.md 或 Cursor 规则文件，升级后需要补齐 Agent 入口规则。");
+  }
 }
 
 function addCheck(result, id, level, message, checkPath) {
@@ -932,6 +1088,19 @@ function printDoctorResult(result, options) {
       }
       console.log("");
     }
+  }
+
+  if (result.upgrade?.candidate) {
+    console.log("Upgrade guidance:");
+    console.log(`  检测为：历史模板升级候选（${result.upgrade.confidence} confidence）`);
+    console.log(`  建议类型：${result.upgrade.inferred.workspace_type}`);
+    console.log(`  建议语言：${result.upgrade.inferred.language}`);
+    console.log(`  建议 Pack：${result.upgrade.inferred.pack}`);
+    console.log("  下一步：");
+    for (const step of result.upgrade.next_steps) {
+      console.log(`  - ${step}`);
+    }
+    console.log("");
   }
 
   console.log("Result:");
