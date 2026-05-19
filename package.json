@@ -1,10 +1,29 @@
 {
-  "name": "starwork-product",
-  "version": "0.1.0",
-  "private": true,
+  "name": "@jennie-shawn/starwork",
+  "version": "0.1.0-alpha.1",
+  "description": "StarWork Core, CLI, Packs, and Agent skills for AI workspaces.",
   "type": "commonjs",
   "bin": {
     "starwork": "cli/bin/starwork.js"
+  },
+  "files": [
+    "adapters/",
+    "cli/",
+    "core/",
+    "docs/",
+    "examples/",
+    "packs/",
+    "schemas/",
+    "skills/",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jennie-shawn/starwork.git"
+  },
+  "publishConfig": {
+    "access": "public",
+    "tag": "latest"
   },
   "scripts": {
     "starwork": "node cli/bin/starwork.js",

@@ -14,3 +14,4 @@ Skill 的职责不是替代 CLI，而是帮助 Agent 更可靠地理解用户意
 ## 当前 Skills
 
 - `starworkSpawn/`：帮助 Agent 设计 `starwork spawn --blueprint` 工作台定制单。
+- `starworkInit/`：帮助 Agent 设计 `starwork init` 初始化方案和 init blueprint。详细 SPEC 见 `starworkInit-spec.md`。
