@@ -1,0 +1,724 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>StarWork CLI 与 Skill 能力注册表</title>
+  <style>
+    :root {
+      --paper: #f7f4ec;
+      --paper-2: #ebe5d7;
+      --ink: #1d211d;
+      --muted: #62675f;
+      --line: #cfc7b7;
+      --white: #fffdf7;
+      --green: #286d4a;
+      --green-soft: #d8eadc;
+      --amber: #b36b19;
+      --amber-soft: #f3dfbd;
+      --blue: #2f6286;
+      --blue-soft: #d7e4ea;
+      --red: #9b3d2c;
+      --red-soft: #edd6cf;
+      --shadow: 0 18px 50px rgba(47, 43, 34, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        linear-gradient(90deg, rgba(62, 71, 62, 0.052) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(62, 71, 62, 0.045) 1px, transparent 1px),
+        var(--paper);
+      background-size: 34px 34px;
+      font-family: "Avenir Next", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      letter-spacing: 0;
+    }
+
+    .page {
+      width: min(1180px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 42px 0 72px;
+    }
+
+    .home-link {
+      display: inline-flex;
+      align-items: center;
+      min-height: 34px;
+      margin-bottom: 18px;
+      padding: 6px 11px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 253, 247, 0.75);
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 800;
+      text-decoration: none;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(340px, 0.75fr);
+      gap: 28px;
+      align-items: stretch;
+      min-height: 430px;
+    }
+
+    .hero-copy {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 34px 0 30px;
+      border-top: 2px solid var(--ink);
+      border-bottom: 2px solid var(--ink);
+    }
+
+    .kicker {
+      margin: 0 0 20px;
+      color: var(--green);
+      font-size: 13px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    h1, h2, h3 {
+      font-family: Georgia, "Times New Roman", "Songti SC", serif;
+      letter-spacing: 0;
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 820px;
+      font-size: clamp(44px, 7vw, 82px);
+      line-height: 0.98;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: clamp(30px, 4.4vw, 52px);
+      line-height: 1.03;
+    }
+
+    h3 {
+      margin: 0 0 10px;
+      font-size: 24px;
+      line-height: 1.16;
+    }
+
+    p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.72;
+    }
+
+    code {
+      padding: 2px 6px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: rgba(29, 33, 29, 0.05);
+      font-family: "SFMono-Regular", "Menlo", "Consolas", monospace;
+      font-size: 0.92em;
+    }
+
+    pre {
+      margin: 0;
+      padding: 16px;
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #1f231f;
+      color: #f7f4ec;
+      font-family: "SFMono-Regular", "Menlo", "Consolas", monospace;
+      font-size: 13px;
+      line-height: 1.65;
+      white-space: pre-wrap;
+    }
+
+    .subtitle {
+      max-width: 760px;
+      margin: 28px 0 0;
+      color: var(--muted);
+      font-size: 19px;
+      line-height: 1.78;
+    }
+
+    .hero-board {
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      background: var(--white);
+      box-shadow: var(--shadow);
+    }
+
+    svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .quick-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 34px;
+    }
+
+    .quick {
+      min-height: 112px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 253, 247, 0.82);
+    }
+
+    .quick b {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--green);
+      font-size: 13px;
+    }
+
+    .quick span {
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.66;
+    }
+
+    .section {
+      margin-top: 70px;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 24px;
+      margin-bottom: 24px;
+      padding-bottom: 14px;
+      border-bottom: 2px solid var(--ink);
+    }
+
+    .section-note {
+      max-width: 520px;
+      font-size: 15px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .panel {
+      padding: 20px;
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      background: rgba(255, 253, 247, 0.82);
+    }
+
+    .panel.soft {
+      border-color: var(--line);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      margin-bottom: 14px;
+      padding: 4px 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--paper);
+      color: var(--green);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      border: 2px solid var(--ink);
+      background: rgba(255, 253, 247, 0.82);
+    }
+
+    th, td {
+      padding: 15px 14px;
+      border: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+      font-size: 15px;
+      line-height: 1.65;
+    }
+
+    th {
+      color: var(--green);
+      background: var(--paper-2);
+      font-size: 13px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    td {
+      color: var(--muted);
+    }
+
+    td strong {
+      color: var(--ink);
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .done {
+      border: 1px solid #91b89b;
+      background: var(--green-soft);
+      color: var(--green);
+    }
+
+    .planned {
+      border: 1px solid #d2aa67;
+      background: var(--amber-soft);
+      color: var(--amber);
+    }
+
+    .callout {
+      margin-top: 18px;
+      padding: 18px;
+      border: 2px solid var(--ink);
+      border-radius: 8px;
+      background: var(--white);
+      font-size: 16px;
+      line-height: 1.75;
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .flow-step {
+      min-height: 150px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 253, 247, 0.82);
+    }
+
+    .flow-step strong {
+      display: inline-flex;
+      min-height: 28px;
+      margin-bottom: 12px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: var(--green-soft);
+      color: var(--green);
+      font-size: 12px;
+    }
+
+    .flow-step span {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--ink);
+      font-weight: 900;
+    }
+
+    .flow-step p {
+      font-size: 14px;
+    }
+
+    @media (max-width: 960px) {
+      .hero, .grid-2, .grid-3, .flow {
+        grid-template-columns: 1fr;
+      }
+
+      .quick-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .section-header {
+        display: block;
+      }
+
+      .section-note {
+        margin-top: 12px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .page {
+        width: min(100% - 24px, 1180px);
+      }
+
+      .quick-row {
+        grid-template-columns: 1fr;
+      }
+
+      table, thead, tbody, tr, th, td {
+        display: block;
+      }
+
+      th {
+        display: none;
+      }
+
+      td {
+        border-left: 0;
+        border-right: 0;
+      }
+
+      tr {
+        border-bottom: 2px solid var(--ink);
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <a class="home-link" href="index.html">返回文档中心</a>
+
+    <section class="hero">
+      <div class="hero-copy">
+        <div>
+          <p class="kicker">CLI + Skills Registry</p>
+          <h1>能力注册表</h1>
+          <p class="subtitle">这页是 StarWork 当前 CLI 与自研 Skills 的总览。后续新增命令、改名、能力边界变化，都要同步更新这里。</p>
+        </div>
+        <div class="quick-row">
+          <div class="quick"><b>CLI</b><span>负责稳定执行：创建、检查、适配、安装、升级。</span></div>
+          <div class="quick"><b>Skills</b><span>负责 AI 判断：采访、诊断、生成 blueprint。</span></div>
+          <div class="quick"><b>Blueprint</b><span>让 AI 的判断变成 CLI 可校验、可 dry-run 的施工图。</span></div>
+          <div class="quick"><b>维护日期</b><span>最后更新：2026-05-20。</span></div>
+        </div>
+      </div>
+
+      <div class="hero-board">
+        <svg viewBox="0 0 720 520" role="img" aria-labelledby="map-title map-desc">
+          <title id="map-title">StarWork CLI 和 Skill 分工</title>
+          <desc id="map-desc">Skills 位于判断层，生成 blueprint；CLI 位于执行层，按参数和 blueprint 稳定执行。</desc>
+          <defs>
+            <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0 0 L10 5 L0 10 z" fill="#3e473e"></path>
+            </marker>
+          </defs>
+          <rect x="24" y="24" width="672" height="472" rx="10" fill="#f7f4ec" stroke="#1d211d" stroke-width="3"></rect>
+          <text x="54" y="72" font-size="28" font-weight="900" fill="#1d211d">判断层 -> 执行层</text>
+          <text x="54" y="104" font-size="14" fill="#62675f">AI 负责理解现实，CLI 负责稳定施工。</text>
+
+          <rect x="66" y="146" width="240" height="210" rx="8" fill="#d7e4ea" stroke="#2f6286" stroke-width="2"></rect>
+          <text x="186" y="180" text-anchor="middle" font-size="18" font-weight="900" fill="#2f6286">Skills</text>
+          <rect x="94" y="210" width="184" height="32" rx="7" fill="#fffdf7" stroke="#cfc7b7"></rect>
+          <text x="186" y="231" text-anchor="middle" font-size="13" fill="#1d211d">starworkInit</text>
+          <rect x="94" y="250" width="184" height="32" rx="7" fill="#fffdf7" stroke="#cfc7b7"></rect>
+          <text x="186" y="271" text-anchor="middle" font-size="13" fill="#1d211d">starworkSpawn</text>
+          <rect x="94" y="290" width="184" height="32" rx="7" fill="#fffdf7" stroke="#cfc7b7"></rect>
+          <text x="186" y="311" text-anchor="middle" font-size="13" fill="#1d211d">starworkDoctor</text>
+          <rect x="94" y="330" width="184" height="32" rx="7" fill="#fffdf7" stroke="#cfc7b7"></rect>
+          <text x="186" y="351" text-anchor="middle" font-size="13" fill="#1d211d">starworkUpgrade</text>
+
+          <line x1="306" y1="252" x2="410" y2="252" stroke="#3e473e" stroke-width="3" marker-end="url(#arrow)"></line>
+          <text x="358" y="235" text-anchor="middle" font-size="12" fill="#62675f">blueprint / diagnosis</text>
+
+          <rect x="410" y="146" width="244" height="210" rx="8" fill="#d8eadc" stroke="#286d4a" stroke-width="2"></rect>
+          <text x="532" y="180" text-anchor="middle" font-size="18" font-weight="900" fill="#286d4a">CLI</text>
+          <rect x="438" y="210" width="188" height="32" rx="7" fill="#fffdf7" stroke="#cfc7b7"></rect>
+          <text x="532" y="231" text-anchor="middle" font-size="13" fill="#1d211d">init / spawn</text>
+          <rect x="438" y="250" width="188" height="32" rx="7" fill="#fffdf7" stroke="#cfc7b7"></rect>
+          <text x="532" y="271" text-anchor="middle" font-size="13" fill="#1d211d">doctor</text>
+          <rect x="438" y="290" width="188" height="32" rx="7" fill="#fffdf7" stroke="#cfc7b7"></rect>
+          <text x="532" y="311" text-anchor="middle" font-size="13" fill="#1d211d">upgrade</text>
+          <rect x="438" y="330" width="188" height="32" rx="7" fill="#fffdf7" stroke="#cfc7b7"></rect>
+          <text x="532" y="351" text-anchor="middle" font-size="13" fill="#1d211d">adapt / pack install</text>
+
+          <rect x="134" y="406" width="452" height="52" rx="8" fill="#fffdf7" stroke="#1d211d" stroke-width="2"></rect>
+          <text x="360" y="437" text-anchor="middle" font-size="15" font-weight="900" fill="#1d211d">原则：CLI 不硬猜业务语义；Skill 不直接改用户文件。</text>
+        </svg>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <h2>当前总览</h2>
+        <p class="section-note">截至 alpha.6，StarWork 已有 6 个 CLI 命令和 4 个自研 Skill。`update` 仍是未来命令，不在当前可用列表里。</p>
+      </div>
+      <div class="grid-3">
+        <article class="panel">
+          <span class="badge">CLI</span>
+          <h3>执行器</h3>
+          <p>命令行负责可重复、可验证、低风险的文件操作。凡是涉及写入，都应支持 dry-run 或明确确认。</p>
+        </article>
+        <article class="panel">
+          <span class="badge">Skills</span>
+          <h3>判断器</h3>
+          <p>Skill 负责把用户的模糊需求变成方案、诊断或 blueprint。它们不直接替代 CLI，也不静默改文件。</p>
+        </article>
+        <article class="panel">
+          <span class="badge">状态</span>
+          <h3>alpha.6</h3>
+          <p>当前 npm latest 为 <code>@jennie-shawn/starwork@0.1.0-alpha.6</code>，包含 upgrade CLI 与 starworkUpgrade skill。</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <h2>CLI 注册表</h2>
+        <p class="section-note">这里列出用户能直接运行的命令、主要能力、输入输出和边界。</p>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>命令</th>
+            <th>定位</th>
+            <th>主要能力</th>
+            <th>典型输入</th>
+            <th>产出</th>
+            <th>边界</th>
+            <th>状态</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong><code>starwork init</code></strong></td>
+            <td>从空目录创建 StarWork 工作台。</td>
+            <td>初始化 <code>single-light</code>、<code>single-matter</code>、<code>hub</code>；组装 Kit 与 Pack；写入 workspace state 和入口规则。</td>
+            <td><code>--type</code>、<code>--pack</code>、<code>--language</code>、<code>--target</code>、<code>--dry-run</code>、<code>--yes</code></td>
+            <td>标准工作台目录、<code>.starwork/workspace.json</code>、<code>AGENTS.md</code>、Core 必需文件。</td>
+            <td>不负责升级已有旧模板；不处理多项目卫星项目创建。</td>
+            <td><span class="status done">已实现</span></td>
+          </tr>
+          <tr>
+            <td><strong><code>starwork spawn</code></strong></td>
+            <td>从 Hub 生成 Satellite 项目。</td>
+            <td>从健康 Hub 创建 <code>satellite-starter</code> 或 <code>satellite-matter</code>；回写项目注册表；支持 <code>--blueprint</code> 定制目录、seed 和规则。</td>
+            <td><code>--hub</code>、<code>--target</code>、<code>--mode</code>、<code>--name</code>、<code>--id</code>、<code>--blueprint</code></td>
+            <td>卫星项目工作台、<code>.core-sync.json</code>、Hub registry 记录、共享资源挂载。</td>
+            <td>不安装业务 Pack；不写入非空目标目录；只从 Hub 派生项目。</td>
+            <td><span class="status done">已实现</span></td>
+          </tr>
+          <tr>
+            <td><strong><code>starwork doctor</code></strong></td>
+            <td>工作台体检和历史模板探测。</td>
+            <td>检查 workspace state、Core roles、Kit、Pack、blueprint 定制；输出 <code>inventory</code> 和 <code>signals</code> 给 AI 判断。</td>
+            <td><code>--target</code>、<code>--json</code>、<code>--strict</code>、<code>--verbose</code>、<code>--inventory-depth</code></td>
+            <td>人类可读体检结果或 <code>starwork.doctor.result.v0.1</code> JSON。</td>
+            <td>不输出升级 next steps；不判断目录真实业务语义；不修复文件。</td>
+            <td><span class="status done">已实现</span></td>
+          </tr>
+          <tr>
+            <td><strong><code>starwork upgrade</code></strong></td>
+            <td>按升级蓝图执行历史模板升级。</td>
+            <td>读取 <code>starworkUpgrade</code> 生成的 <code>upgrade-blueprint.json</code>；支持 dry-run、路径安全校验、workspace state 写入、Kit 缺失文件补齐和规则注入。</td>
+            <td><code>--target</code>、<code>--blueprint</code>、<code>--dry-run</code>、<code>--yes</code>、<code>--json</code></td>
+            <td>可被 StarWork 接管的工作台，保留旧目录名和历史文件。</td>
+            <td>不自动生成升级方案；不处理已是 StarWork 的工作台；不移动、不删除、不覆盖历史文件。</td>
+            <td><span class="status done">已实现</span></td>
+          </tr>
+          <tr>
+            <td><strong><code>starwork adapt</code></strong></td>
+            <td>生成 Agent 适配入口。</td>
+            <td>为 Codex、Claude Code、Cursor、Trae 写入轻量适配文件；记录 adapters 安装状态。</td>
+            <td><code>codex</code>、<code>claude</code>、<code>cursor</code>、<code>trae</code>、<code>all</code>、<code>--target</code></td>
+            <td><code>CLAUDE.md</code>、Cursor / Trae rules 或 workspace state 适配记录。</td>
+            <td>要求 doctor 无 fail；不改变 Core 协议和 Pack。</td>
+            <td><span class="status done">已实现</span></td>
+          </tr>
+          <tr>
+            <td><strong><code>starwork pack install</code></strong></td>
+            <td>给健康工作台补装场景 Pack。</td>
+            <td>安装 Pack 路径、seed、templates 和规则；更新 workspace state 中的 packs 和路径 override。</td>
+            <td><code>pack id</code>、<code>--target</code>、<code>--dry-run</code>、<code>--yes</code></td>
+            <td>Pack 目录、规则注入、模板缓存、workspace state 更新。</td>
+            <td>要求目标已是健康 StarWork 工作台；不支持未兼容当前 workspace type 的 Pack。</td>
+            <td><span class="status done">已实现</span></td>
+          </tr>
+          <tr>
+            <td><strong><code>starwork update</code></strong></td>
+            <td>未来版本迁移命令。</td>
+            <td>面向已经是 StarWork 的工作台，处理未来 Core / Kit / Pack 版本迁移。</td>
+            <td>未定。</td>
+            <td>未定。</td>
+            <td>与 <code>upgrade</code> 分开：update 不负责历史模板进入 StarWork。</td>
+            <td><span class="status planned">规划中</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <h2>Skill 注册表</h2>
+        <p class="section-note">这里列出 StarWork 自研 Skill。Skill 负责 AI 判断和方案生成，不直接替代 CLI。</p>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Skill</th>
+            <th>定位</th>
+            <th>触发场景</th>
+            <th>主要能力</th>
+            <th>产出</th>
+            <th>对应 CLI</th>
+            <th>状态</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong><code>starworkInit</code></strong></td>
+            <td>初始化设计助手。</td>
+            <td>用户想从 0 建工作台，但还没确定工作台类型、语言、事项机制或目录偏好。</td>
+            <td>分支式采访；判断 Hub / 单项目；判断语言；判断是否需要事项；生成初始化建议或 init blueprint。</td>
+            <td>初始化建议、未来 init blueprint、执行命令建议。</td>
+            <td><code>starwork init</code></td>
+            <td><span class="status done">已实现</span></td>
+          </tr>
+          <tr>
+            <td><strong><code>starworkSpawn</code></strong></td>
+            <td>卫星项目定制单设计助手。</td>
+            <td>用户已有 Hub，要创建一个新 Satellite 项目，并希望项目目录或规则可定制。</td>
+            <td>采访项目类型和工作方式；判断 starter / matter；生成 spawn blueprint；整理项目规则和 seed。</td>
+            <td><code>blueprint.json</code>、rules、seed、spawn dry-run 命令。</td>
+            <td><code>starwork spawn --blueprint</code></td>
+            <td><span class="status done">已实现</span></td>
+          </tr>
+          <tr>
+            <td><strong><code>starworkDoctor</code></strong></td>
+            <td>工作区诊断助手。</td>
+            <td>用户要理解 doctor 输出、判断旧目录和 StarWork Core 逻辑是否接近、整理升级建议。</td>
+            <td>读取 doctor JSON；解释 inventory 和 signals；建立 Core 角色映射；判断 Core 逻辑贴近程度；提出整理建议。</td>
+            <td>诊断报告、目录角色映射、缺失和风险、建议确认的问题。</td>
+            <td><code>starwork doctor</code></td>
+            <td><span class="status done">已实现</span></td>
+          </tr>
+          <tr>
+            <td><strong><code>starworkUpgrade</code></strong></td>
+            <td>升级蓝图设计助手。</td>
+            <td>用户已有旧模板或非标准目录，想无损升级成 StarWork 工作台。</td>
+            <td>基于 doctor 和 starworkDoctor 诊断采访用户；确认目录语义；选择升级策略；生成 upgrade blueprint 和规则文件。</td>
+            <td><code>upgrade-blueprint.json</code>、rules、dry-run 命令。</td>
+            <td><code>starwork upgrade --blueprint</code></td>
+            <td><span class="status done">已实现</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <h2>配合关系</h2>
+        <p class="section-note">最容易混淆的是 doctor / upgrade 这一组。这里固定它们的链路。</p>
+      </div>
+      <div class="flow">
+        <div class="flow-step">
+          <strong>01</strong>
+          <span>探测</span>
+          <p><code>starwork doctor --json</code> 只暴露事实、inventory、signals 和 checks。</p>
+        </div>
+        <div class="flow-step">
+          <strong>02</strong>
+          <span>诊断</span>
+          <p><code>starworkDoctor</code> 判断当前目录和 StarWork Core 工作逻辑的贴近程度。</p>
+        </div>
+        <div class="flow-step">
+          <strong>03</strong>
+          <span>设计</span>
+          <p><code>starworkUpgrade</code> 采访用户，生成可执行的升级蓝图。</p>
+        </div>
+        <div class="flow-step">
+          <strong>04</strong>
+          <span>执行</span>
+          <p><code>starwork upgrade --blueprint</code> 只按蓝图执行低风险动作。</p>
+        </div>
+      </div>
+      <div class="callout">
+        <strong>固定边界：</strong>CLI 不硬猜业务语义；Skill 不静默改用户文件。所有会写入的 CLI 能力都应保留 dry-run 或明确确认。
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <h2>常用命令</h2>
+        <p class="section-note">这些命令用于 A 测、演示和本地回归测试。</p>
+      </div>
+      <div class="grid-2">
+        <div>
+          <h3>初始化</h3>
+          <pre>starwork init --type single-matter --pack general --target ./my-workspace --dry-run
+starwork init --type hub --target ./my-hub --yes</pre>
+        </div>
+        <div>
+          <h3>从 Hub 创建项目</h3>
+          <pre>starwork spawn --hub ./my-hub --name "新项目" --target ./new-project --mode matter --dry-run
+starwork spawn --hub ./my-hub --target ./new-project --blueprint ./blueprint.json --dry-run</pre>
+        </div>
+        <div>
+          <h3>检查与升级</h3>
+          <pre>starwork doctor --target ./old-workspace --json --inventory-depth all
+starwork upgrade --target ./old-workspace --blueprint ./upgrade-blueprint.json --dry-run</pre>
+        </div>
+        <div>
+          <h3>适配与安装 Pack</h3>
+          <pre>starwork adapt claude --target ./my-workspace --yes
+starwork pack install content-creator --target ./my-workspace --dry-run</pre>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <h2>维护规则</h2>
+        <p class="section-note">这页后续要按时更新，建议作为发布前检查项。</p>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>触发条件</th>
+            <th>必须更新</th>
+            <th>检查方式</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>新增、改名、删除 CLI 命令。</td>
+            <td>CLI 注册表、常用命令、文档中心入口。</td>
+            <td>运行 <code>starwork --help</code>，确认命令列表一致。</td>
+          </tr>
+          <tr>
+            <td>新增、改名、删除 Skill。</td>
+            <td>Skill 注册表、<code>product/skills/README.md</code>、npm 打包内容。</td>
+            <td>检查 <code>product/skills/*/SKILL.md</code> 和 <code>npm pack --dry-run</code>。</td>
+          </tr>
+          <tr>
+            <td>CLI 与 Skill 的分工变化。</td>
+            <td>配合关系、对应 CLI、边界说明。</td>
+            <td>确认是否仍符合“AI 判断，CLI 执行”。</td>
+          </tr>
+          <tr>
+            <td>发布新 npm alpha。</td>
+            <td>当前总览里的版本号和维护日期。</td>
+            <td>运行 <code>npm view @jennie-shawn/starwork version</code>。</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+</body>
+</html>
