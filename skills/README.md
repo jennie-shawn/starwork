@@ -4,6 +4,8 @@
 
 Skill 的职责不是替代 CLI，而是帮助 Agent 更可靠地理解用户意图、生成配置、组织规则和调用 StarWork 工具。
 
+Skill 的安装、Hub 管理、Pack 推荐和项目分发规则见 `product/core/skill-management-spec.md`。一句话边界：Skill 负责判断和生成方案，CLI 负责执行和校验。
+
 ## 路由规则
 
 - 与 Core 协议相关的事实源放在 `product/core/`。
