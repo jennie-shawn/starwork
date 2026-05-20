@@ -32,7 +32,7 @@ v0.1 只覆盖最小可用安装和适配能力：
 
 后续规划：
 
-- Skill 管理与分发：`init` 创建 Hub 时初始化 Skill registry，`spawn` 按 Hub registry 逐个分发 Skill，`doctor` 暴露 Skill 挂载事实，`upgrade` 按 blueprint 补入 Skill。协议见 [`StarWork Skill 管理与分发机制 SPEC`](../core/skill-management-spec.md)。
+- Skill 管理与分发：Kit 可以自带 Skill，Pack 可以声明场景 Skill，Hub 可以托管用户常用 Skill；`init`、`spawn`、`doctor`、`upgrade` 后续需要按来源记录和分发 Skill。协议见 [`StarWork Skill 管理与分发机制 SPEC`](../core/skill-management-spec.md)。
 - `starwork update`：面向已经是 StarWork 的工作台，处理未来 Core / Kit / Pack 版本迁移；与 `upgrade` 分开设计。
 
 CLI 不在 v0.1 阶段处理账号、授权、消息平台 gateway 或复杂商业系统。

@@ -28,7 +28,7 @@
 - 共享 skills 仍然由主库拥有。
 - 项目专用 skill 修改必须放在项目专用 skill 路径中。
 - 卫星项目不能把软链接的共享 skill 当成本地项目代码来改。
-- Hub 的 `skills/registry.json` 是分发事实源；Satellite 的 `.starwork/skills.json` 是项目已挂载清单。
+- Kit manifest、Pack 声明和 Hub 的 `skills/registry.json` 共同构成分发来源；Satellite 的 `.starwork/skills.json` 是项目已挂载清单。
 
 ## CLI 职责
 
