@@ -33,8 +33,10 @@
    starwork --help
    npx @jennie-shawn/starwork --help
 
-5. 安装 StarWork skills 到 Codex：
-   npx skills add jennie-shawn/starwork --skill '*' -g -a codex -y
+5. 安装 StarWork 系统 skills 到 Codex：
+   npx skills add jennie-shawn/starwork --skill starworkInit -g -a codex -y
+   npx skills add jennie-shawn/starwork --skill starworkDoctor -g -a codex -y
+   npx skills add jennie-shawn/starwork --skill starworkUpgrade -g -a codex -y
 
 6. 验证 skills 能被发现：
    npx skills add jennie-shawn/starwork --list
@@ -48,7 +50,8 @@
 完成后请告诉我：
 - StarWork CLI 安装版本。
 - starwork --help 是否可用。
-- starworkInit 和 starworkSpawn 是否已安装。
+- starworkInit、starworkDoctor、starworkUpgrade 是否已安装。
+- 单项目工作台内是否有 `.starwork/skills.json` 和 `neat-freak`。
 - 最小工作台 doctor 是否通过。
 - 如果有任何失败，请贴出关键错误信息和建议处理方式。
 ```
@@ -60,7 +63,9 @@
 ```bash
 npm install -g @jennie-shawn/starwork
 starwork --help
-npx skills add jennie-shawn/starwork --skill '*' -g -a codex -y
+npx skills add jennie-shawn/starwork --skill starworkInit -g -a codex -y
+npx skills add jennie-shawn/starwork --skill starworkDoctor -g -a codex -y
+npx skills add jennie-shawn/starwork --skill starworkUpgrade -g -a codex -y
 ```
 
 ## 常见情况
@@ -103,11 +108,14 @@ npm install -g @jennie-shawn/starwork --prefix /tmp/starwork-global-test
 
 ```bash
 npx skills update starworkInit -g
-npx skills update starworkSpawn -g
+npx skills update starworkDoctor -g
+npx skills update starworkUpgrade -g
 ```
 
 也可以重新安装：
 
 ```bash
-npx skills add jennie-shawn/starwork --skill '*' -g -a codex -y
+npx skills add jennie-shawn/starwork --skill starworkInit -g -a codex -y
+npx skills add jennie-shawn/starwork --skill starworkDoctor -g -a codex -y
+npx skills add jennie-shawn/starwork --skill starworkUpgrade -g -a codex -y
 ```

@@ -29,10 +29,11 @@ v0.1 只覆盖最小可用安装和适配能力：
 - `starwork upgrade` 第一版：可以读取 `starworkUpgrade` skill 生成的升级蓝图，把历史模板或非标准目录安全升级为 StarWork 工作台；v0.1 只支持 `--blueprint`，不自动判断升级方案。
 - `starwork adapt` 第一版：可以为 Codex、Claude Code、Cursor、Trae 生成或登记轻量适配入口。
 - `starwork pack install` 第一版：可以在健康工作台上补装 Pack，并更新路径、规则、模板和 workspace state。
+- Skill 管理与分发第一版：Kit 可以自带 Skill，Hub 可以托管用户常用 Skill；`init` 写入 `.starwork/skills.json`，`spawn` 按 Hub registry 选择性分发 Skill，`doctor` 暴露 Skill manifest / registry / mount 事实。
 
 后续规划：
 
-- Skill 管理与分发：Kit 可以自带 Skill，Pack 可以声明场景 Skill，Hub 可以托管用户常用 Skill；`init`、`spawn`、`doctor`、`upgrade` 后续需要按来源记录和分发 Skill。协议见 [`StarWork Skill 管理与分发机制 SPEC`](../core/skill-management-spec.md)。
+- Pack 自带 Skill 与 upgrade Skill actions：按 [`StarWork Skill 管理与分发机制 SPEC`](../core/skill-management-spec.md) 继续扩展。
 - `starwork update`：面向已经是 StarWork 的工作台，处理未来 Core / Kit / Pack 版本迁移；与 `upgrade` 分开设计。
 
 CLI 不在 v0.1 阶段处理账号、授权、消息平台 gateway 或复杂商业系统。

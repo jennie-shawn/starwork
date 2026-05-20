@@ -67,6 +67,55 @@ const ADAPTERS = {
   }
 };
 
+const KIT_BUNDLED_SKILLS = {
+  hub: [
+    {
+      id: "starworkSpawn",
+      name: "StarWork Spawn",
+      source: path.join("skills", "starworkSpawn"),
+      sourceKind: "kit",
+      type: "kit-bundled",
+      distribution: "copy",
+      reason: "Hub Kit 自带：用于生成和定制卫星项目。",
+      install: [
+        { agent: "hub", path: path.join("skills", "starworkSpawn"), mode: "copy" },
+        { agent: "codex", path: path.join(".agents", "skills", "starworkSpawn"), mode: "symlink", source: path.join("skills", "starworkSpawn") },
+        { agent: "claude", path: path.join(".claude", "skills", "starworkSpawn"), mode: "symlink", source: path.join("skills", "starworkSpawn") }
+      ]
+    }
+  ],
+  "local-starter": [
+    {
+      id: "neat-freak",
+      name: "Neat Freak",
+      source: path.join("skills", "neat-freak"),
+      sourceKind: "kit",
+      type: "kit-bundled",
+      distribution: "copy",
+      reason: "单项目 Kit 自带：用于阶段性清理、收尾和归档。",
+      install: [
+        { agent: "codex", path: path.join(".agents", "skills", "neat-freak"), mode: "copy" },
+        { agent: "claude", path: path.join(".claude", "skills", "neat-freak"), mode: "copy" }
+      ]
+    }
+  ],
+  "local-matter": [
+    {
+      id: "neat-freak",
+      name: "Neat Freak",
+      source: path.join("skills", "neat-freak"),
+      sourceKind: "kit",
+      type: "kit-bundled",
+      distribution: "copy",
+      reason: "长期单项目 Kit 自带：用于事项收尾、项目记忆清理和归档。",
+      install: [
+        { agent: "codex", path: path.join(".agents", "skills", "neat-freak"), mode: "copy" },
+        { agent: "claude", path: path.join(".claude", "skills", "neat-freak"), mode: "copy" }
+      ]
+    }
+  ]
+};
+
 async function run(argv) {
   const command = argv[0];
   if (!command || command === "--help" || command === "-h") {
@@ -142,7 +191,8 @@ async function init(argv) {
     workspaceType,
     workspaceConfig,
     pack,
-    formalSource
+    formalSource,
+    includeSkills: !options.noSkills
   });
 
   printPlan(plan, options.dryRun);
@@ -246,6 +296,8 @@ function parseArgs(argv) {
       options.strict = true;
     } else if (arg === "--verbose") {
       options.verbose = true;
+    } else if (arg === "--no-skills") {
+      options.noSkills = true;
     } else if (arg === "--inventory-depth") {
       options.inventoryDepth = readValue(argv, ++i, arg);
     } else if (arg === "--inventory-limit") {
@@ -480,6 +532,7 @@ function doctor(argv) {
   checkCoreRoles(result, workspaceRoot, state);
   checkPackInstallations(result, workspaceRoot, state);
   checkBlueprintCustomization(result, workspaceRoot, state);
+  checkSkillInstallations(result, workspaceRoot, state);
 
   return finishDoctor(result, options);
 }
@@ -512,6 +565,7 @@ function doctorCollect(targetDir) {
   checkCoreRoles(result, workspaceRoot, state);
   checkPackInstallations(result, workspaceRoot, state);
   checkBlueprintCustomization(result, workspaceRoot, state);
+  checkSkillInstallations(result, workspaceRoot, state);
   result.ok = result.summary.fail === 0;
   result.strict_ok = result.ok;
   result.exitCode = result.ok ? 0 : 1;
@@ -526,6 +580,7 @@ function createDoctorResult(targetDir) {
     workspace_root: null,
     target: targetDir,
     workspace: null,
+    skills: null,
     upgrade: null,
     inventory: null,
     signals: null,
@@ -1122,6 +1177,99 @@ function checkBlueprintCustomization(result, workspaceRoot, state) {
   }
 }
 
+function checkSkillInstallations(result, workspaceRoot, state) {
+  const manifestPath = path.join(workspaceRoot, ".starwork", "skills.json");
+  const skills = {
+    project_manifest: {
+      exists: fs.existsSync(manifestPath),
+      path: ".starwork/skills.json",
+      count: 0
+    },
+    registry: null,
+    mounts: []
+  };
+  result.skills = skills;
+
+  if (!skills.project_manifest.exists) {
+    addCheck(result, "skills.project_manifest.exists", "warn", "缺少项目 Skill 清单 .starwork/skills.json。", ".starwork/skills.json");
+  } else {
+    addCheck(result, "skills.project_manifest.exists", "pass", "Project skill manifest exists", ".starwork/skills.json");
+    let manifest;
+    try {
+      manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+    } catch (error) {
+      addCheck(result, "skills.project_manifest.parse", "fail", `无法解析项目 Skill 清单：${error.message}`, ".starwork/skills.json");
+      manifest = null;
+    }
+    if (manifest) {
+      if (manifest.schema === "starwork.project_skills.v0.1") {
+        addCheck(result, "skills.project_manifest.schema", "pass", "Project skill manifest schema is valid", ".starwork/skills.json");
+      } else {
+        addCheck(result, "skills.project_manifest.schema", "fail", "项目 Skill 清单 schema 不正确。", ".starwork/skills.json");
+      }
+      const manifestSkills = Array.isArray(manifest.skills) ? manifest.skills : [];
+      skills.project_manifest.count = manifestSkills.length;
+      for (const skill of manifestSkills) {
+        if (!skill?.id) {
+          addCheck(result, "skills.id.exists", "fail", "项目 Skill 清单中存在缺少 id 的条目。", ".starwork/skills.json");
+          continue;
+        }
+        for (const mount of skill.mounts || []) {
+          if (!mount?.path) continue;
+          const normalized = normalizeRelativePath(mount.path);
+          const exists = fs.existsSync(path.join(workspaceRoot, normalized));
+          skills.mounts.push({
+            id: skill.id,
+            path: normalized,
+            mode: mount.mode || null,
+            status: exists ? "ok" : "missing"
+          });
+          if (exists) {
+            addCheck(result, "skills.mount.exists", "pass", `Skill mount exists: ${skill.id}`, normalized);
+          } else {
+            addCheck(result, "skills.mount.exists", "fail", `Skill ${skill.id} 缺少挂载路径：${normalized}`, normalized);
+          }
+        }
+      }
+    }
+  }
+
+  if (state.workspace_type === "hub") {
+    const registryPath = path.join(workspaceRoot, "skills", "registry.json");
+    skills.registry = {
+      exists: fs.existsSync(registryPath),
+      path: "skills/registry.json",
+      count: 0
+    };
+    if (!skills.registry.exists) {
+      addCheck(result, "skills.registry.exists", "warn", "Hub 缺少托管 Skill 注册表。", "skills/registry.json");
+      return;
+    }
+    addCheck(result, "skills.registry.exists", "pass", "Hub skill registry exists", "skills/registry.json");
+    let registry;
+    try {
+      registry = JSON.parse(fs.readFileSync(registryPath, "utf8"));
+    } catch (error) {
+      addCheck(result, "skills.registry.parse", "fail", `无法解析 Hub Skill registry：${error.message}`, "skills/registry.json");
+      return;
+    }
+    if (registry.schema === "starwork.skill_registry.v0.1") {
+      addCheck(result, "skills.registry.schema", "pass", "Hub skill registry schema is valid", "skills/registry.json");
+    } else {
+      addCheck(result, "skills.registry.schema", "fail", "Hub Skill registry schema 不正确。", "skills/registry.json");
+    }
+    const registrySkills = Array.isArray(registry.skills) ? registry.skills : [];
+    skills.registry.count = registrySkills.length;
+    for (const skill of registrySkills) {
+      if (!skill?.id) {
+        addCheck(result, "skills.registry.id.exists", "fail", "Hub Skill registry 中存在缺少 id 的条目。", "skills/registry.json");
+        continue;
+      }
+      checkPathExists(result, workspaceRoot, path.join("skills", skill.id), "skills.registry.source.exists", `Hub skill source exists: ${skill.id}`, `Hub 托管 Skill 缺少目录：skills/${skill.id}`);
+    }
+  }
+}
+
 function checkPathExists(result, workspaceRoot, relativePath, id, passMessage, failMessage) {
   const normalized = normalizeRelativePath(relativePath);
   if (fs.existsSync(path.join(workspaceRoot, normalized))) {
@@ -1667,7 +1815,7 @@ function ask(question) {
   });
 }
 
-function buildInitPlan({ targetDir, workspaceName, workspaceType, workspaceConfig, pack, formalSource }) {
+function buildInitPlan({ targetDir, workspaceName, workspaceType, workspaceConfig, pack, formalSource, includeSkills = true }) {
   const kitDir = path.join(PRODUCT_ROOT, "core", "kits", workspaceConfig.kit);
   if (!fs.existsSync(kitDir)) {
     throw new Error(`找不到 Kit：${workspaceConfig.kit}`);
@@ -1721,6 +1869,14 @@ function buildInitPlan({ targetDir, workspaceName, workspaceType, workspaceConfi
     actions.push(fileAction(targetDir, target, content));
   }
 
+  const kitSkillPlan = includeSkills
+    ? buildKitSkillPlan({ targetDir, kit: workspaceConfig.kit, installedBy: "starwork init" })
+    : { actions: [], records: [] };
+  actions.push(...kitSkillPlan.actions);
+  if (workspaceType === "hub") {
+    actions.push(fileAction(targetDir, path.join("skills", "registry.json"), renderHubSkillRegistry([])));
+  }
+
   const workspaceState = {
     schema: "starwork.workspace.v0.1",
     core: "0.1",
@@ -1741,6 +1897,7 @@ function buildInitPlan({ targetDir, workspaceName, workspaceType, workspaceConfi
     created_by: "starwork init"
   };
   actions.push(fileAction(targetDir, path.join(".starwork", "workspace.json"), `${JSON.stringify(workspaceState, null, 2)}\n`));
+  actions.push(fileAction(targetDir, path.join(".starwork", "skills.json"), renderProjectSkillsManifest(kitSkillPlan.records)));
 
   return {
     targetDir,
@@ -1750,8 +1907,189 @@ function buildInitPlan({ targetDir, workspaceName, workspaceType, workspaceConfi
     kit: workspaceConfig.kit,
     pack,
     formalSource,
+    skills: kitSkillPlan.records,
     actions: dedupeActions(actions)
   };
+}
+
+function buildKitSkillPlan({ targetDir, kit, installedBy }) {
+  const now = new Date().toISOString();
+  const actions = [];
+  const records = [];
+  const skills = KIT_BUNDLED_SKILLS[kit] || [];
+
+  for (const skill of skills) {
+    const sourceDir = path.join(PRODUCT_ROOT, skill.source);
+    if (!fs.existsSync(sourceDir)) {
+      throw new Error(`Kit ${kit} 声明的 Skill 不存在：${skill.id}`);
+    }
+
+    const mounts = [];
+    for (const install of skill.install || []) {
+      if (install.mode === "copy") {
+        actions.push(...copyDirectoryFiles(PRODUCT_ROOT, skill.source, targetDir, install.path));
+      } else if (install.mode === "symlink") {
+        if (!install.source) {
+          throw new Error(`Skill ${skill.id} 的 symlink 安装缺少 source。`);
+        }
+        actions.push(symlinkAction(targetDir, install.path, path.join(targetDir, install.source)));
+      } else {
+        throw new Error(`Skill ${skill.id} 不支持安装模式：${install.mode}`);
+      }
+      mounts.push({
+        agent: install.agent,
+        path: normalizeRelativePath(install.path),
+        mode: install.mode
+      });
+    }
+
+    records.push({
+      id: skill.id,
+      name: skill.name,
+      type: skill.type || "kit-bundled",
+      source: {
+        kind: skill.sourceKind || "kit",
+        kit,
+        manifest_id: skill.id
+      },
+      distribution: skill.distribution || "copy",
+      mounts,
+      reason: skill.reason,
+      installed_by: installedBy,
+      installed_at: now
+    });
+  }
+
+  return { actions, records };
+}
+
+function renderProjectSkillsManifest(records) {
+  return `${JSON.stringify({
+    schema: "starwork.project_skills.v0.1",
+    updated_at: new Date().toISOString(),
+    skills: records
+  }, null, 2)}\n`;
+}
+
+function renderHubSkillRegistry(skills) {
+  return `${JSON.stringify({
+    schema: "starwork.skill_registry.v0.1",
+    owner: "hub",
+    updated_at: new Date().toISOString(),
+    skills
+  }, null, 2)}\n`;
+}
+
+function buildSpawnSkillPlan({ hubRoot, targetDir, blueprint, kit, installedBy }) {
+  const registry = readHubSkillRegistry(hubRoot);
+  const registrySkills = Array.isArray(registry.skills) ? registry.skills : [];
+  const kitPlan = buildKitSkillPlan({ targetDir, kit, installedBy });
+  const kitSkillIds = new Set(kitPlan.records.map((record) => record.id));
+  for (const requestedSkill of blueprint?.skills || []) {
+    if (requestedSkill.source === "kit" && !kitSkillIds.has(requestedSkill.id)) {
+      throw new Error(`Kit ${kit} 未声明自带 Skill：${requestedSkill.id}`);
+    }
+  }
+  const selected = selectSpawnSkills(registrySkills, blueprint);
+  const now = new Date().toISOString();
+  const actions = [...kitPlan.actions];
+  const records = [...kitPlan.records];
+
+  for (const selectedSkill of selected) {
+    const registrySkill = registrySkills.find((skill) => skill.id === selectedSkill.id);
+    if (!registrySkill) {
+      throw new Error(`Hub 托管 Skill 未登记：${selectedSkill.id}`);
+    }
+    const distribution = selectedSkill.distribution || registrySkill.distribution?.mode || "symlink";
+    if (!["symlink", "copy"].includes(distribution)) {
+      throw new Error(`Hub 托管 Skill ${selectedSkill.id} 的分发模式不支持：${distribution}`);
+    }
+    const sourceDir = path.join(hubRoot, "skills", selectedSkill.id);
+    if (!fs.existsSync(sourceDir)) {
+      throw new Error(`Hub 托管 Skill 缺少目录：skills/${selectedSkill.id}`);
+    }
+
+    const mounts = [];
+    for (const agent of ["codex", "claude"]) {
+      const base = agent === "codex" ? path.join(".agents", "skills") : path.join(".claude", "skills");
+      const target = path.join(base, selectedSkill.id);
+      if (distribution === "symlink") {
+        actions.push(symlinkAction(targetDir, target, sourceDir));
+      } else {
+        actions.push(...copyDirectoryFiles(hubRoot, path.join("skills", selectedSkill.id), targetDir, target));
+      }
+      mounts.push({
+        agent,
+        path: normalizeRelativePath(target),
+        mode: distribution
+      });
+    }
+
+    records.push({
+      id: selectedSkill.id,
+      name: registrySkill.name || selectedSkill.id,
+      type: registrySkill.type || "hub-managed",
+      source: {
+        kind: "hub",
+        hub_path: hubRoot,
+        registry_id: selectedSkill.id
+      },
+      distribution,
+      mounts,
+      reason: selectedSkill.reason || registrySkill.description || "Hub 托管 Skill 按本次 spawn 选择分发。",
+      installed_by: installedBy,
+      installed_at: now
+    });
+  }
+
+  return { actions, records };
+}
+
+function selectSpawnSkills(registrySkills, blueprint) {
+  const selected = [];
+  const seen = new Set();
+  for (const skill of blueprint?.skills || []) {
+    if (skill.source && skill.source !== "hub") continue;
+    selected.push(skill);
+    seen.add(skill.id);
+  }
+  for (const skill of registrySkills) {
+    if (!skill?.id || seen.has(skill.id)) continue;
+    if (skill.distribution?.default_for_spawn) {
+      selected.push({
+        id: skill.id,
+        source: "hub",
+        distribution: skill.distribution.mode,
+        reason: skill.description
+      });
+      seen.add(skill.id);
+    }
+  }
+  return selected;
+}
+
+function readHubSkillRegistry(hubRoot) {
+  const registryPath = path.join(hubRoot, "skills", "registry.json");
+  if (!fs.existsSync(registryPath)) {
+    return {
+      schema: "starwork.skill_registry.v0.1",
+      owner: "hub",
+      skills: []
+    };
+  }
+  let registry;
+  try {
+    registry = JSON.parse(fs.readFileSync(registryPath, "utf8"));
+  } catch (error) {
+    throw new Error(`无法读取 Hub Skill registry：${error.message}`);
+  }
+  if (registry.schema !== "starwork.skill_registry.v0.1") {
+    throw new Error("Hub Skill registry schema 必须是 starwork.skill_registry.v0.1。");
+  }
+  if (!Array.isArray(registry.skills)) {
+    throw new Error("Hub Skill registry 的 skills 必须是数组。");
+  }
+  return registry;
 }
 
 function resolveHubRoot(hubPath) {
@@ -1857,6 +2195,17 @@ function validateSpawnBlueprintForMode(blueprint, mode, modeConfig) {
       throw new Error("blueprint seed.on_conflict 只支持 error、skip 或 create_new。");
     }
   }
+  for (const skill of blueprint.skills || []) {
+    if (!skill?.id || typeof skill.id !== "string") {
+      throw new Error("blueprint skills 每一项都必须包含 id。");
+    }
+    if (skill.source && !["hub", "kit"].includes(skill.source)) {
+      throw new Error("blueprint skill.source 只支持 hub 或 kit。");
+    }
+    if (skill.distribution && !["symlink", "copy"].includes(skill.distribution)) {
+      throw new Error("blueprint skill.distribution 只支持 symlink 或 copy。");
+    }
+  }
 }
 
 function applySpawnBlueprintModeConfig(modeConfig, blueprint) {
@@ -1921,8 +2270,16 @@ function buildSpawnPlan({ hubRoot, hubState, targetDir, projectName, projectId, 
   }
 
   actions.push(symlinkAction(targetDir, "知识", path.join(hubRoot, "知识")));
-  actions.push(symlinkAction(targetDir, path.join(".agents", "skills"), path.join(hubRoot, "skills")));
-  actions.push(symlinkAction(targetDir, path.join(".claude", "skills"), path.join(hubRoot, "skills")));
+  actions.push(directoryAction(targetDir, path.join(".agents", "skills")));
+  actions.push(directoryAction(targetDir, path.join(".claude", "skills")));
+  const skillPlan = buildSpawnSkillPlan({
+    hubRoot,
+    targetDir,
+    blueprint,
+    kit: modeConfig.kit,
+    installedBy: blueprint ? "starwork spawn --blueprint" : "starwork spawn"
+  });
+  actions.push(...skillPlan.actions);
 
   const workspaceState = {
     schema: "starwork.workspace.v0.1",
@@ -1984,14 +2341,20 @@ function buildSpawnPlan({ hubRoot, hubState, targetDir, projectName, projectId, 
         mode: "readonly-link"
       },
       skills: {
-        source: "skills/",
+        source: "skills/registry.json",
         target: [".agents/skills/", ".claude/skills/"],
-        mode: "symlink"
+        mode: "selected",
+        items: skillPlan.records.map((record) => ({
+          id: record.id,
+          distribution: record.distribution,
+          mounts: record.mounts
+        }))
       }
     }
   };
 
   actions.push(fileAction(targetDir, path.join(".starwork", "workspace.json"), `${JSON.stringify(workspaceState, null, 2)}\n`));
+  actions.push(fileAction(targetDir, path.join(".starwork", "skills.json"), renderProjectSkillsManifest(skillPlan.records)));
   actions.push(fileAction(targetDir, ".core-sync.json", `${JSON.stringify(coreSync, null, 2)}\n`));
   actions.push(fileAction(targetDir, path.join("_系统", "上下文", "当前项目.md"), renderSpawnProjectStatus({
     projectName,
@@ -2022,7 +2385,7 @@ function buildSpawnPlan({ hubRoot, hubState, targetDir, projectName, projectId, 
           identity: "snapshot",
           lessons: "snapshot",
           knowledge: "readonly-link",
-          skills: "symlink"
+          skills: "selected"
         }
       }
     ]
@@ -2039,6 +2402,7 @@ function buildSpawnPlan({ hubRoot, hubState, targetDir, projectName, projectId, 
     modeLabel: modeConfig.label,
     kit: modeConfig.kit,
     blueprint,
+    skills: skillPlan.records,
     actions: dedupeActions(actions)
   };
 }
@@ -2049,9 +2413,7 @@ function shouldSpawnOverrideKitFile(relativePath) {
     || normalized === "_系统/上下文/当前项目.md"
     || normalized.startsWith("_系统/身份/")
     || normalized.startsWith("_系统/教训/")
-    || normalized.startsWith("知识/")
-    || normalized.startsWith(".agents/skills/")
-    || normalized.startsWith(".claude/skills/");
+    || normalized.startsWith("知识/");
 }
 
 function appendBlueprintRulesToAgents(content, blueprint, variables) {
@@ -2412,6 +2774,9 @@ function printPlan(plan, dryRun) {
   console.log(`Pack：${plan.pack.name || PACK_LABELS[plan.pack.id] || plan.pack.id} (${plan.pack.id})`);
   console.log(`工作台名称：${plan.workspaceName}`);
   console.log(`正式成果位置：${plan.formalSource}`);
+  if (plan.skills?.length) {
+    console.log(`Kit 自带 Skill：${plan.skills.map((skill) => skill.id).join(", ")}`);
+  }
   console.log("");
 
   if (creates.length) {
@@ -2447,6 +2812,9 @@ function printSpawnPlan(plan, dryRun) {
   console.log(`目标目录：${plan.targetDir}`);
   console.log(`模式：${plan.modeLabel} (${plan.mode})`);
   console.log(`Kit：${plan.kit}`);
+  if (plan.skills?.length) {
+    console.log(`分发 Skill：${plan.skills.map((skill) => skill.id).join(", ")}`);
+  }
   if (plan.blueprint) {
     console.log(`Blueprint：${plan.blueprint.__path}`);
     console.log(`正式事实源：${plan.blueprint.paths?.formal_source || "(默认)"}`);
@@ -2635,6 +3003,7 @@ Options:
   --strict
   --verbose
   --agent <codex|claude|cursor|trae|all>
+  --no-skills
   --yes, -y
 `);
 }

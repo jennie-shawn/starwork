@@ -17,4 +17,4 @@
 相关事实源：
 
 - CLI 命令规格在 `product/cli/`，包括 `spawn-blueprint-spec.md`。
-- StarWork 自研 Agent skill 在 `product/skills/`，当前包含 `starworkSpawn` 和 `starworkInit`。
+- StarWork 自研 Agent skill 在 `product/skills/`，当前包含系统 Skill、Kit 自带 Skill 和配套工作流 Skill；具体分发口径见 `product/core/skill-management-spec.md`。

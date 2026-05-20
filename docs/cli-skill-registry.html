@@ -472,8 +472,8 @@
         </article>
         <article class="panel">
           <span class="badge">状态</span>
-          <h3>alpha.6</h3>
-          <p>当前 npm latest 为 <code>@jennie-shawn/starwork@0.1.0-alpha.6</code>，包含 upgrade CLI 与 starworkUpgrade skill。</p>
+          <h3>alpha.7</h3>
+          <p>当前开发版本为 <code>@jennie-shawn/starwork@0.1.0-alpha.7</code>，新增 Kit 自带 Skill、Hub 托管 Skill registry 和项目 <code>.starwork/skills.json</code>。</p>
         </article>
       </div>
     </section>
@@ -499,25 +499,25 @@
           <tr>
             <td><strong><code>starwork init</code></strong></td>
             <td>从空目录创建 StarWork 工作台。</td>
-            <td>初始化 <code>single-light</code>、<code>single-matter</code>、<code>hub</code>；组装 Kit 与 Pack；写入 workspace state 和入口规则。</td>
+            <td>初始化 <code>single-light</code>、<code>single-matter</code>、<code>hub</code>；组装 Kit 与 Pack；写入 workspace state、Skill manifest 和入口规则。</td>
             <td><code>--type</code>、<code>--pack</code>、<code>--language</code>、<code>--target</code>、<code>--dry-run</code>、<code>--yes</code></td>
-            <td>标准工作台目录、<code>.starwork/workspace.json</code>、<code>AGENTS.md</code>、Core 必需文件。</td>
+            <td>标准工作台目录、<code>.starwork/workspace.json</code>、<code>.starwork/skills.json</code>、<code>AGENTS.md</code>、Core 必需文件。</td>
             <td>不负责升级已有旧模板；不处理多项目卫星项目创建。</td>
             <td><span class="status done">已实现</span></td>
           </tr>
           <tr>
             <td><strong><code>starwork spawn</code></strong></td>
             <td>从 Hub 生成 Satellite 项目。</td>
-            <td>从健康 Hub 创建 <code>satellite-starter</code> 或 <code>satellite-matter</code>；回写项目注册表；支持 <code>--blueprint</code> 定制目录、seed 和规则。</td>
+            <td>从健康 Hub 创建 <code>satellite-starter</code> 或 <code>satellite-matter</code>；回写项目注册表；支持 <code>--blueprint</code> 定制目录、seed、规则和 Hub 托管 Skill 分发。</td>
             <td><code>--hub</code>、<code>--target</code>、<code>--mode</code>、<code>--name</code>、<code>--id</code>、<code>--blueprint</code></td>
-            <td>卫星项目工作台、<code>.core-sync.json</code>、Hub registry 记录、共享资源挂载。</td>
+            <td>卫星项目工作台、<code>.core-sync.json</code>、Hub 项目 registry 记录、共享资源挂载、项目 Skill manifest。</td>
             <td>不安装业务 Pack；不写入非空目标目录；只从 Hub 派生项目。</td>
             <td><span class="status done">已实现</span></td>
           </tr>
           <tr>
             <td><strong><code>starwork doctor</code></strong></td>
             <td>工作台体检和历史模板探测。</td>
-            <td>检查 workspace state、Core roles、Kit、Pack、blueprint 定制；输出 <code>inventory</code> 和 <code>signals</code> 给 AI 判断。</td>
+            <td>检查 workspace state、Core roles、Kit、Pack、blueprint 定制和 Skill manifest；输出 <code>inventory</code> 和 <code>signals</code> 给 AI 判断。</td>
             <td><code>--target</code>、<code>--json</code>、<code>--strict</code>、<code>--verbose</code>、<code>--inventory-depth</code></td>
             <td>人类可读体检结果或 <code>starwork.doctor.result.v0.1</code> JSON。</td>
             <td>不输出升级 next steps；不判断目录真实业务语义；不修复文件。</td>
@@ -592,11 +592,20 @@
           </tr>
           <tr>
             <td><strong><code>starworkSpawn</code></strong></td>
-            <td>卫星项目定制单设计助手。</td>
-            <td>用户已有 Hub，要创建一个新 Satellite 项目，并希望项目目录或规则可定制。</td>
+            <td>Hub Kit 自带的卫星项目定制单设计助手。</td>
+            <td>用户已有 Hub，要创建一个新 Satellite 项目，并希望项目目录、规则或托管 Skill 可定制。</td>
             <td>采访项目类型和工作方式；判断 starter / matter；生成 spawn blueprint；整理项目规则和 seed。</td>
             <td><code>blueprint.json</code>、rules、seed、spawn dry-run 命令。</td>
             <td><code>starwork spawn --blueprint</code></td>
+            <td><span class="status done">已实现</span></td>
+          </tr>
+          <tr>
+            <td><strong><code>neat-freak</code></strong></td>
+            <td>单项目 Kit 自带的整理收尾助手。</td>
+            <td>单项目工作台需要阶段性清理、项目记忆整理、收尾归档。</td>
+            <td>读取工作区规则和当前工作；检查产品事实、过程记录和当前任务是否归位；输出清理报告。</td>
+            <td>清理报告、必要的当前工作记录更新建议。</td>
+            <td><code>starwork init</code> 随 Kit 写入</td>
             <td><span class="status done">已实现</span></td>
           </tr>
           <tr>

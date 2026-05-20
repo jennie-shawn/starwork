@@ -133,7 +133,7 @@ M8 v1.0 稳定产品
 
 - GitHub 仓库已推送到 `jennie-shawn/starwork`。
 - npm 包名为 `@jennie-shawn/starwork`。
-- `starworkInit` 与 `starworkSpawn` 可通过 `npx skills add jennie-shawn/starwork --skill '*' -g -a codex -y` 安装。
+- `starworkInit`、`starworkDoctor`、`starworkUpgrade` 可通过 `npx skills add` 安装为系统 Skill；`starworkSpawn` 改为 Hub Kit 自带 Skill。
 - 公开 README 已改为中文首页。
 - 已新增面向 Agent 的安装指南：`product/docs/agent-install-guide.md`。
 - npm `latest` 已发布到 `0.1.0-alpha.3`。
@@ -141,7 +141,8 @@ M8 v1.0 稳定产品
 验收标准：
 
 - A 测用户能安装 CLI 并看到 `starwork --help`。
-- A 测用户能安装 Skills，并让 Agent 识别 `starworkInit` 与 `starworkSpawn`。
+- A 测用户能安装系统 Skills，并让 Agent 识别 `starworkInit`、`starworkDoctor`、`starworkUpgrade`。
+- Hub 工作台能带出 Kit 自带的 `starworkSpawn`，单项目工作台能带出 Kit 自带的 `neat-freak`。
 - `init -> doctor -> hub init -> spawn -> doctor` 的最小流程能被外部用户跑通。
 - A 测反馈中暴露的安装和 skill 调用问题被记录到 matter。
 

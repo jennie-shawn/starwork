@@ -28,25 +28,32 @@ npx @jennie-shawn/starwork --help
 
 ## 安装 Skills
 
-StarWork skills 通过 GitHub 仓库和 `skills` CLI 分发。
+StarWork skills 分两类管理：
 
-给 Codex 安装全部 StarWork skills：
+- 系统 Skill 通过 GitHub 仓库和 `skills` CLI 安装到 Agent 全局环境。
+- Kit 自带 Skill 跟着工作台走，例如 Hub Kit 自带 `starworkSpawn`，单项目 Kit 自带 `neat-freak`。
 
-```bash
-npx skills add jennie-shawn/starwork --skill '*' -g -a codex -y
-```
-
-单独安装某个 skill：
+给 Codex 安装 StarWork 系统 Skill：
 
 ```bash
 npx skills add jennie-shawn/starwork --skill starworkInit -g -a codex -y
-npx skills add jennie-shawn/starwork --skill starworkSpawn -g -a codex -y
+npx skills add jennie-shawn/starwork --skill starworkDoctor -g -a codex -y
+npx skills add jennie-shawn/starwork --skill starworkUpgrade -g -a codex -y
+```
+
+如果你只想先安装初始化助手：
+
+```bash
+npx skills add jennie-shawn/starwork --skill starworkInit -g -a codex -y
 ```
 
 当前 skills：
 
 - `starworkInit`：帮助 Agent 判断工作台类型、语言、是否需要事项，并生成友好的 `starwork init` 初始化方案。
-- `starworkSpawn`：帮助 Agent 为已有 Hub 设计 `starwork spawn --blueprint` 工作台定制单。
+- `starworkDoctor`：帮助 Agent 基于 `starwork doctor --json` 做目录逻辑诊断。
+- `starworkUpgrade`：帮助 Agent 生成 `starwork upgrade --blueprint` 升级蓝图。
+- `starworkSpawn`：Hub Kit 自带 Skill，帮助已有 Hub 设计 `starwork spawn --blueprint` 工作台定制单。
+- `neat-freak`：单项目 Kit 自带 Skill，帮助项目收尾、整理和归档。
 
 如果你希望让 Agent 帮你完成安装，可以把 [Agent 安装指南](docs/agent-install-guide.md) 里的提示词发给你的 Agent。
 
@@ -138,7 +145,8 @@ starwork pack install
 - `init` 创建的工作台结构是否容易理解。
 - `doctor` 的检查结果是否能指导修复问题。
 - Hub + Satellite 工作流是否自然。
-- `starworkInit` 和 `starworkSpawn` 是否能被 Agent 正确识别和调用。
+- 系统 Skill 是否能被 Agent 正确识别和调用。
+- Hub Kit 自带的 `starworkSpawn`、单项目 Kit 自带的 `neat-freak` 是否能在对应工作台内被正确发现。
 
 更完整的测试脚本见 [A 测安装指南](docs/alpha-test-guide.md)。
 
