@@ -1,6 +1,6 @@
 ---
 name: starworkInit
-description: Use this skill when a user wants to initialize a new StarWork workspace, choose between single-light, single-matter, and hub workspace types, choose Chinese or English workspace language, decide whether matters are needed, design friendly init interview flows, draft init blueprints, and explain how `starwork init` should execute and validate the result.
+description: Use this skill when a user wants to initialize a new StarWork workspace, choose between single-light, single-matter, and hub workspace types, choose Chinese or English workspace language, decide whether a multi-matter workspace is truly needed, design friendly init interview flows, draft init blueprints, and explain how `starwork init` should execute and validate the result.
 ---
 
 # starworkInit
@@ -34,15 +34,15 @@ description: Use this skill when a user wants to initialize a new StarWork works
 ```text
 Step 1 判断工作台类型
   ├─ hub：继续判断语言，然后直接给 Hub 初始化建议
-  └─ single：继续判断语言和事项
+  └─ single：默认按单事务项目判断，再确认是否真的需要多事务
 
 Step 2 判断语言
   ├─ 中文：language=zh
   └─ English：language=en
 
-Step 3 判断是否需要事项
-  ├─ 需要：single-matter
-  └─ 不需要：single-light
+Step 3 判断是否需要多事务
+  ├─ 不需要或不确定：single-light
+  └─ 明确需要多个事项：single-matter
 
 Step 4 判断是否需要定制工作台
   ├─ 不需要：输出标准初始化建议
@@ -63,11 +63,11 @@ Step 7 采访额外固定区域和 Agent 规则
 
 判断：
 
-- 一个具体项目、轻量资料和成果：`single-light`
-- 一个长期项目、跨会话推进、需要追踪：`single-matter`
+- 一个明确事务、一个阶段目标、一次成果交付：`single-light`
+- 同一项目里有多个事项要分别推进、交接、复盘：`single-matter`
 - 管理多个项目、统一身份/教训/知识/skills：`hub`
 
-如果用户只是说“以后可能会有很多项目”，但当前只有一个项目，优先建议 `single-matter`。只有用户明确要建立多项目中枢时，才推荐 `hub`。
+默认优先建议 `single-light`。只有用户明确说“这个项目里会有多个事项 / 多条推进线 / 多个阶段需要分别管理”，才建议 `single-matter`。只有用户明确要建立多项目中枢时，才推荐 `hub`。
 
 ### Hub 分支
 
@@ -98,18 +98,18 @@ Step 7 采访额外固定区域和 Agent 规则
 
 不要跳过这一步。语言会影响目录名称、模板文字和 Agent 规则表达方式。
 
-## Step 3：判断是否需要事项
+## Step 3：判断是否需要多事务
 
 仅当 Step 1 是单项目时才问：
 
 ```text
-这个工作会不会持续数周以上，或者需要多次接力？
+这个项目里会不会同时或连续推进多个相对独立的事项？
 ```
 
 判断：
 
-- 需要长期推进、复盘、交接：`single-matter`
-- 只是放资料、写草稿、收成果：`single-light`
+- 不需要、不确定、只有一个明确目标：`single-light`
+- 明确有多个事项、多个阶段、多个交付线需要分别推进：`single-matter`
 - 用户改口说要管理多个项目：回到 Step 1，改为 `hub`
 
 ## Pack 选择规则

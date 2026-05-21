@@ -17,11 +17,13 @@ StarWork 现在不缺想法，缺的是一条清晰的主线。
 - `starwork init` 第一版已经可以把 Kit 和 Pack 组装成工作台。
 - `starwork spawn` 第一版已经可以从多项目中枢生成并登记新项目工作台。
 - `starwork doctor` 第一版已经可以检查工作台健康状态。
+- `starwork upgrade` 第一版已经可以按 skill 生成的 blueprint 保守升级历史模板。
 - `starwork adapt` 第一版已经可以生成或登记 Agent 适配入口。
 - `starwork pack install` 第一版已经可以在健康工作台上补装 Pack。
 - `starwork spawn --blueprint` 第一版已经可以按工作台定制单生成定制化卫星项目；`starworkSpawn` skill 第一版用于生成工作台定制单。
+- `starwork --version` 与产品化 help 文案已补齐，方便 A 测用户确认安装版本和入口命令。
 
-所以，下一步不应该继续扩张 Core 或 CLI。当前应先完成公开 A 测分发和安装反馈收集，再进入第一个场景 Pack 与 Demo 验证。
+所以，下一步不应该继续扩张 Core。当前应先打磨 CLI 与 Skills 的 A 测体验，完成公开安装反馈收集，再进入第一个场景 Pack 与 Demo 验证。
 
 ## 总路线
 
@@ -136,7 +138,9 @@ M8 v1.0 稳定产品
 - `starworkInit`、`starworkDoctor`、`starworkUpgrade` 可通过 `npx skills add` 安装为系统 Skill；`starworkSpawn` 改为 Hub Kit 自带 Skill。
 - 公开 README 已改为中文首页。
 - 已新增面向 Agent 的安装指南：`product/docs/agent-install-guide.md`。
-- npm `latest` 已发布到 `0.1.0-alpha.3`。
+- npm `latest` 已发布到 `0.1.0-alpha.7`。
+- `starwork --version` 已可直接输出包版本，`starwork --help` 已改为面向 A 测用户的命令入口说明。
+- `starwork upgrade --blueprint`、`starworkDoctor`、`starworkUpgrade` 和 Skill 分发第一版已进入公开包。
 
 验收标准：
 
@@ -144,6 +148,7 @@ M8 v1.0 稳定产品
 - A 测用户能安装系统 Skills，并让 Agent 识别 `starworkInit`、`starworkDoctor`、`starworkUpgrade`。
 - Hub 工作台能带出 Kit 自带的 `starworkSpawn`，单项目工作台能带出 Kit 自带的 `neat-freak`。
 - `init -> doctor -> hub init -> spawn -> doctor` 的最小流程能被外部用户跑通。
+- 历史模板用户能跑通 `doctor --json -> starworkDoctor -> starworkUpgrade -> upgrade --blueprint -> doctor` 的保守升级验证流程。
 - A 测反馈中暴露的安装和 skill 调用问题被记录到 matter。
 
 ## M3 Content Creator Pack v0.1

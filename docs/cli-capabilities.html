@@ -587,12 +587,12 @@
           </div>
           <p>把 Core Kit 和场景 Pack 组装成一个可直接使用的 StarWork 工作台。普通用户不需要理解 Kit、Profile、Capability。</p>
           <ul>
-            <li>支持轻量单项目、长期单项目、多项目管理中枢。</li>
-            <li>初始化时选择 Pack，通用场景也是 Pack。</li>
+            <li>支持单事务项目、多事务项目、多项目管理中枢。</li>
+            <li>交互默认推荐单事务项目；单项目默认使用通用 Pack。</li>
             <li>写入前预览，不静默覆盖已有内容。</li>
             <li>生成 `.starwork/workspace.json`，供后续命令读取。</li>
           </ul>
-          <pre>node cli/bin/starwork.js init --type single-matter --pack content-creator --target ./workspace --yes</pre>
+          <pre>node cli/bin/starwork.js init --type single-light --pack general --target ./workspace --yes</pre>
         </article>
 
         <article class="command">
@@ -670,8 +670,8 @@
             <h3><code>starwork init</code></h3>
             <p>把 Core Kit 和 Pack 合成一个最终工作台。它是用户第一次接触 StarWork 的入口。</p>
             <pre>node cli/bin/starwork.js init \
-  --type single-matter \
-  --pack content-creator \
+  --type single-light \
+  --pack general \
   --target ./workspace \
   --yes</pre>
           </div>
@@ -680,7 +680,7 @@
               <h4>具备的能力</h4>
               <ul>
                 <li>识别目标目录是否已经是 StarWork 工作台。</li>
-                <li>根据 <code>--type</code> 选择 Kit：轻量单项目、长期单项目、多项目中枢。</li>
+                <li>根据 <code>--type</code> 选择 Kit：单事务项目、多事务项目、多项目中枢。</li>
                 <li>根据 <code>--pack</code> 安装通用、内容创作者或中枢管理 Pack。</li>
                 <li>生成 <code>AGENTS.md</code>、系统状态文件、工作目录、Pack seed 和 templates。</li>
                 <li>写入 <code>.starwork/workspace.json</code>，作为后续命令读取的机器状态。</li>

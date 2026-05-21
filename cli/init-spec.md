@@ -104,48 +104,65 @@ v0.1 不在 `init` 中处理升级。
 ```text
 你要建立哪种工作区？
 
-1. 轻量单项目
-   适合放资料、写草稿、整理最终成果。
+1. 单事务项目（推荐）
+   适合一个明确目标、一个阶段任务或一次成果交付。
 
-2. 长期单项目
-   适合需要事项追踪、跨会话接力、长期沉淀过程的项目。
+2. 多事务项目（进阶）
+   适合同一项目下有多个事项，需要推进、交接和复盘。
 
 3. 多项目管理中枢
-   适合你有多个长期项目，希望统一管理身份、教训、知识、skills 和项目联络。
+   适合你有多个项目，希望统一管理身份、教训、知识、skills 和项目登记。
 ```
 
 内部映射：
 
 | 用户选择 | Kit / Preset | 说明 |
 |---|---|---|
-| 轻量单项目 | `local-starter` | 不启用事项机制，使用轻量输入输出结构。 |
-| 长期单项目 | `local-matter` | 启用 Matter Mode 和决策记录。 |
+| 单事务项目 | `local-starter` | 默认推荐入口。不启用事项机制，使用轻量输入输出结构。 |
+| 多事务项目 | `local-matter` | 进阶入口。启用 Matter Mode 和决策记录。 |
 | 多项目管理中枢 | `hub` | 建立主库 / 中枢，不创建卫星项目。 |
 
 注意：Core 中的 `satellite-matter` 更接近卫星项目 Kit，不应被 `init` 的“多项目管理中枢”入口直接使用。`init` 应使用独立的 Hub Kit / Hub Preset。
 
-### Step 2：选择 Pack
+### Step 2：选择语言
 
-如果用户选择单项目工作区，继续提问：
+CLI 应在交互模式下明确询问语言：
 
 ```text
-你准备用这个工作台做什么？
+第 2 步：工作台使用哪种语言？
 
-1. 通用工作
-   默认 Pack，适合资料整理、草稿输出、项目推进。
+1. 中文（推荐）
+   目录、规则和 Pack 内容使用中文。
 
-2. 自媒体内容创作
-   安装内容创作者 Pack，包含账号定位、选题、素材、草稿、发布、复盘等结构。
+2. English
+   Pack 内容使用英文；当前 Core Kit 仍以中文结构为主。
 ```
 
-内部映射：
+参数模式可通过 `--language zh|en` 指定。非交互和 `--yes` 默认使用 `zh`。
 
-| 用户选择 | Pack | 说明 |
+### Step 3：选择 Pack
+
+v0.1 交互模式下不主动展示未定稿的场景 Pack。
+
+```text
+第 3 步：v0.1 单项目先使用通用工作 Pack（general）。
+内容创作者等场景 Pack 还在定稿中，暂不在交互流程里主动推荐。
+```
+
+单项目默认使用：
+
+| 工作区类型 | Pack | 说明 |
 |---|---|---|
-| 通用工作 | `general` | 默认 Pack。不是“无 Pack”。 |
-| 自媒体内容创作 | `content-creator` | 首个场景 Pack。 |
+| 单事务项目 | `general` | 默认 Pack。不是“无 Pack”。 |
+| 多事务项目 | `general` | 默认 Pack。不是“无 Pack”。 |
 
-如果用户选择多项目管理中枢，不展示业务 Pack 列表。
+高级参数仍可显式传入兼容 Pack：
+
+```bash
+starwork init --type single-matter --pack content-creator
+```
+
+如果用户选择多项目管理中枢，不展示业务 Pack 列表，也不询问场景 Pack。
 
 多项目管理中枢应使用自己的管理 Pack：
 
@@ -153,12 +170,11 @@ v0.1 不在 `init` 中处理升级。
 |---|---|---|
 | 多项目管理中枢 | `hub-management` | 定义项目注册、共享身份、共享教训、知识库、skills 和跨项目联络。 |
 
-### Step 3：确认基本信息
+### Step 4：确认基本信息
 
 CLI 询问或自动推断：
 
 - 工作台名称：默认使用当前目录名。
-- 语言：v0.1 默认中文；高级参数可选择英文。
 - 正式成果位置：默认由 Kit + Pack 合并后决定。
 - 是否继续预览：默认是。
 
@@ -183,10 +199,10 @@ _系统/任务/当前工作.md
 ```text
 将创建 StarWork 工作台：
 
-工作区类型：长期单项目
-Kit：local-matter
-Pack：content-creator
-工作台名称：my-content-workspace
+工作区类型：单事务项目
+Kit：local-starter
+Pack：general
+工作台名称：my-workspace
 
 将创建：
 - AGENTS.md
@@ -305,10 +321,10 @@ Pack 可以改变业务流向，但不能移除工作区仪表盘。
 {
   "schema": "starwork.workspace.v0.1",
   "core": "0.1",
-  "workspace_type": "single-matter",
-  "kit": "local-matter",
+  "workspace_type": "single-light",
+  "kit": "local-starter",
   "packs": [
-    "content-creator"
+    "general"
   ],
   "language": "zh",
   "formal_source": "由 pack 或用户选择决定",
@@ -335,6 +351,7 @@ starwork init --formal-source outputs/final
 starwork init --target ./my-workspace
 starwork init --dry-run
 starwork init --yes
+starwork init --language en
 ```
 
 参数说明：
@@ -342,7 +359,8 @@ starwork init --yes
 | 参数 | 说明 |
 |---|---|
 | `--type` | 工作区类型：`single-light`、`single-matter`、`hub`。 |
-| `--pack` | Pack ID；单项目默认 `general`，自媒体为 `content-creator`。 |
+| `--pack` | Pack ID；单项目交互默认 `general`，高级参数可传入兼容 Pack。 |
+| `--language` | 工作台语言：`zh` 或 `en`；交互模式会询问，非交互默认 `zh`。 |
 | `--name` | 工作台名称。 |
 | `--formal-source` | 覆盖默认正式成果位置。 |
 | `--target` | 指定初始化目标目录；默认是当前目录。 |
@@ -428,7 +446,7 @@ v0.1 `init` 不处理：
 - 普通用户无需理解 Kit / Pack / preset，也能完成初始化。
 - 用户能在写入前看懂将创建什么。
 - 初始化不会静默覆盖已有内容。
-- 轻量单项目、长期单项目、多项目管理中枢三种入口边界清楚。
+- 单事务项目、多事务项目、多项目管理中枢三种入口边界清楚；默认推荐单事务项目，多事务项目作为进阶入口。
 - 通用工作和自媒体内容创作都通过 Pack 表达。
 - 多项目管理中枢不安装业务 Pack。
 - 初始化结果可被 `starwork doctor` 检查。

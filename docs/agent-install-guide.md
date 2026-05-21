@@ -21,6 +21,7 @@
 
 2. 检查当前是否已有 starwork 命令：
    which starwork
+   starwork --version
    starwork --help
 
 3. 如果没有 starwork，安装 CLI：
@@ -30,7 +31,9 @@
    如果不是，请先向我说明，不要直接覆盖。
 
 4. 验证 CLI：
+   starwork --version
    starwork --help
+   npx @jennie-shawn/starwork --version
    npx @jennie-shawn/starwork --help
 
 5. 安装 StarWork 系统 skills 到 Codex：
@@ -44,11 +47,12 @@
 
 7. 做一个最小 CLI 测试，使用临时目录，不要污染我的真实项目：
    rm -rf /tmp/starwork-a-test
-   starwork init --type single-matter --pack general --language zh --name "StarWork A Test" --target /tmp/starwork-a-test --yes
+   starwork init --type single-light --pack general --language zh --name "StarWork A Test" --target /tmp/starwork-a-test --yes
    starwork doctor --target /tmp/starwork-a-test
 
 完成后请告诉我：
 - StarWork CLI 安装版本。
+- starwork --version 是否返回版本号。
 - starwork --help 是否可用。
 - starworkInit、starworkDoctor、starworkUpgrade 是否已安装。
 - 单项目工作台内是否有 `.starwork/skills.json` 和 `neat-freak`。
@@ -62,6 +66,7 @@
 
 ```bash
 npm install -g @jennie-shawn/starwork
+starwork --version
 starwork --help
 npx skills add jennie-shawn/starwork --skill starworkInit -g -a codex -y
 npx skills add jennie-shawn/starwork --skill starworkDoctor -g -a codex -y

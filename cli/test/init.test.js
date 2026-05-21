@@ -7,6 +7,7 @@ const { execFileSync, spawnSync } = require("node:child_process");
 
 const root = path.resolve(__dirname, "..", "..");
 const bin = path.join(root, "cli", "bin", "starwork.js");
+const packageJson = require(path.join(root, "package.json"));
 
 function tempDir() {
   return fs.mkdtempSync(path.join(os.tmpdir(), "starwork-init-test-"));
@@ -37,6 +38,18 @@ function readJson(file) {
   return JSON.parse(fs.readFileSync(file, "utf8"));
 }
 
+test("prints version and product-oriented help", () => {
+  const version = runCommand(["--version"]);
+  assert.equal(version.status, 0);
+  assert.equal(version.stdout.trim(), packageJson.version);
+
+  const help = runCommand(["--help"]);
+  assert.equal(help.status, 0);
+  assert.match(help.stdout, new RegExp(`StarWork CLI ${packageJson.version}`));
+  assert.match(help.stdout, /常用开始/);
+  assert.match(help.stdout, /starwork init --help/);
+});
+
 test("dry-run does not write files", () => {
   const dir = tempDir();
   const output = runInit(["--type", "single-light", "--pack", "general", "--target", dir, "--dry-run"]);
@@ -44,6 +57,22 @@ test("dry-run does not write files", () => {
   assert.match(output, /初始化预览/);
   assert.equal(fs.existsSync(path.join(dir, "AGENTS.md")), false);
   assert.equal(fs.existsSync(path.join(dir, ".starwork", "workspace.json")), false);
+});
+
+test("init dry-run shows selected language", () => {
+  const dir = tempDir();
+  const output = runInit(["--type", "single-light", "--pack", "general", "--language", "en", "--target", dir, "--dry-run"]);
+
+  assert.match(output, /语言：en/);
+  assert.equal(fs.existsSync(path.join(dir, ".starwork", "workspace.json")), false);
+});
+
+test("init rejects unsupported language", () => {
+  const dir = tempDir();
+  const result = runCommand(["init", "--type", "single-light", "--pack", "general", "--language", "fr", "--target", dir, "--dry-run"]);
+
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /不支持的语言：fr/);
 });
 
 test("creates a single-light workspace with general pack", () => {

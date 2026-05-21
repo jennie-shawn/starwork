@@ -14,12 +14,14 @@
 
 ```bash
 npm install -g @jennie-shawn/starwork
+starwork --version
 starwork --help
 ```
 
 不全局安装：
 
 ```bash
+npx @jennie-shawn/starwork --version
 npx @jennie-shawn/starwork --help
 ```
 
@@ -43,11 +45,13 @@ npx skills add jennie-shawn/starwork --skill starworkInit -g -a codex -y
 
 ## 最小测试流程
 
-### 1. 创建单项目工作台
+交互式测试时，`starwork init` 会先询问工作台类型和语言；默认推荐单事务项目。Hub 会自动使用 `hub-management` Pack，单项目会默认使用 `general` Pack。
+
+### 1. 创建单事务项目工作台
 
 ```bash
 starwork init \
-  --type single-matter \
+  --type single-light \
   --pack general \
   --language zh \
   --name "StarWork A Test" \

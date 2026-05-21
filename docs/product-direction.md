@@ -42,25 +42,27 @@ Core v0.1 协议
         ↓
 CLI v0.1 安装与适配
         ↓
-内容创作者 Pack v0.1
+公开 A 测安装验证
         ↓
-Demo 工作区与产品文档
+内容创作者 Pack v0.1 与 Demo 工作区
 ```
 
-目标是证明：普通内容创作者可以安装 StarWork，加入内容创作者 Pack，并让 Agent 清楚知道灵感、选题、草稿、发布记录、复盘数据、用户反馈和下一步动作分别放在哪里。
+目标是先证明：普通用户可以安装 StarWork，创建单项目或多项目工作台，并让 Agent 清楚知道项目状态、当前工作、成果、过程材料和 Skill 分发分别如何维护。安装链路稳定后，再用内容创作者 Pack 验证具体场景闭环。
 
 ## v0.1 当前收敛
 
-截至 2026-05-19，Core 被定义为开源 AI 工作区协议；Kit 是协议的参考落地结构；CLI 负责稳定生成、检查、适配和安装 Pack；Skill 负责帮助 Agent 生成配置、理解流程和调用工具；Pack 负责场景定制。
+截至 2026-05-20，Core 被定义为开源 AI 工作区协议；Kit 是协议的参考落地结构；CLI 负责稳定生成、检查、升级、适配、安装 Pack 和分发 Kit 自带 Skill；Skill 负责帮助 Agent 生成配置、诊断目录、生成 blueprint 和调用工具；Pack 负责场景定制。
 
 当前已经形成：
 
 - Core v0.1 协议入口与五类 Kit 结构。
-- `starwork init`、`starwork spawn`、`starwork doctor`、`starwork adapt`、`starwork pack install` 第一版。
+- `starwork init`、`starwork spawn`、`starwork doctor`、`starwork upgrade`、`starwork adapt`、`starwork pack install` 第一版。
 - `starwork spawn --blueprint` 第一版，可按工作台定制单生成定制化卫星项目。
 - `starworkSpawn` skill 第一版，用于帮助 Agent 设计 Spawn Blueprint。
 - `starworkInit` skill 第一版，用于帮助 Agent 采访用户并生成初始化建议。
+- `starworkDoctor` 与 `starworkUpgrade` 第一版，用于把历史模板诊断和升级蓝图生成交给 Agent 判断，再由 CLI 保守执行。
+- Skill 管理与分发第一版：系统 Skill、Kit 自带 Skill、Hub 托管 Skill、Pack 自带 Skill 和项目本地 Skill 已有基本边界。
 - 公开 A 测分发入口：GitHub `jennie-shawn/starwork` 与 npm `@jennie-shawn/starwork`。
 - Pack 源包结构：语言无关业务角色 + `languages/` 多语言落地配置。
 
-下一步重点不是继续扩张 Core，而是先验证 CLI 与 Skills 能否被 A 测用户顺利安装和调用；安装链路稳定后，再进入内容创作者 Pack 的场景验证。
+下一步重点不是继续扩张 Core，而是先验证 CLI 与 Skills 能否被 A 测用户顺利安装和调用，并打磨 `init`、`doctor`、`upgrade` 和 Skill 分发体验；安装链路稳定后，再进入内容创作者 Pack 的场景验证。

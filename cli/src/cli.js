@@ -3,19 +3,20 @@ const path = require("path");
 const readline = require("readline");
 
 const PRODUCT_ROOT = path.resolve(__dirname, "..", "..");
+const PACKAGE_VERSION = require(path.join(PRODUCT_ROOT, "package.json")).version;
 
 const WORKSPACE_TYPES = {
   "single-light": {
-    label: "轻量单项目",
+    label: "单事务项目",
     kit: "local-starter",
     defaultPack: "general",
-    description: "适合放资料、写草稿、整理最终成果。"
+    description: "适合一个明确事务、一个阶段目标或一次成果交付。"
   },
   "single-matter": {
-    label: "长期单项目",
+    label: "多事务项目",
     kit: "local-matter",
     defaultPack: "general",
-    description: "适合需要事项追踪、跨会话接力、长期沉淀过程的项目。"
+    description: "适合同一项目下有多个事项需要追踪、交接和复盘。"
   },
   hub: {
     label: "多项目管理中枢",
@@ -107,7 +108,7 @@ const KIT_BUNDLED_SKILLS = {
       sourceKind: "kit",
       type: "kit-bundled",
       distribution: "copy",
-      reason: "长期单项目 Kit 自带：用于事项收尾、项目记忆清理和归档。",
+      reason: "多事务项目 Kit 自带：用于事项收尾、项目记忆清理和归档。",
       install: [
         { agent: "codex", path: path.join(".agents", "skills", "neat-freak"), mode: "copy" },
         { agent: "claude", path: path.join(".claude", "skills", "neat-freak"), mode: "copy" }
@@ -120,6 +121,11 @@ async function run(argv) {
   const command = argv[0];
   if (!command || command === "--help" || command === "-h") {
     printHelp();
+    return;
+  }
+
+  if (command === "--version" || command === "-v" || command === "version") {
+    printVersion();
     return;
   }
 
@@ -160,7 +166,7 @@ async function run(argv) {
 async function init(argv) {
   const options = parseArgs(argv);
   if (options.help) {
-    printHelp();
+    printInitHelp();
     return;
   }
   const targetDir = path.resolve(options.target || process.cwd());
@@ -171,14 +177,16 @@ async function init(argv) {
     return;
   }
 
+  printInitIntro(options, targetDir);
   const workspaceType = options.type || await chooseWorkspaceType(options);
   const workspaceConfig = WORKSPACE_TYPES[workspaceType];
   if (!workspaceConfig) {
     throw new Error(`不支持的工作区类型：${workspaceType}`);
   }
 
+  const language = options.language || await chooseLanguage(options);
+  validateLanguage(language);
   const packId = options.pack || await choosePack(workspaceType, workspaceConfig, options);
-  const language = options.language || getKitLanguage(workspaceConfig.kit);
   const pack = loadPack(packId, language);
   validatePack(pack, workspaceType);
 
@@ -216,9 +224,9 @@ async function init(argv) {
   console.log("StarWork 工作台已创建。");
   console.log("");
   console.log("下一步建议：");
-  console.log("1. 运行 starwork doctor 检查工作区。");
+  console.log(`1. 运行 starwork doctor --target ${plan.targetDir}`);
   console.log("2. 打开 AGENTS.md，确认 Agent 入口规则。");
-  console.log("3. 如需生成特定 Agent 适配文件，后续运行 starwork adapt。");
+  console.log("3. 如需生成特定 Agent 适配文件，运行 starwork adapt。");
 }
 
 async function spawnWorkspace(argv) {
@@ -1756,15 +1764,19 @@ async function chooseWorkspaceType(options) {
   if (options.yes || !process.stdin.isTTY) {
     return "single-light";
   }
-  return choose("你要建立哪种工作区？", [
-    ["single-light", "轻量单项目：放资料、写草稿、整理最终成果"],
-    ["single-matter", "长期单项目：事项追踪、跨会话接力"],
-    ["hub", "多项目管理中枢：统一管理身份、教训、知识、skills 和项目联络"]
-  ]);
+  return choose("第 1 步：你要创建哪种工作台？", [
+    ["single-light", "单事务项目（推荐）：一个明确目标，资料、草稿、成果分开即可"],
+    ["single-matter", "多事务项目（进阶）：同一项目里有多个事项，需要推进、交接和复盘"],
+    ["hub", "多项目管理中枢：统一维护身份、教训、知识、skills 和项目登记"]
+  ], { defaultIndex: 0 });
 }
 
 async function choosePack(workspaceType, workspaceConfig, options) {
   if (workspaceType === "hub") {
+    if (!options.yes && process.stdin.isTTY) {
+      console.log("");
+      console.log("第 3 步：多项目 Hub 会自动使用 hub-management Pack，不需要再选择场景 Pack。");
+    }
     return workspaceConfig.defaultPack;
   }
 
@@ -1772,26 +1784,57 @@ async function choosePack(workspaceType, workspaceConfig, options) {
     return workspaceConfig.defaultPack;
   }
 
-  return choose("你准备用这个工作台做什么？", [
-    ["general", "通用工作：资料整理、草稿输出、项目推进"],
-    ["content-creator", "自媒体内容创作：账号定位、选题、素材、草稿、发布、复盘"]
-  ]);
+  console.log("");
+  console.log("第 3 步：v0.1 单项目先使用通用工作 Pack（general）。");
+  console.log("内容创作者等场景 Pack 还在定稿中，暂不在交互流程里主动推荐。");
+  return workspaceConfig.defaultPack;
 }
 
-async function choose(question, choices) {
+function printInitIntro(options, targetDir) {
+  if (options.yes || !process.stdin.isTTY) return;
+  console.log("");
+  console.log("StarWork 初始化向导");
+  console.log("");
+  console.log(`目标目录：${targetDir}`);
+  console.log("我会先确认工作台类型、语言和 Pack，然后给出写入预览。");
+}
+
+async function chooseLanguage(options) {
+  if (options.yes || !process.stdin.isTTY) {
+    return "zh";
+  }
+  return choose("第 2 步：工作台使用哪种语言？", [
+    ["zh", "中文（推荐）：目录、规则和 Pack 内容使用中文"],
+    ["en", "English：Pack 内容使用英文；当前 Core Kit 仍以中文结构为主"]
+  ], { defaultIndex: 0 });
+}
+
+function validateLanguage(language) {
+  if (!["zh", "en"].includes(language)) {
+    throw new Error(`不支持的语言：${language}。可选值：zh、en。`);
+  }
+}
+
+async function choose(question, choices, { defaultIndex = 0 } = {}) {
   console.log("");
   console.log(question);
   choices.forEach(([_, label], index) => {
-    console.log(`${index + 1}. ${label}`);
+    const marker = index === defaultIndex ? "（默认）" : "";
+    console.log(`${index + 1}. ${label}${marker}`);
   });
 
-  const answer = await ask("请输入序号：");
-  const index = Number(answer.trim()) - 1;
-  if (!choices[index]) {
-    console.log("未识别选择，使用第一项。");
-    return choices[0][0];
+  while (true) {
+    const answer = await ask("请输入序号，或直接回车使用默认项：");
+    const trimmed = answer.trim();
+    if (!trimmed) {
+      return choices[defaultIndex][0];
+    }
+    const index = Number(trimmed) - 1;
+    if (choices[index]) {
+      return choices[index][0];
+    }
+    console.log("没有这个选项，请重新输入。");
   }
-  return choices[index][0];
 }
 
 async function confirm(question, defaultValue) {
@@ -1905,6 +1948,7 @@ function buildInitPlan({ targetDir, workspaceName, workspaceType, workspaceConfi
     workspaceType,
     workspaceLabel: workspaceConfig.label,
     kit: workspaceConfig.kit,
+    language: pack.language || "zh",
     pack,
     formalSource,
     skills: kitSkillPlan.records,
@@ -2771,6 +2815,7 @@ function printPlan(plan, dryRun) {
   console.log("");
   console.log(`工作区类型：${plan.workspaceLabel} (${plan.workspaceType})`);
   console.log(`Kit：${plan.kit}`);
+  console.log(`语言：${plan.language}`);
   console.log(`Pack：${plan.pack.name || PACK_LABELS[plan.pack.id] || plan.pack.id} (${plan.pack.id})`);
   console.log(`工作台名称：${plan.workspaceName}`);
   console.log(`正式成果位置：${plan.formalSource}`);
@@ -2976,35 +3021,67 @@ function getKitLanguage(kit) {
 }
 
 function printHelp() {
-  console.log(`StarWork CLI
+  console.log(`StarWork CLI ${PACKAGE_VERSION}
+
+Usage:
+  starwork <command> [options]
+
+Commands:
+  init             创建单项目工作台或多项目 Hub。
+  doctor           检查工作台或历史模板目录，并输出事实。
+  spawn            从健康 Hub 生成新的项目工作台。
+  upgrade          执行由 skill 生成的升级 blueprint。
+  adapt            生成轻量 Agent 适配入口。
+  pack install     向健康工作台安装兼容 Pack。
+
+常用开始：
+  starwork init --type single-light --pack general --language zh --target ./my-workspace --yes
+  starwork init --type hub --language zh --target ./my-hub --yes
+  starwork doctor --target ./my-workspace
+  starwork spawn --hub ./my-hub --name "New Project" --target ./new-project --mode matter --yes
+
+全局选项：
+  --help, -h       查看帮助。
+  --version, -v    查看 CLI 版本。
+
+查看命令帮助：
+  starwork init --help
+  starwork doctor --help
+  starwork spawn --help
+  starwork upgrade --help
+  starwork adapt --help
+  starwork pack install --help
+`);
+}
+
+function printVersion() {
+  console.log(PACKAGE_VERSION);
+}
+
+function printInitHelp() {
+  console.log(`StarWork Init
 
 Usage:
   starwork init [options]
-  starwork spawn [options]
-  starwork upgrade [options]
-  starwork doctor [options]
-  starwork adapt [agent] [options]
-  starwork pack install <pack> [options]
+
+用 Kit + Pack 创建 StarWork 工作台。v0.1 中，单项目默认使用 general Pack，
+Hub 工作台使用 hub-management Pack。
 
 Options:
   --type <single-light|single-matter|hub>
-  --hub <path>
-  --blueprint <path>
-  --mode <starter|matter>
-  --id <project-id>
-  --status <active|paused>
   --pack <general|content-creator|hub-management|path>
+  --language <zh|en>
   --name <name>
   --formal-source <path>
-  --language <zh|en>
   --target <path>
   --dry-run
-  --json
-  --strict
-  --verbose
-  --agent <codex|claude|cursor|trae|all>
   --no-skills
   --yes, -y
+
+示例：
+  starwork init --type single-light --pack general --language zh --target ./my-workspace --yes
+  starwork init --type hub --language zh --target ./my-hub --yes
+  starwork init --type single-matter --pack general --target ./complex-project --dry-run
 `);
 }
 
@@ -3025,6 +3102,10 @@ Options:
   --status <active|paused>
   --dry-run
   --yes, -y
+
+示例：
+  starwork spawn --hub ./my-hub --name "New Project" --target ./new-project --mode matter --yes
+  starwork spawn --hub ./my-hub --target ./new-project --blueprint ./blueprint.json --dry-run
 `);
 }
 
@@ -3041,6 +3122,10 @@ Options:
   --verbose
   --inventory-depth <number|all>
   --inventory-limit <number>
+
+示例：
+  starwork doctor --target ./my-workspace
+  starwork doctor --target ./old-workspace --json --inventory-depth all
 `);
 }
 
@@ -3057,6 +3142,10 @@ Options:
   --dry-run
   --json
   --yes, -y
+
+示例：
+  starwork upgrade --target ./old-workspace --blueprint ./upgrade-blueprint.json --dry-run
+  starwork upgrade --target ./old-workspace --blueprint ./upgrade-blueprint.json --yes
 `);
 }
 
@@ -3071,6 +3160,10 @@ Options:
   --target <path>
   --dry-run
   --yes, -y
+
+示例：
+  starwork adapt claude --target ./my-workspace --yes
+  starwork adapt all --target ./my-workspace --dry-run
 `);
 }
 
@@ -3079,6 +3172,10 @@ function printPackHelp() {
 
 Usage:
   starwork pack install <pack> [options]
+
+示例：
+  starwork pack install general --target ./my-workspace --dry-run
+  starwork pack install content-creator --target ./my-workspace --yes
 `);
 }
 
@@ -3092,6 +3189,10 @@ Options:
   --target <path>
   --dry-run
   --yes, -y
+
+示例：
+  starwork pack install general --target ./my-workspace --dry-run
+  starwork pack install content-creator --target ./my-workspace --yes
 `);
 }
 
