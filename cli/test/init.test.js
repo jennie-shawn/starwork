@@ -178,11 +178,13 @@ test("multiagent init creates custom agent lanes without built-in defaults", () 
   const shared = fs.readFileSync(path.join(dir, "_系统", "协作", "shared.md"), "utf8");
 
   assert.equal(lanes.status, 0);
-  assert.match(registry, /\| research \| 待补充 \| unbound \| 待补充 \| lanes\/research\/worklog\.md \|/);
-  assert.match(registry, /\| writing \| 待补充 \| unbound \| 待补充 \| lanes\/writing\/worklog\.md \|/);
+  assert.match(registry, /\| lane \| purpose \| current_session \| write_scope \| worklog \| workspace \|/);
+  assert.match(registry, /\| research \| 待补充 \| unbound \| 待补充 \| lanes\/research\/worklog\.md \| lanes\/research\/workspace \|/);
+  assert.match(registry, /\| writing \| 待补充 \| unbound \| 待补充 \| lanes\/writing\/worklog\.md \| lanes\/writing\/workspace \|/);
   assert.doesNotMatch(registry, /backend|frontend|test/);
   assert.match(shared, /# Shared Agent Context/);
   assert.equal(fs.existsSync(path.join(dir, "_系统", "协作", "lanes", "research", "worklog.md")), true);
+  assert.equal(fs.existsSync(path.join(dir, "_系统", "协作", "lanes", "research", "workspace", "README.md")), true);
 });
 
 test("multiagent add bind share and status update markdown state", () => {
@@ -206,7 +208,7 @@ test("multiagent add bind share and status update markdown state", () => {
   const share = runCommand([
     "multiagent", "share", "review",
     "--title", "Review checklist",
-    "--path", "product/docs/review-checklist.md",
+    "--path", "_系统/协作/lanes/review/workspace/review-checklist.md",
     "--audience", "writing",
     "--status", "draft",
     "--target", dir,
@@ -221,12 +223,35 @@ test("multiagent add bind share and status update markdown state", () => {
   assert.equal(bind.status, 0);
   assert.equal(share.status, 0);
   assert.equal(status.status, 0);
-  assert.match(registry, /\| review \| 审校和风险检查 \| codex:manual-review-1 \| reviews\/\*\*,product\/docs\/\*\* \| lanes\/review\/worklog\.md \|/);
-  assert.match(shared, /\| review \| Review checklist \| product\/docs\/review-checklist\.md \| writing \| draft \|/);
+  assert.match(registry, /\| review \| 审校和风险检查 \| codex:manual-review-1 \| reviews\/\*\*,product\/docs\/\*\* \| lanes\/review\/worklog\.md \| lanes\/review\/workspace \|/);
+  assert.match(shared, /\| review \| Review checklist \| _系统\/协作\/lanes\/review\/workspace\/review-checklist\.md \| writing \| draft \|/);
+  assert.equal(fs.existsSync(path.join(dir, "_系统", "协作", "lanes", "review", "workspace", "README.md")), true);
   assert.equal(report.schema, "starwork.agent_lanes.status.v0.1");
   assert.equal(report.lanes[0].lane, "review");
   assert.equal(report.lanes[0].current_session, "codex:manual-review-1");
+  assert.equal(report.lanes[0].workspace, "lanes/review/workspace");
   assert.equal(report.shared_outputs[0].title, "Review checklist");
+});
+
+test("multiagent status infers workspace for legacy registries", () => {
+  const dir = tempDir();
+  runInit(["--type", "single-light", "--pack", "general", "--target", dir, "--yes"]);
+  runCommand(["multiagent", "init", "--target", dir, "--yes"]);
+  fs.writeFileSync(path.join(dir, "_系统", "协作", "agent-lanes.md"), `# Agent Lanes
+
+## Lanes
+
+| lane | purpose | current_session | write_scope | worklog |
+|---|---|---|---|---|
+| legacy | 旧版职责 | unbound | legacy/** | lanes/legacy/worklog.md |
+`);
+
+  const status = runCommand(["multiagent", "status", "--target", dir, "--json"]);
+  const report = JSON.parse(status.stdout);
+
+  assert.equal(status.status, 0);
+  assert.equal(report.lanes[0].lane, "legacy");
+  assert.equal(report.lanes[0].workspace, "lanes/legacy/workspace");
 });
 
 test("spawn creates a matter project from a hub", () => {

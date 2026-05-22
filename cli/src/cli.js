@@ -459,7 +459,8 @@ async function lanesInit(argv) {
     purpose: "待补充",
     current_session: "unbound",
     write_scope: "待补充",
-    worklog: path.posix.join("lanes", id, "worklog.md")
+    worklog: defaultLaneWorklogPath(id),
+    workspace: defaultLaneWorkspacePath(id)
   }));
   const plan = buildLanesInitPlan({ workspaceRoot, lanes });
   printGenericPlan(options.dryRun ? "Agent Lanes 初始化预览（dry run）：" : "Agent Lanes 初始化计划：", plan.actions);
@@ -493,10 +494,12 @@ async function lanesAdd(argv) {
     purpose: normalizeMarkdownCell(options.purpose),
     current_session: "unbound",
     write_scope: normalizeMarkdownCell(options.write),
-    worklog: path.posix.join("lanes", laneId, "worklog.md")
+    worklog: defaultLaneWorklogPath(laneId),
+    workspace: defaultLaneWorkspacePath(laneId)
   };
   const plan = buildLanesRegistryPlan(workspaceRoot, [...registry.lanes, lane], [
-    fileAction(workspaceRoot, path.join("_系统", "协作", "lanes", laneId, "worklog.md"), renderLaneWorklog(laneId))
+    fileAction(workspaceRoot, path.join("_系统", "协作", "lanes", laneId, "worklog.md"), renderLaneWorklog(laneId)),
+    fileAction(workspaceRoot, path.join("_系统", "协作", "lanes", laneId, "workspace", "README.md"), renderLaneWorkspaceReadme(laneId))
   ]);
   printGenericPlan(options.dryRun ? "新增 Lane 预览（dry run）：" : "新增 Lane 计划：", plan.actions);
   if (options.dryRun) return;
@@ -580,6 +583,7 @@ function lanesStatus(argv) {
       console.log(`  session: ${lane.current_session || "unbound"}`);
       console.log(`  write: ${lane.write_scope}`);
       console.log(`  worklog: ${lane.worklog}`);
+      console.log(`  workspace: ${lane.workspace}`);
     }
   }
   const openRequests = shared.requests.filter((request) => request.status !== "done");
@@ -3074,6 +3078,7 @@ function buildLanesInitPlan({ workspaceRoot, lanes }) {
   ];
   for (const lane of lanes) {
     actions.push(fileAction(workspaceRoot, path.join("_系统", "协作", "lanes", lane.lane, "worklog.md"), renderLaneWorklog(lane.lane)));
+    actions.push(fileAction(workspaceRoot, path.join("_系统", "协作", "lanes", lane.lane, "workspace", "README.md"), renderLaneWorkspaceReadme(lane.lane)));
   }
   return {
     targetDir: workspaceRoot,
@@ -3107,7 +3112,8 @@ function readLanesRegistry(workspaceRoot) {
   }
   return {
     path: registryPath,
-    lanes: parseMarkdownTableSection(fs.readFileSync(registryPath, "utf8"), "## Lanes", ["lane", "purpose", "current_session", "write_scope", "worklog"])
+    lanes: parseMarkdownTableSection(fs.readFileSync(registryPath, "utf8"), "## Lanes", ["lane", "purpose", "current_session", "write_scope", "worklog", "workspace"])
+      .map(normalizeLaneRecord)
   };
 }
 
@@ -3150,10 +3156,29 @@ function renderAgentLanesRegistry(lanes) {
 
 ## Lanes
 
-| lane | purpose | current_session | write_scope | worklog |
-|---|---|---|---|---|
-${lanes.map((lane) => `| ${escapeMarkdownCell(lane.lane)} | ${escapeMarkdownCell(lane.purpose)} | ${escapeMarkdownCell(lane.current_session || "unbound")} | ${escapeMarkdownCell(lane.write_scope)} | ${escapeMarkdownCell(lane.worklog)} |`).join("\n")}
+| lane | purpose | current_session | write_scope | worklog | workspace |
+|---|---|---|---|---|---|
+${lanes.map((rawLane) => {
+    const lane = normalizeLaneRecord(rawLane);
+    return `| ${escapeMarkdownCell(lane.lane)} | ${escapeMarkdownCell(lane.purpose)} | ${escapeMarkdownCell(lane.current_session || "unbound")} | ${escapeMarkdownCell(lane.write_scope)} | ${escapeMarkdownCell(lane.worklog)} | ${escapeMarkdownCell(lane.workspace)} |`;
+  }).join("\n")}
 `;
+}
+
+function normalizeLaneRecord(lane) {
+  return {
+    ...lane,
+    worklog: lane.worklog || defaultLaneWorklogPath(lane.lane),
+    workspace: lane.workspace || defaultLaneWorkspacePath(lane.lane)
+  };
+}
+
+function defaultLaneWorklogPath(laneId) {
+  return path.posix.join("lanes", laneId, "worklog.md");
+}
+
+function defaultLaneWorkspacePath(laneId) {
+  return path.posix.join("lanes", laneId, "workspace");
 }
 
 function renderSharedContext(shared) {
@@ -3204,6 +3229,20 @@ function renderLaneWorklog(laneId) {
 ## Next
 
 待补充。
+`;
+}
+
+function renderLaneWorkspaceReadme(laneId) {
+  const title = laneId.split(/[-_]/).filter(Boolean).map((part) => `${part.slice(0, 1).toUpperCase()}${part.slice(1)}`).join(" ") || "Lane";
+  return `# ${title} Workspace
+
+这里存放该 lane 的过程材料、草稿、分析记录和临时产物。
+
+## 边界
+
+- 这是过程工作区，不是项目正式输出目录。
+- 需要其他 lane 读取的材料，应通过 \`_系统/协作/shared.md\` 登记。
+- 成熟产物应晋升到项目正式事实源，例如 \`product/\`、\`输出/确认成果/\` 或项目约定的正式输出目录。
 `;
 }
 

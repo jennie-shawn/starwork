@@ -218,7 +218,7 @@ starwork multiagent status --target <path> --json
 ### 文档检查
 
 - `product/skills/README.md`、产品 README、CLI/Skill 注册表均出现 `starworkMultiagent`。
-- 文档中不出现旧命令 `starwork lanes`。
+- 文档中不把旧的 lanes 命令名作为可用命令出现。
 
 ### 行为验收
 

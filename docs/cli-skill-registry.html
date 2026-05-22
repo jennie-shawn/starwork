@@ -461,7 +461,7 @@
     <section class="section">
       <div class="section-header">
         <h2>当前总览</h2>
-        <p class="section-note">截至 alpha.9，StarWork 已有 7 个可用 CLI 命令和 5 个自研 Skill。`update` 和 `starwork skill` 仍是未来命令，不在当前可用列表里。</p>
+        <p class="section-note">截至 alpha.10，StarWork 已有 7 个可用 CLI 命令和 5 个自研 Skill。`update` 和 `starwork skill` 仍是未来命令，不在当前可用列表里。</p>
       </div>
       <div class="grid-3">
         <article class="panel">
@@ -476,8 +476,8 @@
         </article>
         <article class="panel">
           <span class="badge">状态</span>
-          <h3>alpha.9</h3>
-          <p>当前开发版本为 <code>@jennie-shawn/starwork@0.1.0-alpha.9</code>，已将历史模板升级蓝图生成能力合并进 <code>starworkDoctor</code>，并补齐 Hub-like 主库的无损接入诊断和 <code>hub + preserve-names + pack:null</code> 升级路径；同时继续包含 Kit 自带 Skill、Hub 托管 Skill registry、项目 <code>.starwork/skills.json</code> 和 Agent Lanes 协作入口。</p>
+          <h3>alpha.10</h3>
+          <p>当前开发版本为 <code>@jennie-shawn/starwork@0.1.0-alpha.10</code>，已将历史模板升级蓝图生成能力合并进 <code>starworkDoctor</code>，补齐 Hub-like 主库的无损接入诊断和 <code>hub + preserve-names + pack:null</code> 升级路径，并继续完善 Agent Lanes 的 lane workspace 过程工作区。</p>
         </article>
       </div>
     </section>
@@ -557,9 +557,9 @@
           <tr>
             <td><strong><code>starwork multiagent</code></strong></td>
             <td>管理同一项目内多个 Agent 会话的职责位协作。</td>
-            <td>初始化 Agent Lanes；新增自定义 lane；绑定或释放 session；查看状态；登记跨 lane 可读输出。</td>
+            <td>初始化 Agent Lanes；新增自定义 lane；创建 lane workspace；绑定或释放 session；查看状态；登记跨 lane 可读输出。</td>
             <td><code>init</code>、<code>add</code>、<code>bind</code>、<code>release</code>、<code>status</code>、<code>share</code>、<code>--target</code>、<code>--session</code></td>
-            <td><code>_系统/协作/agent-lanes.md</code>、<code>_系统/协作/shared.md</code>、lane <code>worklog.md</code>。</td>
+            <td><code>_系统/协作/agent-lanes.md</code>、<code>_系统/协作/shared.md</code>、lane <code>worklog.md</code> 和 <code>workspace/README.md</code>。</td>
             <td>不内置固定职责；不写入 Matter registry；不做任务系统、锁或调度。</td>
             <td><span class="status done">已实现</span></td>
           </tr>
@@ -634,8 +634,8 @@
             <td><strong><code>starworkMultiagent</code></strong></td>
             <td>多 Agent 协作命令包装助手。</td>
             <td>用户想把当前会话登记为常用智能体、管理 Agent 职责位、绑定或释放 session、查看分工、登记共享输出。</td>
-            <td>判断用户语义；确认 lane ID、职责、写入范围和 session；把请求翻译成 <code>multiagent init/add/bind/release/status/share</code> 命令组合。</td>
-            <td>multiagent dry-run 命令、确认后的执行命令、当前分工解释。</td>
+            <td>判断用户语义；确认 lane ID、职责、写入范围、workspace 和 session；把请求翻译成 <code>multiagent init/add/bind/release/status/share</code> 命令组合。</td>
+            <td>multiagent dry-run 命令、确认后的执行命令、当前分工解释、过程材料放置建议。</td>
             <td><code>starwork multiagent</code></td>
             <td><span class="status done">已实现</span></td>
           </tr>
@@ -671,7 +671,7 @@
         </div>
       </div>
       <div class="callout">
-        <strong>固定边界：</strong>CLI 不硬猜业务语义；Skill 不静默改用户文件。所有会写入的 CLI 能力都应保留 dry-run 或明确确认。<code>multiagent init</code> 是协议初始化；“登记当前会话为常用智能体”在 Skill 层应解释为必要时先 init，再 add 和 bind。
+        <strong>固定边界：</strong>CLI 不硬猜业务语义；Skill 不静默改用户文件。所有会写入的 CLI 能力都应保留 dry-run 或明确确认。<code>multiagent init</code> 是协议初始化；“登记当前会话为常用智能体”在 Skill 层应解释为必要时先 init，再 add 和 bind。lane workspace 是过程区，不是项目正式输出目录。
       </div>
     </section>
 
@@ -705,7 +705,7 @@ starwork pack install content-creator --target ./my-workspace --dry-run</pre>
           <h3>多 Agent 协作</h3>
           <pre>starwork multiagent init --lanes research,writing,review --target ./my-workspace --yes
 starwork multiagent bind research --session codex:manual-research-1 --target ./my-workspace --yes
-starwork multiagent share research --title "Source summary" --path product/docs/source-summary.md --audience writing,review --target ./my-workspace --yes</pre>
+starwork multiagent share research --title "Source notes draft" --path _系统/协作/lanes/research/workspace/source-notes.md --audience writing,review --target ./my-workspace --yes</pre>
         </div>
       </div>
     </section>

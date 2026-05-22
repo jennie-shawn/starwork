@@ -138,7 +138,7 @@ M8 v1.0 稳定产品
 - `starworkInit`、`starworkDoctor` 可通过 `npx skills add` 安装为系统 Skill；`starworkDoctor` 同时承担历史模板诊断和升级蓝图生成；`starworkSpawn` 改为 Hub Kit 自带 Skill。
 - 公开 README 已改为中文首页。
 - 已新增面向 Agent 的安装指南：`product/docs/agent-install-guide.md`。
-- 当前开发版本准备推进到 `0.1.0-alpha.9`。
+- 当前开发版本准备推进到 `0.1.0-alpha.10`。
 - `starwork --version` 已可直接输出包版本，`starwork --help` 已改为面向 A 测用户的命令入口说明。
 - `starwork upgrade --blueprint`、`starworkDoctor` 和 Skill 分发第一版已进入公开包。
 

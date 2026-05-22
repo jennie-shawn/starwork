@@ -44,6 +44,7 @@ product/core/agent-lanes-spec.md
 
 - 判断用户是在初始化协作层、登记当前会话、增加 lane、绑定会话、释放会话、查看状态，还是登记共享输出。
 - 采访 lane ID、职责、写入范围、session ID、共享输出受众。
+- 判断过程材料应进入 lane workspace，还是应晋升到项目正式输出目录。
 - 生成可 dry-run 的 `starwork multiagent` 命令。
 - 在用户确认后执行写入类命令。
 - 用 `status --json` 解释当前协作状态。
@@ -54,6 +55,7 @@ product/core/agent-lanes-spec.md
 - 自动创建任务系统、锁系统或 JSON manifest。
 - 静默修改 `matters/registry.md`。
 - 替用户决定项目一定需要多少 lane。
+- 把 lane workspace 当成项目正式输出目录。
 - 搬运或复制共享输出文件。
 
 ## 用户语义与 CLI 映射
@@ -83,6 +85,7 @@ starwork multiagent init --target <path> --dry-run
 ```
 
 4. 确认 lane ID、职责、写入范围和 session ID。
+   默认过程工作区为 `_系统/协作/lanes/<lane-id>/workspace/`。
 5. 若 lane 不存在，生成：
 
 ```bash
@@ -170,6 +173,44 @@ skill 应解释：
 
 不移动、不复制原文件。
 
+## Lane Workspace 与正式输出
+
+每个 lane 默认拥有一个过程工作区：
+
+```text
+_系统/协作/lanes/<lane-id>/workspace/
+```
+
+它用于：
+
+- 调研笔记。
+- 未确认草稿。
+- 中间分析。
+- 临时实验结果。
+- 给同一 lane 后续会话看的上下文材料。
+
+项目正式输出目录用于：
+
+- 用户认可的最终交付物。
+- 项目正式文档。
+- 发布稿、确认稿、版本记录。
+- 可被整个项目长期引用的稳定成果。
+
+推荐流转：
+
+```text
+lane workspace 产生过程材料
+  -> 如需其他 lane 读取，登记 shared.md
+  -> 如被确认有项目价值，晋升到正式输出目录
+  -> 晋升后以正式输出目录为准
+```
+
+skill 判断放置位置时遵循：
+
+- 用户说“草稿、笔记、临时分析、先整理一下”，优先建议 lane workspace。
+- 用户说“最终版、发布、确认稿、产品文档、正式沉淀”，优先建议项目正式输出目录。
+- workspace 内容需要其他 lane 读取时，建议生成 `starwork multiagent share ... --path "_系统/协作/lanes/<lane-id>/workspace/<file>"`。
+
 ## 输出结构
 
 讨论阶段：
@@ -214,6 +255,7 @@ skill 应解释：
 - 不静默覆盖已有绑定。
 - 不绕过 StarWork 工作区边界。
 - 不修改 `matters/registry.md`。
+- 不把 lane workspace 当成项目正式事实源。
 
 ## 验收标准
 

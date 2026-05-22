@@ -67,6 +67,7 @@ starwork multiagent init --target <path> --dry-run
    - lane ID，例如 `research`、`writing`、`review`。这些只是示例，不是默认值。
    - 职责描述。
    - 可主动修改的路径范围。
+   - 该 lane 的过程工作区，默认是 `_系统/协作/lanes/<lane-id>/workspace/`。
    - 当前 session ID；无法自动识别时，请用户提供 `agent:session-id`。
 4. 生成 dry-run 命令：
 
@@ -156,6 +157,7 @@ starwork multiagent status --target <path> --json
 - 当前 lane 列表。
 - 哪些 lane 已绑定 / 未绑定。
 - 每个 lane 的写入范围。
+- 每个 lane 的 workspace 路径。
 - shared outputs 和 cross-lane requests 中需要关注的内容。
 
 ### share
@@ -178,6 +180,22 @@ starwork multiagent share <from-lane> --title "<title>" --path "<relative-path>"
 
 只登记索引，不移动、不复制文件。
 
+## Lane Workspace 与正式输出
+
+每个 lane 默认有自己的过程工作区：
+
+```text
+_系统/协作/lanes/<lane-id>/workspace/
+```
+
+使用规则：
+
+- 草稿、调研笔记、中间分析和临时实验结果，优先放入当前 lane workspace。
+- 用户认可的最终交付物、项目正式文档、发布稿和确认稿，应晋升到项目正式输出目录。
+- workspace 内容需要其他 lane 读取时，用 `starwork multiagent share` 登记到 `_系统/协作/shared.md`。
+- 晋升后，以项目正式输出目录中的文件为准；workspace 保留过程记录。
+- 不要把 workspace 当成新的长期事实源或归档库。
+
 ## 安全规则
 
 - 写入类命令默认先 `--dry-run` 或征得用户确认。
@@ -187,6 +205,7 @@ starwork multiagent share <from-lane> --title "<title>" --path "<relative-path>"
 - 不创建任务系统、锁系统或 JSON manifest。
 - 不自动决定项目该有哪些 lane。
 - 不把示例 lane 当默认模板。
+- 不把 lane workspace 当成项目正式输出目录。
 - lane 外文件修改前，先登记共享请求或取得用户明确授权。
 
 ## 输出格式
