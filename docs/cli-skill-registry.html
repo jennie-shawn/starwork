@@ -457,7 +457,7 @@
     <section class="section">
       <div class="section-header">
         <h2>当前总览</h2>
-        <p class="section-note">截至 alpha.7，StarWork 已有 6 个 CLI 命令和 5 个自研 Skill。`update` 和 `starwork skill` 仍是未来命令，不在当前可用列表里。</p>
+        <p class="section-note">截至 alpha.7，StarWork 已有 7 个可用 CLI 命令和 5 个自研 Skill。`update` 和 `starwork skill` 仍是未来命令，不在当前可用列表里。</p>
       </div>
       <div class="grid-3">
         <article class="panel">
@@ -548,6 +548,15 @@
             <td><code>pack id</code>、<code>--target</code>、<code>--dry-run</code>、<code>--yes</code></td>
             <td>Pack 目录、规则注入、模板缓存、workspace state 更新。</td>
             <td>要求目标已是健康 StarWork 工作台；不支持未兼容当前 workspace type 的 Pack。</td>
+            <td><span class="status done">已实现</span></td>
+          </tr>
+          <tr>
+            <td><strong><code>starwork multiagent</code></strong></td>
+            <td>管理同一项目内多个 Agent 会话的职责位协作。</td>
+            <td>初始化 Agent Lanes；新增自定义 lane；绑定或释放 session；查看状态；登记跨 lane 可读输出。</td>
+            <td><code>init</code>、<code>add</code>、<code>bind</code>、<code>release</code>、<code>status</code>、<code>share</code>、<code>--target</code>、<code>--session</code></td>
+            <td><code>_系统/协作/agent-lanes.md</code>、<code>_系统/协作/shared.md</code>、lane <code>worklog.md</code>。</td>
+            <td>不内置固定职责；不写入 Matter registry；不做任务系统、锁或调度。</td>
             <td><span class="status done">已实现</span></td>
           </tr>
           <tr>
@@ -687,6 +696,12 @@ starwork upgrade --target ./old-workspace --blueprint ./upgrade-blueprint.json -
           <h3>适配与安装 Pack</h3>
           <pre>starwork adapt claude --target ./my-workspace --yes
 starwork pack install content-creator --target ./my-workspace --dry-run</pre>
+        </div>
+        <div>
+          <h3>多 Agent 协作</h3>
+          <pre>starwork multiagent init --lanes research,writing,review --target ./my-workspace --yes
+starwork multiagent bind research --session codex:manual-research-1 --target ./my-workspace --yes
+starwork multiagent share research --title "Source summary" --path product/docs/source-summary.md --audience writing,review --target ./my-workspace --yes</pre>
         </div>
       </div>
     </section>

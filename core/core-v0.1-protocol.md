@@ -86,6 +86,7 @@ Core v0.1 把额外功能做成 capabilities。能力可以组合，但不能改
 | `local-lessons` | 在项目内维护本地可复用教训。 |
 | `main-repo-sync` | 支持主库 + 多个卫星项目的 Hub + Satellite 模型。 |
 | `skill-mount` | 通过软链接挂载主库共享 skills。 |
+| `agent-lanes` | 支持同一项目内多个 Agent 会话按职责位分工协作。 |
 
 ## 五种首批形态
 

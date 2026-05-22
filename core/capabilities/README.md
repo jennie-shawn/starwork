@@ -13,3 +13,4 @@ Capabilities 是 Core 的可选能力，可以通过 presets 组合。
 - `local-lessons`：项目本地教训
 - `main-repo-sync`：主库与卫星项目的同步模型
 - `skill-mount`：通过软链接挂载共享 skills
+- `agent-lanes`：多 Agent 会话按职责位分工协作

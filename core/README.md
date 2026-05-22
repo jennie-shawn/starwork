@@ -10,6 +10,7 @@ Core v0.1 定义：
 - 项目状态和当前工作分别放在哪里
 - 过程材料如何与正式事实源分离
 - 轻量的 `references/outputs` 工作区如何与 Matter 工作区并存
+- 多 Agent 会话如何按职责位分工协作
 - CLI、Adapters、Packs 和模板如何基于同一套协议工作
 - Skill 如何被系统安装、Hub 管理、Pack 推荐，并分发到具体项目
 
@@ -44,6 +45,8 @@ product/core/
 - Satellite 工作区维护自己的项目状态、当前工作、过程材料、项目决策和正式事实源。
 - 快照、只读链接、`.core-sync.json` 和审核队列共同定义同步边界。
 - Hub 可以读取 Satellite 状态，但不会把状态正文复制进 registry。
+
+Agent Lanes 协作机制见：[StarWork Agent Lanes 协作机制 SPEC](./agent-lanes-spec.md)。
 
 Skill 管理与分发机制见：[StarWork Skill 管理与分发机制 SPEC](./skill-management-spec.md)。
 

@@ -516,15 +516,16 @@
           <p class="kicker">StarWork CLI v0.1</p>
           <h1>CLI 能力说明</h1>
           <p class="subtitle">
-            CLI 是 StarWork 的产品化入口。Core 定义什么是对的，CLI 负责把它生成出来、检查出来、适配出来，并把场景 Pack 安全安装进去；定制化生成由 spawn blueprint 和 starworkSpawn skill 共同完成第一版闭环。
+            CLI 是 StarWork 的产品化入口。Core 定义什么是对的，CLI 负责把它生成出来、检查出来、适配出来，组织多 Agent 协作，并把场景 Pack 安全安装进去；定制化生成由 spawn blueprint 和 starworkSpawn skill 共同完成第一版闭环。
           </p>
         </div>
 
-        <div class="quick-row" aria-label="CLI 五个命令">
+        <div class="quick-row" aria-label="CLI 核心命令">
           <div class="quick"><b>init</b><span>从空文件夹生成一个可工作的 StarWork 工作台。</span></div>
           <div class="quick"><b>spawn</b><span>从多项目中枢生成并登记一个新项目工作台。</span></div>
           <div class="quick"><b>doctor</b><span>检查工作台是否健康，找出缺失、错配和风险。</span></div>
           <div class="quick"><b>adapt</b><span>为不同 Agent 生成轻量入口，但不复制规则源。</span></div>
+          <div class="quick"><b>multiagent</b><span>按项目自定义职责位组织多个 Agent 会话协作。</span></div>
           <div class="quick"><b>pack install</b><span>在健康工作台上补装场景 Pack。</span></div>
         </div>
       </div>
@@ -532,7 +533,7 @@
       <div class="hero-board" aria-label="CLI 最小闭环图">
         <svg viewBox="0 0 640 520" role="img" aria-labelledby="cli-flow-title cli-flow-desc">
           <title id="cli-flow-title">CLI 最小闭环</title>
-          <desc id="cli-flow-desc">init 生成工作台，spawn 从中枢生成项目，doctor 检查工作台，adapt 适配 Agent，pack install 安装场景 Pack。</desc>
+          <desc id="cli-flow-desc">init 生成工作台，spawn 从中枢生成项目，doctor 检查工作台，adapt 适配 Agent，multiagent 组织多 Agent 协作，pack install 安装场景 Pack。</desc>
           <defs>
             <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
               <path d="M 0 0 L 10 5 L 0 10 z" fill="#1d211d"></path>
@@ -540,7 +541,7 @@
           </defs>
           <rect x="12" y="12" width="616" height="496" rx="8" fill="#fffdf7" stroke="#1d211d" stroke-width="3"></rect>
           <text x="44" y="58" font-size="25" font-weight="900" fill="#1d211d">M2 CLI 最小闭环</text>
-          <text x="44" y="84" font-size="14" fill="#62675f">五个命令共同完成：初始化、派生项目、检查、适配、扩展。</text>
+          <text x="44" y="84" font-size="14" fill="#62675f">核心命令共同完成：初始化、派生项目、检查、适配、协作、扩展。</text>
 
           <g transform="translate(74 150)">
             <rect width="150" height="82" rx="8" fill="#d8eadc" stroke="#286d4a" stroke-width="2"></rect>
@@ -575,8 +576,8 @@
 
     <section class="section">
       <div class="section-header">
-        <h2>五个命令</h2>
-        <p class="section-note">v0.1 不做大而全的 CLI，而是先完成一条可靠路径：能初始化、能生成中枢项目、能检查、能适配、能补装 Pack。</p>
+        <h2>核心命令</h2>
+        <p class="section-note">v0.1 不做大而全的 CLI，而是先完成一条可靠路径：能初始化、能生成中枢项目、能检查、能适配、能组织多 Agent 协作、能补装 Pack。</p>
       </div>
 
       <div class="command-grid">
@@ -638,6 +639,21 @@
             <li>适配结果记录到 workspace state。</li>
           </ul>
           <pre>node cli/bin/starwork.js adapt claude --target ./workspace --yes</pre>
+        </article>
+
+        <article class="command">
+          <div class="command-top">
+            <h3><code>multiagent</code></h3>
+            <span class="badge">协作</span>
+          </div>
+          <p>为同一项目建立自定义 Agent 职责位，绑定具体会话，并登记跨 lane 可读输出。</p>
+          <ul>
+            <li>不内置固定职责，lane 由项目场景定义。</li>
+            <li>使用 <code>_系统/协作/agent-lanes.md</code> 作为分工索引。</li>
+            <li>使用 <code>_系统/协作/shared.md</code> 登记跨 lane 共享输出。</li>
+            <li>不写入 Matter registry，不引入任务系统或锁机制。</li>
+          </ul>
+          <pre>node cli/bin/starwork.js multiagent init --lanes research,writing,review --target ./workspace --yes</pre>
         </article>
 
         <article class="command">
@@ -828,7 +844,48 @@ node cli/bin/starwork.js adapt --agent cursor \
 
         <article class="detail-card">
           <div>
-            <span class="mini-label">05 / 安装 Pack</span>
+            <span class="mini-label">05 / 多 Agent 协作</span>
+            <h3><code>starwork multiagent</code></h3>
+            <p>为同一项目建立多个 Agent 会话的职责位协作层。它管理 lane、会话绑定、worklog 和 shared context，不管理事项生命周期。</p>
+            <pre>node cli/bin/starwork.js multiagent init \
+  --lanes research,writing,review \
+  --target ./workspace \
+  --yes
+
+node cli/bin/starwork.js multiagent bind research \
+  --session codex:manual-research-1 \
+  --target ./workspace \
+  --yes</pre>
+          </div>
+          <div class="detail-columns">
+            <div class="detail-box">
+              <h4>具备的能力</h4>
+              <ul>
+                <li>初始化 <code>_系统/协作/agent-lanes.md</code> 和 <code>shared.md</code>。</li>
+                <li>按项目实际职责新增 lane，不预设后端、前端或测试。</li>
+                <li>将当前或手动指定的 session 绑定到 lane。</li>
+                <li>释放 lane 绑定，保留历史工作记录。</li>
+                <li>用 <code>status --json</code> 输出可被 Agent 读取的分工状态。</li>
+                <li>用 <code>share</code> 登记其他 lane 需要读取的输出。</li>
+              </ul>
+            </div>
+            <div class="detail-box">
+              <h4>执行步骤</h4>
+              <ol>
+                <li>定位 StarWork 工作台。</li>
+                <li>读取或创建 Agent Lanes Markdown 文件。</li>
+                <li>校验 lane ID 和安全相对路径。</li>
+                <li>按命令更新 lane 表或 shared outputs 表。</li>
+                <li>确认后写回 Markdown 事实源。</li>
+                <li>不写入 Matter registry，不创建任务看板。</li>
+              </ol>
+            </div>
+          </div>
+        </article>
+
+        <article class="detail-card">
+          <div>
+            <span class="mini-label">06 / 安装 Pack</span>
             <h3><code>starwork pack install</code></h3>
             <p>在已有健康工作台上补装场景 Pack。适合先建通用工作台，再加入内容创作者等场景能力。</p>
             <pre>node cli/bin/starwork.js pack install content-creator \

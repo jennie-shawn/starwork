@@ -160,6 +160,11 @@ async function run(argv) {
     return;
   }
 
+  if (command === "multiagent") {
+    await lanesCommand(argv.slice(1));
+    return;
+  }
+
   throw new Error(`未知命令：${command}`);
 }
 
@@ -322,6 +327,20 @@ function parseArgs(argv) {
       options.id = readValue(argv, ++i, arg);
     } else if (arg === "--status") {
       options.status = readValue(argv, ++i, arg);
+    } else if (arg === "--lanes") {
+      options.lanes = readValue(argv, ++i, arg);
+    } else if (arg === "--purpose") {
+      options.purpose = readValue(argv, ++i, arg);
+    } else if (arg === "--write") {
+      options.write = readValue(argv, ++i, arg);
+    } else if (arg === "--session") {
+      options.session = readValue(argv, ++i, arg);
+    } else if (arg === "--title") {
+      options.title = readValue(argv, ++i, arg);
+    } else if (arg === "--path") {
+      options.path = readValue(argv, ++i, arg);
+    } else if (arg === "--audience") {
+      options.audience = readValue(argv, ++i, arg);
     } else if (arg === "--type") {
       options.type = readValue(argv, ++i, arg);
     } else if (arg === "--pack") {
@@ -391,6 +410,226 @@ async function packCommand(argv) {
     throw new Error(`未知 pack 子命令：${subcommand}`);
   }
   await packInstall(argv.slice(1));
+}
+
+async function lanesCommand(argv) {
+  const subcommand = argv[0];
+  if (!subcommand || subcommand === "--help" || subcommand === "-h") {
+    printLanesHelp();
+    return;
+  }
+
+  if (subcommand === "init") {
+    await lanesInit(argv.slice(1));
+    return;
+  }
+  if (subcommand === "add") {
+    await lanesAdd(argv.slice(1));
+    return;
+  }
+  if (subcommand === "bind") {
+    await lanesBind(argv.slice(1));
+    return;
+  }
+  if (subcommand === "release") {
+    await lanesRelease(argv.slice(1));
+    return;
+  }
+  if (subcommand === "status") {
+    lanesStatus(argv.slice(1));
+    return;
+  }
+  if (subcommand === "share") {
+    await lanesShare(argv.slice(1));
+    return;
+  }
+
+  throw new Error(`未知 multiagent 子命令：${subcommand}`);
+}
+
+async function lanesInit(argv) {
+  const options = parseArgs(argv);
+  if (options.help) {
+    printLanesInitHelp();
+    return;
+  }
+  const workspaceRoot = requireWorkspaceRoot(path.resolve(options.target || process.cwd()));
+  const lanes = parseLaneList(options.lanes || "").map((id) => ({
+    lane: id,
+    purpose: "待补充",
+    current_session: "unbound",
+    write_scope: "待补充",
+    worklog: path.posix.join("lanes", id, "worklog.md")
+  }));
+  const plan = buildLanesInitPlan({ workspaceRoot, lanes });
+  printGenericPlan(options.dryRun ? "Agent Lanes 初始化预览（dry run）：" : "Agent Lanes 初始化计划：", plan.actions);
+  if (options.dryRun) return;
+  await confirmOrThrow(options, "是否初始化 Agent Lanes？");
+  applyPlan(plan);
+  console.log("");
+  console.log("Agent Lanes 已初始化。");
+}
+
+async function lanesAdd(argv) {
+  const options = parseArgs(argv);
+  if (options.help) {
+    printLanesAddHelp();
+    return;
+  }
+  const laneId = normalizeLaneId(options._?.[0], "lane");
+  if (!options.purpose) {
+    throw new Error("multiagent add 需要 --purpose <text>。");
+  }
+  if (!options.write) {
+    throw new Error("multiagent add 需要 --write <path-globs>。");
+  }
+  const workspaceRoot = requireWorkspaceRoot(path.resolve(options.target || process.cwd()));
+  const registry = readLanesRegistry(workspaceRoot);
+  if (registry.lanes.some((lane) => lane.lane === laneId)) {
+    throw new Error(`Lane 已存在：${laneId}`);
+  }
+  const lane = {
+    lane: laneId,
+    purpose: normalizeMarkdownCell(options.purpose),
+    current_session: "unbound",
+    write_scope: normalizeMarkdownCell(options.write),
+    worklog: path.posix.join("lanes", laneId, "worklog.md")
+  };
+  const plan = buildLanesRegistryPlan(workspaceRoot, [...registry.lanes, lane], [
+    fileAction(workspaceRoot, path.join("_系统", "协作", "lanes", laneId, "worklog.md"), renderLaneWorklog(laneId))
+  ]);
+  printGenericPlan(options.dryRun ? "新增 Lane 预览（dry run）：" : "新增 Lane 计划：", plan.actions);
+  if (options.dryRun) return;
+  await confirmOrThrow(options, `是否新增 Lane ${laneId}？`);
+  applyPlan(plan);
+  console.log("");
+  console.log(`Lane ${laneId} 已新增。`);
+}
+
+async function lanesBind(argv) {
+  const options = parseArgs(argv);
+  if (options.help) {
+    printLanesBindHelp();
+    return;
+  }
+  const laneId = normalizeLaneId(options._?.[0], "lane");
+  const workspaceRoot = requireWorkspaceRoot(path.resolve(options.target || process.cwd()));
+  const registry = readLanesRegistry(workspaceRoot);
+  const lane = findLaneOrThrow(registry.lanes, laneId);
+  const session = resolveLaneSession(options);
+  if (lane.current_session && lane.current_session !== "unbound" && lane.current_session !== session && !options.yes) {
+    throw new Error(`Lane ${laneId} 已绑定 ${lane.current_session}。如需覆盖，请传入 --yes。`);
+  }
+  const nextLanes = registry.lanes.map((item) => item.lane === laneId ? { ...item, current_session: session } : item);
+  const plan = buildLanesRegistryPlan(workspaceRoot, nextLanes);
+  printGenericPlan(options.dryRun ? "绑定 Lane 预览（dry run）：" : "绑定 Lane 计划：", plan.actions);
+  if (options.dryRun) return;
+  await confirmOrThrow(options, `是否将当前会话绑定到 Lane ${laneId}？`);
+  applyPlan(plan);
+  console.log("");
+  console.log(`Lane ${laneId} 已绑定到 ${session}。`);
+}
+
+async function lanesRelease(argv) {
+  const options = parseArgs(argv);
+  if (options.help) {
+    printLanesReleaseHelp();
+    return;
+  }
+  const laneId = normalizeLaneId(options._?.[0], "lane");
+  const workspaceRoot = requireWorkspaceRoot(path.resolve(options.target || process.cwd()));
+  const registry = readLanesRegistry(workspaceRoot);
+  findLaneOrThrow(registry.lanes, laneId);
+  const nextLanes = registry.lanes.map((item) => item.lane === laneId ? { ...item, current_session: "unbound" } : item);
+  const plan = buildLanesRegistryPlan(workspaceRoot, nextLanes);
+  printGenericPlan(options.dryRun ? "释放 Lane 预览（dry run）：" : "释放 Lane 计划：", plan.actions);
+  if (options.dryRun) return;
+  await confirmOrThrow(options, `是否释放 Lane ${laneId}？`);
+  applyPlan(plan);
+  console.log("");
+  console.log(`Lane ${laneId} 已释放。请更新对应 worklog。`);
+}
+
+function lanesStatus(argv) {
+  const options = parseArgs(argv);
+  if (options.help) {
+    printLanesStatusHelp();
+    return;
+  }
+  const workspaceRoot = requireWorkspaceRoot(path.resolve(options.target || process.cwd()));
+  const registry = readLanesRegistry(workspaceRoot);
+  const shared = readSharedContext(workspaceRoot);
+  if (options.json) {
+    console.log(JSON.stringify({
+      schema: "starwork.agent_lanes.status.v0.1",
+      workspace_root: workspaceRoot,
+      lanes: registry.lanes,
+      shared_outputs: shared.outputs,
+      cross_lane_requests: shared.requests
+    }, null, 2));
+    return;
+  }
+  console.log("");
+  console.log("Agent Lanes");
+  console.log("");
+  if (!registry.lanes.length) {
+    console.log("未登记任何 lane。");
+  } else {
+    for (const lane of registry.lanes) {
+      console.log(`- ${lane.lane}: ${lane.purpose}`);
+      console.log(`  session: ${lane.current_session || "unbound"}`);
+      console.log(`  write: ${lane.write_scope}`);
+      console.log(`  worklog: ${lane.worklog}`);
+    }
+  }
+  const openRequests = shared.requests.filter((request) => request.status !== "done");
+  if (openRequests.length) {
+    console.log("");
+    console.log("Cross-Lane Requests:");
+    openRequests.forEach((request) => console.log(`- ${request.from} -> ${request.to}: ${request.request} (${request.status})`));
+  }
+}
+
+async function lanesShare(argv) {
+  const options = parseArgs(argv);
+  if (options.help) {
+    printLanesShareHelp();
+    return;
+  }
+  const from = normalizeLaneId(options._?.[0], "lane");
+  if (!options.title) {
+    throw new Error("multiagent share 需要 --title <text>。");
+  }
+  if (!options.path) {
+    throw new Error("multiagent share 需要 --path <relative-path>。");
+  }
+  if (!options.audience) {
+    throw new Error("multiagent share 需要 --audience <lane-list>。");
+  }
+  const workspaceRoot = requireWorkspaceRoot(path.resolve(options.target || process.cwd()));
+  const registry = readLanesRegistry(workspaceRoot);
+  findLaneOrThrow(registry.lanes, from);
+  const outputPath = normalizeSafeRelativePath(options.path, "multiagent share --path");
+  const shared = readSharedContext(workspaceRoot);
+  const row = {
+    from,
+    title: normalizeMarkdownCell(options.title),
+    path: outputPath,
+    audience: normalizeMarkdownCell(options.audience),
+    status: normalizeMarkdownCell(options.status || "draft"),
+    updated: todayIsoDate()
+  };
+  const plan = buildSharedContextPlan(workspaceRoot, {
+    outputs: [...shared.outputs, row],
+    requests: shared.requests,
+    agreements: shared.agreements
+  });
+  printGenericPlan(options.dryRun ? "共享输出登记预览（dry run）：" : "共享输出登记计划：", plan.actions);
+  if (options.dryRun) return;
+  await confirmOrThrow(options, "是否登记共享输出？");
+  applyPlan(plan);
+  console.log("");
+  console.log(`已登记共享输出：${row.title}`);
 }
 
 async function packInstall(argv) {
@@ -2602,6 +2841,197 @@ ${customization}
 `;
 }
 
+function buildLanesInitPlan({ workspaceRoot, lanes }) {
+  const actions = [
+    directoryAction(workspaceRoot, path.join("_系统", "协作")),
+    fileAction(workspaceRoot, path.join("_系统", "协作", "agent-lanes.md"), renderAgentLanesRegistry(lanes)),
+    fileAction(workspaceRoot, path.join("_系统", "协作", "shared.md"), renderSharedContext({ outputs: [], requests: [], agreements: [] }))
+  ];
+  for (const lane of lanes) {
+    actions.push(fileAction(workspaceRoot, path.join("_系统", "协作", "lanes", lane.lane, "worklog.md"), renderLaneWorklog(lane.lane)));
+  }
+  return {
+    targetDir: workspaceRoot,
+    actions: dedupeActions(actions)
+  };
+}
+
+function buildLanesRegistryPlan(workspaceRoot, lanes, extraActions = []) {
+  return {
+    targetDir: workspaceRoot,
+    actions: dedupeActions([
+      overwriteFileAction(workspaceRoot, path.join("_系统", "协作", "agent-lanes.md"), renderAgentLanesRegistry(lanes)),
+      ...extraActions
+    ])
+  };
+}
+
+function buildSharedContextPlan(workspaceRoot, shared) {
+  return {
+    targetDir: workspaceRoot,
+    actions: [
+      overwriteFileAction(workspaceRoot, path.join("_系统", "协作", "shared.md"), renderSharedContext(shared))
+    ]
+  };
+}
+
+function readLanesRegistry(workspaceRoot) {
+  const registryPath = path.join(workspaceRoot, "_系统", "协作", "agent-lanes.md");
+  if (!fs.existsSync(registryPath)) {
+    throw new Error("当前工作台尚未启用 Agent Lanes。请先运行 starwork multiagent init。");
+  }
+  return {
+    path: registryPath,
+    lanes: parseMarkdownTableSection(fs.readFileSync(registryPath, "utf8"), "## Lanes", ["lane", "purpose", "current_session", "write_scope", "worklog"])
+  };
+}
+
+function readSharedContext(workspaceRoot) {
+  const sharedPath = path.join(workspaceRoot, "_系统", "协作", "shared.md");
+  if (!fs.existsSync(sharedPath)) {
+    return { outputs: [], requests: [], agreements: [] };
+  }
+  const content = fs.readFileSync(sharedPath, "utf8");
+  return {
+    outputs: parseMarkdownTableSection(content, "## Shared Outputs", ["from", "title", "path", "audience", "status", "updated"]),
+    requests: parseMarkdownTableSection(content, "## Cross-Lane Requests", ["from", "to", "request", "status", "link"]),
+    agreements: parseMarkdownTableSection(content, "## Shared Agreements", ["agreement", "owner", "status", "link"])
+  };
+}
+
+function parseMarkdownTableSection(content, heading, fields) {
+  const lines = content.split(/\r?\n/);
+  const headingIndex = lines.findIndex((line) => line.trim() === heading);
+  if (headingIndex === -1) return [];
+  const rows = [];
+  for (let i = headingIndex + 1; i < lines.length; i += 1) {
+    const line = lines[i].trim();
+    if (line.startsWith("## ")) break;
+    if (!line.startsWith("|")) continue;
+    const cells = line.split("|").slice(1, -1).map((cell) => cell.trim());
+    if (!cells.length || cells.every((cell) => /^-+$/.test(cell.replace(/\s/g, "")))) continue;
+    if (cells[0] === fields[0]) continue;
+    const row = {};
+    fields.forEach((field, index) => {
+      row[field] = cells[index] || "";
+    });
+    rows.push(row);
+  }
+  return rows;
+}
+
+function renderAgentLanesRegistry(lanes) {
+  return `# Agent Lanes
+
+## Lanes
+
+| lane | purpose | current_session | write_scope | worklog |
+|---|---|---|---|---|
+${lanes.map((lane) => `| ${escapeMarkdownCell(lane.lane)} | ${escapeMarkdownCell(lane.purpose)} | ${escapeMarkdownCell(lane.current_session || "unbound")} | ${escapeMarkdownCell(lane.write_scope)} | ${escapeMarkdownCell(lane.worklog)} |`).join("\n")}
+`;
+}
+
+function renderSharedContext(shared) {
+  return `# Shared Agent Context
+
+## Shared Outputs
+
+| from | title | path | audience | status | updated |
+|---|---|---|---|---|---|
+${shared.outputs.map((row) => `| ${escapeMarkdownCell(row.from)} | ${escapeMarkdownCell(row.title)} | ${escapeMarkdownCell(row.path)} | ${escapeMarkdownCell(row.audience)} | ${escapeMarkdownCell(row.status)} | ${escapeMarkdownCell(row.updated)} |`).join("\n")}
+
+## Cross-Lane Requests
+
+| from | to | request | status | link |
+|---|---|---|---|---|
+${shared.requests.map((row) => `| ${escapeMarkdownCell(row.from)} | ${escapeMarkdownCell(row.to)} | ${escapeMarkdownCell(row.request)} | ${escapeMarkdownCell(row.status)} | ${escapeMarkdownCell(row.link)} |`).join("\n")}
+
+## Shared Agreements
+
+| agreement | owner | status | link |
+|---|---|---|---|
+${shared.agreements.map((row) => `| ${escapeMarkdownCell(row.agreement)} | ${escapeMarkdownCell(row.owner)} | ${escapeMarkdownCell(row.status)} | ${escapeMarkdownCell(row.link)} |`).join("\n")}
+`;
+}
+
+function renderLaneWorklog(laneId) {
+  const title = laneId.split(/[-_]/).filter(Boolean).map((part) => `${part.slice(0, 1).toUpperCase()}${part.slice(1)}`).join(" ") || "Lane";
+  return `# ${title} Worklog
+
+## Current
+
+待补充。
+
+## Outputs
+
+| title | path | audience | status |
+|---|---|---|---|
+
+## Requests
+
+| to | request | status | link |
+|---|---|---|---|
+
+## Notes
+
+待补充。
+
+## Next
+
+待补充。
+`;
+}
+
+function parseLaneList(value) {
+  return String(value || "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .map((item) => normalizeLaneId(item, "lanes"));
+}
+
+function normalizeLaneId(value, label) {
+  if (typeof value !== "string" || !value.trim()) {
+    throw new Error(`${label} 必须是非空 lane ID。`);
+  }
+  const laneId = value.trim();
+  if (!/^[a-zA-Z0-9][a-zA-Z0-9_-]*$/.test(laneId)) {
+    throw new Error(`${label} 只能包含字母、数字、短横线和下划线：${value}`);
+  }
+  return laneId;
+}
+
+function findLaneOrThrow(lanes, laneId) {
+  const lane = lanes.find((item) => item.lane === laneId);
+  if (!lane) {
+    throw new Error(`找不到 Lane：${laneId}`);
+  }
+  return lane;
+}
+
+function resolveLaneSession(options) {
+  if (options.session) {
+    return normalizeMarkdownCell(options.session);
+  }
+  const agent = options.agent || "codex";
+  if (agent === "codex" && process.env.CODEX_THREAD_ID) {
+    return `codex:${process.env.CODEX_THREAD_ID}`;
+  }
+  throw new Error("无法自动识别当前会话。请传入 --session <agent:session-id>。");
+}
+
+function normalizeMarkdownCell(value) {
+  return String(value || "").replace(/\r?\n/g, " ").trim();
+}
+
+function escapeMarkdownCell(value) {
+  return normalizeMarkdownCell(value).replace(/\|/g, "\\|");
+}
+
+function todayIsoDate() {
+  return new Date().toISOString().slice(0, 10);
+}
+
 function slugifyProjectId(value) {
   return String(value || "")
     .trim()
@@ -3033,11 +3463,13 @@ Commands:
   upgrade          执行由 skill 生成的升级 blueprint。
   adapt            生成轻量 Agent 适配入口。
   pack install     向健康工作台安装兼容 Pack。
+  multiagent       管理多 Agent 职责位、会话绑定和共享索引。
 
 常用开始：
   starwork init --type single-light --pack general --language zh --target ./my-workspace --yes
   starwork init --type hub --language zh --target ./my-hub --yes
   starwork doctor --target ./my-workspace
+  starwork multiagent init --lanes research,writing,review --target ./my-workspace --yes
   starwork spawn --hub ./my-hub --name "New Project" --target ./new-project --mode matter --yes
 
 全局选项：
@@ -3051,6 +3483,7 @@ Commands:
   starwork upgrade --help
   starwork adapt --help
   starwork pack install --help
+  starwork multiagent --help
 `);
 }
 
@@ -3193,6 +3626,118 @@ Options:
 示例：
   starwork pack install general --target ./my-workspace --dry-run
   starwork pack install content-creator --target ./my-workspace --yes
+`);
+}
+
+function printLanesHelp() {
+  console.log(`StarWork Multiagent
+
+Usage:
+  starwork multiagent <init|add|bind|release|status|share> [options]
+
+Agent Lanes 用于同一项目内多个 Agent 会话按项目自定义职责位协作。
+
+Subcommands:
+  init       创建 Agent Lanes 协作文件。
+  add        新增一个 lane。
+  bind       将当前会话绑定到 lane。
+  release    释放 lane 的当前会话绑定。
+  status     查看 lane 分工和共享请求。
+  share      登记一个跨 lane 可读输出。
+
+示例：
+  starwork multiagent init --lanes research,writing,review --target ./my-workspace --yes
+  starwork multiagent add review --purpose "审校和风险检查" --write "reviews/**,product/docs/**" --target ./my-workspace --yes
+  starwork multiagent bind research --session codex:manual-research-1 --target ./my-workspace --yes
+`);
+}
+
+function printLanesInitHelp() {
+  console.log(`StarWork Multiagent Init
+
+Usage:
+  starwork multiagent init [options]
+
+Options:
+  --target <path>
+  --lanes <lane1,lane2>
+  --dry-run
+  --yes, -y
+
+示例：
+  starwork multiagent init --lanes research,writing,review --target ./my-workspace --yes
+`);
+}
+
+function printLanesAddHelp() {
+  console.log(`StarWork Multiagent Add
+
+Usage:
+  starwork multiagent add <lane-id> --purpose <text> --write <path-globs> [options]
+
+Options:
+  --target <path>
+  --purpose <text>
+  --write <path-globs>
+  --dry-run
+  --yes, -y
+`);
+}
+
+function printLanesBindHelp() {
+  console.log(`StarWork Multiagent Bind
+
+Usage:
+  starwork multiagent bind <lane-id> [options]
+
+Options:
+  --target <path>
+  --agent <codex|claude|cursor|trae|manual>
+  --session <agent:session-id>
+  --dry-run
+  --yes, -y
+`);
+}
+
+function printLanesReleaseHelp() {
+  console.log(`StarWork Multiagent Release
+
+Usage:
+  starwork multiagent release <lane-id> [options]
+
+Options:
+  --target <path>
+  --dry-run
+  --yes, -y
+`);
+}
+
+function printLanesStatusHelp() {
+  console.log(`StarWork Multiagent Status
+
+Usage:
+  starwork multiagent status [options]
+
+Options:
+  --target <path>
+  --json
+`);
+}
+
+function printLanesShareHelp() {
+  console.log(`StarWork Multiagent Share
+
+Usage:
+  starwork multiagent share <from-lane> --title <title> --path <relative-path> --audience <lanes> [options]
+
+Options:
+  --target <path>
+  --title <title>
+  --path <relative-path>
+  --audience <lane-list>
+  --status <draft|ready|confirmed>
+  --dry-run
+  --yes, -y
 `);
 }
 

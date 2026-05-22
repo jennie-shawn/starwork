@@ -35,6 +35,7 @@ Capabilities 可以增加文件和行为，但不能重新定义 baseline 的含
 - `local-lessons`
 - `main-repo-sync`
 - `skill-mount`
+- `agent-lanes`
 
 ## 不做什么
 
