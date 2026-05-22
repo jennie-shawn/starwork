@@ -17,6 +17,5 @@ Skill 的安装、Hub 管理、Pack 推荐和项目分发规则见 `product/core
 
 - `starworkSpawn/`：帮助 Agent 设计 `starwork spawn --blueprint` 工作台定制单。
 - `starworkInit/`：帮助 Agent 设计 `starwork init` 初始化方案和 init blueprint。详细 SPEC 见 `starworkInit-spec.md`。
-- `starworkDoctor/`：帮助 Agent 基于 `starwork doctor --json` 的探测结果，对当前工作区或历史模板做理性诊断和升级建议。详细 SPEC 见 `starworkDoctor-spec.md`。
-- `starworkUpgrade/`：帮助 Agent 基于 `starworkDoctor` 的诊断和用户确认，生成 `starwork upgrade --blueprint` 升级施工图。详细 SPEC 见 `starworkUpgrade-spec.md`。
+- `starworkDoctor/`：帮助 Agent 基于 `starwork doctor --json` 的探测结果，对当前工作区或历史模板做理性诊断；用户明确要求升级时，继续确认目录语义并生成 `starwork upgrade --blueprint` 升级施工图。详细 SPEC 见 `starworkDoctor-spec.md`。
 - `starworkMultiagent/`：帮助 Agent 把“常用智能体 / 当前会话职责 / 多 Agent 分工 / 共享输出”翻译成安全的 `starwork multiagent` 命令组合。详细 SPEC 见 `starworkMultiagent-spec.md`。

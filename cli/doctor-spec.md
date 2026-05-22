@@ -185,9 +185,10 @@ v0.1 判断标准：
 - `upgrade.source: legacy-template`
 - `upgrade.inferred.language`
 - `upgrade.inferred.workspace_type`
+- `upgrade.inferred.reasons`
 - 检测到的参考资料目录和输出目录
 
-注意：`doctor --json` 不输出 `next_steps`，也不输出 Pack 建议，避免影响 `starworkDoctor` 基于上下文做独立判断。在没有正式 `starwork upgrade` 命令前，`doctor` 只提供事实和信号，不执行迁移。
+注意：`doctor --json` 不输出 `next_steps`，也不输出 Pack 建议，避免影响 `starworkDoctor` 基于上下文做独立判断。正式升级仍由 `starworkDoctor` 生成 blueprint，再交给 `starwork upgrade --blueprint` 执行。
 
 ### Step 2：读取 workspace state
 
@@ -459,8 +460,20 @@ Result:
       "language": "zh",
       "workspace_type": "single-matter",
       "references": ["参考资料"],
-      "outputs": ["输出"]
+      "outputs": ["输出"],
+      "reasons": {
+        "language": ["_系统 是中文工作区信号"],
+        "workspace_type": ["事项 表示存在事项或多事务推进结构"],
+        "references": ["参考资料 命中参考资料候选信号"],
+        "outputs": ["输出 命中成果或输出候选信号"]
+      }
     }
+  },
+  "signals": {
+    "project_status_files": ["_系统/上下文/项目状态.md"],
+    "current_work_files": ["_系统/任务/当前工作.md"],
+    "readonly_candidate_dirs": ["参考资料"],
+    "writable_candidate_dirs": ["事项", "输出"]
   }
 }
 ```

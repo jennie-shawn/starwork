@@ -196,7 +196,7 @@ starwork multiagent status --json
 
 ## Safety Rules
 
-- 这是系统 Skill，和 `starworkInit`、`starworkDoctor`、`starworkUpgrade` 一样全局安装。
+- 这是系统 Skill，和 `starworkInit`、`starworkDoctor` 一样全局安装。
 - 不拆成多个子命令 skill；保持一个入口，降低安装和触发成本。
 - 不写死后端、前端、测试等职责；示例只能作为说明，不能作为默认 lane。
 - 不写入 `matters/registry.md`。

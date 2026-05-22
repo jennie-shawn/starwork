@@ -135,20 +135,20 @@ M8 v1.0 稳定产品
 
 - GitHub 仓库已推送到 `jennie-shawn/starwork`。
 - npm 包名为 `@jennie-shawn/starwork`。
-- `starworkInit`、`starworkDoctor`、`starworkUpgrade` 可通过 `npx skills add` 安装为系统 Skill；`starworkSpawn` 改为 Hub Kit 自带 Skill。
+- `starworkInit`、`starworkDoctor` 可通过 `npx skills add` 安装为系统 Skill；`starworkDoctor` 同时承担历史模板诊断和升级蓝图生成；`starworkSpawn` 改为 Hub Kit 自带 Skill。
 - 公开 README 已改为中文首页。
 - 已新增面向 Agent 的安装指南：`product/docs/agent-install-guide.md`。
-- npm `latest` 已发布到 `0.1.0-alpha.7`。
+- 当前开发版本准备推进到 `0.1.0-alpha.8`。
 - `starwork --version` 已可直接输出包版本，`starwork --help` 已改为面向 A 测用户的命令入口说明。
-- `starwork upgrade --blueprint`、`starworkDoctor`、`starworkUpgrade` 和 Skill 分发第一版已进入公开包。
+- `starwork upgrade --blueprint`、`starworkDoctor` 和 Skill 分发第一版已进入公开包。
 
 验收标准：
 
 - A 测用户能安装 CLI 并看到 `starwork --help`。
-- A 测用户能安装系统 Skills，并让 Agent 识别 `starworkInit`、`starworkDoctor`、`starworkUpgrade`。
+- A 测用户能安装系统 Skills，并让 Agent 识别 `starworkInit`、`starworkDoctor`。
 - Hub 工作台能带出 Kit 自带的 `starworkSpawn`，单项目工作台能带出 Kit 自带的 `neat-freak`。
 - `init -> doctor -> hub init -> spawn -> doctor` 的最小流程能被外部用户跑通。
-- 历史模板用户能跑通 `doctor --json -> starworkDoctor -> starworkUpgrade -> upgrade --blueprint -> doctor` 的保守升级验证流程。
+- 历史模板用户能跑通 `doctor --json -> starworkDoctor -> upgrade --blueprint -> doctor` 的保守升级验证流程。
 - A 测反馈中暴露的安装和 skill 调用问题被记录到 matter。
 
 ## M3 Content Creator Pack v0.1

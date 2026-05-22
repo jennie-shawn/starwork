@@ -1,7 +1,0 @@
-interface:
-  display_name: "StarWork Upgrade"
-  short_description: "生成 StarWork 升级蓝图"
-  default_prompt: "Use $starworkUpgrade to design a safe upgrade blueprint for a legacy or non-standard StarWork workspace."
-
-policy:
-  allow_implicit_invocation: true

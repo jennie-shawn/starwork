@@ -6,7 +6,7 @@
 - 所属模块：StarWork CLI / StarWork Skills
 - 命令：`starwork upgrade`
 - 实现状态：v0.1 第一版已实现
-- 相关对象：`starwork doctor`、`starworkDoctor`、`starworkUpgrade`、升级蓝图、Core v0.1 Kit
+- 相关对象：`starwork doctor`、`starworkDoctor`、升级蓝图、Core v0.1 Kit
 - 目标：把历史模板或非标准目录，在不破坏用户历史文件的前提下，升级为 StarWork 可接管的标准工作台
 
 ## 一句话定义
@@ -20,7 +20,7 @@ starwork doctor --json
   ↓
 starworkDoctor skill 诊断 Core 逻辑贴近程度
   ↓
-starworkUpgrade skill 采访用户并生成 upgrade blueprint
+starworkDoctor skill 采访用户并生成 upgrade blueprint
   ↓
 starwork upgrade --blueprint upgrade-blueprint.json --dry-run
   ↓
@@ -54,7 +54,7 @@ starwork doctor 再检查
 - 用户可能想保留旧目录名，也可能想标准化成 StarWork 中文结构。
 - 有些旧 `outputs/` 只能保留归档，不能继续作为正式事实源。
 
-这些判断应由 `starworkUpgrade` skill 结合 `doctor` 探测、`starworkDoctor` 诊断和用户回答生成蓝图。CLI 只执行蓝图，不硬猜。
+这些判断应由 `starworkDoctor` skill 结合 `doctor` 探测、诊断结论和用户回答生成蓝图。CLI 只执行蓝图，不硬猜。
 
 ## 命令形式
 
@@ -71,7 +71,7 @@ starwork upgrade --target <path> --blueprint <upgrade-blueprint.json> --json --d
 | 参数 | 说明 |
 |---|---|
 | `--target <path>` | 要升级的历史工作区，默认当前目录。 |
-| `--blueprint <path>` | `starworkUpgrade` skill 生成的升级蓝图。v0.1 必填。 |
+| `--blueprint <path>` | `starworkDoctor` skill 生成的升级蓝图。v0.1 必填。 |
 | `--dry-run` | 只展示执行计划，不写入文件。 |
 | `--yes` | 按 blueprint 执行写入。非交互环境必填。 |
 | `--json` | 输出机器可读执行计划或执行结果。 |
@@ -108,7 +108,7 @@ v0.1 不支持：
 
 ## 推荐文件结构
 
-`starworkUpgrade` skill 生成的蓝图建议放在独立目录：
+`starworkDoctor` skill 生成的蓝图建议放在独立目录：
 
 ```text
 my-workspace-upgrade/
@@ -129,7 +129,7 @@ my-workspace-upgrade/
 {
   "schema": "starwork.upgrade_blueprint.v0.1",
   "target": ".",
-  "generated_by": "starworkUpgrade",
+  "generated_by": "starworkDoctor",
   "source": {
     "doctor_schema": "starwork.doctor.result.v0.1",
     "diagnosis": "legacy-template",
@@ -208,7 +208,7 @@ my-workspace-upgrade/
 |---|---:|---|
 | `schema` | 是 | 固定为 `starwork.upgrade_blueprint.v0.1`。 |
 | `target` | 否 | 仅作说明；真实目标仍以 CLI `--target` 为准。 |
-| `generated_by` | 是 | 通常为 `starworkUpgrade`。 |
+| `generated_by` | 是 | 通常为 `starworkDoctor`。 |
 | `source` | 是 | 记录 doctor / starworkDoctor 的诊断来源。 |
 | `base.workspace_type` | 是 | `single-light`、`single-matter`。v0.1 不支持把旧目录升级为 Hub。 |
 | `base.kit` | 是 | `local-starter` 或 `local-matter`。 |

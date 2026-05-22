@@ -29,7 +29,7 @@ v0.1 只覆盖最小可用安装和适配能力：
 - `starwork init` 第一版：可以初始化单事务项目、多事务项目和多项目管理中枢；交互模式默认推荐单事务项目，先确认工作台类型和语言；Hub 自动使用 `hub-management` Pack，单项目 v0.1 默认使用 `general` Pack，不主动推荐未定稿场景 Pack。
 - `starwork spawn` 第一版：可以从健康 Hub 生成 `satellite-starter` / `satellite-matter` 项目工作台，支持 `--blueprint` 定制目录、路径、规则和 seed，并回写 Hub 项目注册表。
 - `starwork doctor` 第一版：可以检查 workspace state、Core 必需角色、Kit 文件、正式事实源、业务工作区和 Pack 落地结果，并支持 `--json` 输出；alpha.4 开始可识别历史模板候选；alpha.5 开始输出目录 `inventory` 与语义 `signals`，供 `starworkDoctor` skill 判断。
-- `starwork upgrade` 第一版：可以读取 `starworkUpgrade` skill 生成的升级蓝图，把历史模板或非标准目录安全升级为 StarWork 工作台；v0.1 只支持 `--blueprint`，不自动判断升级方案。
+- `starwork upgrade` 第一版：可以读取 `starworkDoctor` skill 生成的升级蓝图，把历史模板或非标准目录安全升级为 StarWork 工作台；v0.1 只支持 `--blueprint`，不自动判断升级方案。
 - `starwork adapt` 第一版：可以为 Codex、Claude Code、Cursor、Trae 生成或登记轻量适配入口。
 - `starwork pack install` 第一版：可以在健康工作台上补装 Pack，并更新路径、规则、模板和 workspace state。
 - `starwork multiagent` 第一版：可以初始化 Agent Lanes、按项目自定义职责新增 lane、绑定 / 释放会话、查看状态，并登记跨 lane 可读输出。
@@ -37,7 +37,7 @@ v0.1 只覆盖最小可用安装和适配能力：
 
 后续规划：
 
-- Pack 自带 Skill 与 upgrade Skill actions：按 [`StarWork Skill 管理与分发机制 SPEC`](../core/skill-management-spec.md) 继续扩展。
+- Pack 自带 Skill 与 upgrade blueprint actions：按 [`StarWork Skill 管理与分发机制 SPEC`](../core/skill-management-spec.md) 继续扩展。
 - `starwork update`：面向已经是 StarWork 的工作台，处理未来 Core / Kit / Pack 版本迁移；与 `upgrade` 分开设计。
 
 CLI 不在 v0.1 阶段处理账号、授权、消息平台 gateway 或复杂商业系统。

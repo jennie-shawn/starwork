@@ -512,7 +512,7 @@
       </div>
       <div class="callout">
         <strong>关键边界</strong>
-        Doctor 不会自动改历史模板。它负责把目录结构和候选信号暴露出来；<code>starworkDoctor</code> skill 负责结合上下文做理性判断。真正写入仍由用户确认后的 <code>starwork init --yes</code> 或未来升级命令执行。
+        Doctor 不会自动改历史模板。它负责把目录结构和候选信号暴露出来；<code>starworkDoctor</code> skill 负责结合上下文做理性判断，并在用户确认后生成升级蓝图。真正写入仍由 <code>starwork upgrade --blueprint</code> 执行。
       </div>
     </section>
 
@@ -523,8 +523,8 @@
       </div>
       <div class="grid-3">
         <article class="panel soft"><h3>Doctor</h3><p>探测当前目录，输出 workspace state、inventory、signals、checks 和 legacy 候选信号；不输出下一步建议。</p></article>
-        <article class="panel soft"><h3>starworkDoctor</h3><p>基于 doctor 的事实，判断当前目录和 Core 工作逻辑的贴近程度，并提出整理升级建议。</p></article>
-        <article class="panel soft"><h3>Init / Upgrade</h3><p>在用户确认后执行写入、补齐或迁移；这里才讨论 Kit、Pack 和具体命令。</p></article>
+        <article class="panel soft"><h3>starworkDoctor</h3><p>基于 doctor 的事实，判断当前目录和 Core 工作逻辑的贴近程度；用户要求升级时，继续确认目录语义并生成 blueprint。</p></article>
+        <article class="panel soft"><h3>Upgrade</h3><p>在用户确认后执行 blueprint 中的低风险写入；这里才真正补齐 workspace state、Kit 缺失文件和入口规则。</p></article>
       </div>
     </section>
 
@@ -594,7 +594,10 @@
       "language": "zh",
       "workspace_type": "single-matter",
       "references": ["参考资料"],
-      "outputs": ["输出"]
+      "outputs": ["输出"],
+      "reasons": {
+        "workspace_type": ["事项 表示存在事项或多事务推进结构"]
+      }
     }
   },
   "inventory": {
@@ -603,7 +606,9 @@
   "signals": {
     "possible_reference_dirs": ["资料库"],
     "possible_output_dirs": ["成稿"],
-    "possible_current_work_dirs": ["推进"]
+    "possible_current_work_dirs": ["推进"],
+    "readonly_candidate_dirs": ["资料库"],
+    "writable_candidate_dirs": ["推进"]
   }
 }</pre>
         </div>

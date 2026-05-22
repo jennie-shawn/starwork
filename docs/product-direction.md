@@ -60,7 +60,7 @@ CLI v0.1 安装与适配
 - `starwork spawn --blueprint` 第一版，可按工作台定制单生成定制化卫星项目。
 - `starworkSpawn` skill 第一版，用于帮助 Agent 设计 Spawn Blueprint。
 - `starworkInit` skill 第一版，用于帮助 Agent 采访用户并生成初始化建议。
-- `starworkDoctor` 与 `starworkUpgrade` 第一版，用于把历史模板诊断和升级蓝图生成交给 Agent 判断，再由 CLI 保守执行。
+- `starworkDoctor` 第一版，用于把历史模板诊断和升级蓝图生成交给 Agent 判断，再由 CLI 保守执行。
 - Skill 管理与分发第一版：系统 Skill、Kit 自带 Skill、Hub 托管 Skill、Pack 自带 Skill 和项目本地 Skill 已有基本边界。
 - 公开 A 测分发入口：GitHub `jennie-shawn/starwork` 与 npm `@jennie-shawn/starwork`。
 - Pack 源包结构：语言无关业务角色 + `languages/` 多语言落地配置。

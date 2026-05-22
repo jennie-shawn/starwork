@@ -40,7 +40,6 @@ StarWork skills 分两类管理：
 ```bash
 npx skills add jennie-shawn/starwork --skill starworkInit -g -a codex -y
 npx skills add jennie-shawn/starwork --skill starworkDoctor -g -a codex -y
-npx skills add jennie-shawn/starwork --skill starworkUpgrade -g -a codex -y
 npx skills add jennie-shawn/starwork --skill starworkMultiagent -g -a codex -y
 ```
 
@@ -53,8 +52,7 @@ npx skills add jennie-shawn/starwork --skill starworkInit -g -a codex -y
 当前 skills：
 
 - `starworkInit`：帮助 Agent 判断工作台类型、语言、是否需要事项，并生成友好的 `starwork init` 初始化方案。
-- `starworkDoctor`：帮助 Agent 基于 `starwork doctor --json` 做目录逻辑诊断。
-- `starworkUpgrade`：帮助 Agent 生成 `starwork upgrade --blueprint` 升级蓝图。
+- `starworkDoctor`：帮助 Agent 基于 `starwork doctor --json` 做目录逻辑诊断；用户明确要求升级时，也负责生成 `starwork upgrade --blueprint` 升级蓝图。
 - `starworkMultiagent`：帮助 Agent 把“登记当前会话为常用智能体”“管理多 Agent 分工”“登记共享输出”等请求转换成 `starwork multiagent` 命令组合。
 - `starworkSpawn`：Hub Kit 自带 Skill，帮助已有 Hub 设计 `starwork spawn --blueprint` 工作台定制单。
 - `neat-freak`：单项目 Kit 自带 Skill，帮助项目收尾、整理和归档。
@@ -126,7 +124,7 @@ starwork multiagent
 - `init`：创建单事务项目、多事务项目或多项目 Hub；交互默认推荐单事务项目。
 - `doctor`：检查工作台健康状态、必需文件、Pack 落地结果和 blueprint 定制结果。
 - `spawn`：从已有 Hub 创建并登记卫星项目。
-- `upgrade`：按 `starworkUpgrade` skill 生成的升级蓝图，把历史模板安全升级为 StarWork 工作台。
+- `upgrade`：按 `starworkDoctor` skill 生成的升级蓝图，把历史模板安全升级为 StarWork 工作台。
 - `adapt`：生成 Claude Code、Cursor 等 Agent 的适配文件。
 - `pack install`：向兼容工作台安装支持的 Pack。
 - `multiagent`：为同一项目建立自定义 Agent 职责位、绑定会话，并登记跨 lane 共享输出。

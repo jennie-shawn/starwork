@@ -680,7 +680,7 @@ async function upgradeWorkspace(argv) {
   }
 
   if (!options.blueprint) {
-    throw new Error("upgrade v0.1 必须传入 --blueprint <upgrade-blueprint.json>。请先用 starworkUpgrade skill 生成升级蓝图。");
+    throw new Error("upgrade v0.1 必须传入 --blueprint <upgrade-blueprint.json>。请先用 starworkDoctor skill 诊断并生成升级蓝图。");
   }
 
   const targetDir = path.resolve(options.target || process.cwd());
@@ -726,11 +726,16 @@ function doctor(argv) {
   }
 
   const targetDir = path.resolve(options.target || process.cwd());
+  const result = collectDoctorResult(targetDir, options);
+  return finishDoctor(result, options);
+}
+
+function collectDoctorResult(targetDir, options = {}) {
   const result = createDoctorResult(targetDir);
 
   if (!fs.existsSync(targetDir)) {
     addCheck(result, "workspace.target.exists", "fail", `目标目录不存在：${targetDir}`);
-    return finishDoctor(result, options);
+    return result;
   }
 
   result.inventory = collectInventory(targetDir, options);
@@ -751,48 +756,13 @@ function doctor(argv) {
         addCheck(result, "workspace.state.exists", "fail", "当前目录不是 StarWork 工作台。请先运行 starwork init。");
       }
     }
-    return finishDoctor(result, options);
+    return result;
   }
 
   result.workspace_root = workspaceRoot;
   const statePath = path.join(workspaceRoot, ".starwork", "workspace.json");
   addCheck(result, "workspace.state.exists", "pass", ".starwork/workspace.json exists", ".starwork/workspace.json");
 
-  let state;
-  try {
-    state = JSON.parse(fs.readFileSync(statePath, "utf8"));
-  } catch (error) {
-    addCheck(result, "workspace.state.parse", "fail", `无法解析 workspace state：${error.message}`, ".starwork/workspace.json");
-    return finishDoctor(result, options);
-  }
-
-  result.workspace = {
-    core: state.core || null,
-    workspace_type: state.workspace_type || null,
-    kit: state.kit || null,
-    language: state.language || null,
-    packs: Array.isArray(state.packs) ? state.packs.map((pack) => pack.id).filter(Boolean) : []
-  };
-
-  checkWorkspaceState(result, state);
-  checkKit(result, workspaceRoot, state);
-  checkCoreRoles(result, workspaceRoot, state);
-  checkPackInstallations(result, workspaceRoot, state);
-  checkBlueprintCustomization(result, workspaceRoot, state);
-  checkSkillInstallations(result, workspaceRoot, state);
-
-  return finishDoctor(result, options);
-}
-
-function doctorCollect(targetDir) {
-  const result = createDoctorResult(targetDir);
-  const workspaceRoot = findWorkspaceRoot(targetDir);
-  if (!workspaceRoot) {
-    addCheck(result, "workspace.state.exists", "fail", "当前目录不是 StarWork 工作台。请先运行 starwork init。");
-    return result;
-  }
-  result.workspace_root = workspaceRoot;
-  const statePath = path.join(workspaceRoot, ".starwork", "workspace.json");
   let state;
   try {
     state = JSON.parse(fs.readFileSync(statePath, "utf8"));
@@ -817,6 +787,10 @@ function doctorCollect(targetDir) {
   result.strict_ok = result.ok;
   result.exitCode = result.ok ? 0 : 1;
   return result;
+}
+
+function doctorCollect(targetDir) {
+  return collectDoctorResult(targetDir);
 }
 
 function createDoctorResult(targetDir) {
@@ -1180,7 +1154,7 @@ function renderUpgradeWorkspaceState(blueprint, pack, now) {
       schema: blueprint.schema,
       source: path.basename(blueprint.__path),
       strategy: blueprint.strategy,
-      generated_by: blueprint.generated_by || "starworkUpgrade",
+      generated_by: blueprint.generated_by || "starworkDoctor",
       core_role_mapping: Array.isArray(blueprint.core_role_mapping) ? blueprint.core_role_mapping : [],
       upgraded_at: now
     },
@@ -1707,16 +1681,31 @@ function safeFileSize(file) {
 function detectWorkspaceSignals(inventory) {
   const directories = inventory?.directories || [];
   const files = inventory?.files || [];
+  const possibleReferences = directories.filter((dir) => isPossibleReferenceDirectory(dir.path)).map((dir) => dir.path);
+  const possibleOutputs = directories.filter((dir) => isPossibleOutputDirectory(dir.path)).map((dir) => dir.path);
+  const possibleDrafts = directories.filter((dir) => isPossibleDraftDirectory(dir.path)).map((dir) => dir.path);
+  const possibleCurrentWork = directories.filter((dir) => isPossibleCurrentWorkDirectory(dir.path)).map((dir) => dir.path);
+  const matterDirs = directories.filter((dir) => isMatterDirectory(dir.path)).map((dir) => dir.path);
+  const systemDirs = directories.filter((dir) => isSystemDirectory(dir.path)).map((dir) => dir.path);
+  const identityDirs = directories.filter((dir) => isIdentityDirectory(dir.path)).map((dir) => dir.path);
+  const lessonsDirs = directories.filter((dir) => isLessonsDirectory(dir.path)).map((dir) => dir.path);
   return {
     agent_entry: files.filter((file) => isAgentEntryFile(file.path)).map((file) => file.path),
-    system_dirs: directories.filter((dir) => isSystemDirectory(dir.path)).map((dir) => dir.path),
-    matter_dirs: directories.filter((dir) => isMatterDirectory(dir.path)).map((dir) => dir.path),
-    possible_reference_dirs: directories.filter((dir) => isPossibleReferenceDirectory(dir.path)).map((dir) => dir.path),
-    possible_output_dirs: directories.filter((dir) => isPossibleOutputDirectory(dir.path)).map((dir) => dir.path),
-    possible_draft_dirs: directories.filter((dir) => isPossibleDraftDirectory(dir.path)).map((dir) => dir.path),
-    possible_current_work_dirs: directories.filter((dir) => isPossibleCurrentWorkDirectory(dir.path)).map((dir) => dir.path),
-    identity_dirs: directories.filter((dir) => isIdentityDirectory(dir.path)).map((dir) => dir.path),
-    lessons_dirs: directories.filter((dir) => isLessonsDirectory(dir.path)).map((dir) => dir.path),
+    agent_rule_files: files.filter((file) => isAgentEntryFile(file.path) || isAgentRuleFile(file.path)).map((file) => file.path),
+    system_dirs: systemDirs,
+    matter_dirs: matterDirs,
+    possible_reference_dirs: possibleReferences,
+    possible_output_dirs: possibleOutputs,
+    possible_draft_dirs: possibleDrafts,
+    possible_current_work_dirs: possibleCurrentWork,
+    project_status_files: files.filter((file) => isProjectStatusFile(file.path)).map((file) => file.path),
+    current_work_files: files.filter((file) => isCurrentWorkFile(file.path)).map((file) => file.path),
+    decision_files: files.filter((file) => isDecisionFile(file.path)).map((file) => file.path),
+    identity_dirs: identityDirs,
+    lessons_dirs: lessonsDirs,
+    skill_mount_dirs: directories.filter((dir) => isSkillMountDirectory(dir.path)).map((dir) => dir.path),
+    readonly_candidate_dirs: uniqueList([...possibleReferences, ...identityDirs, ...lessonsDirs, ...systemDirs]),
+    writable_candidate_dirs: uniqueList([...possibleDrafts, ...possibleCurrentWork, ...possibleOutputs, ...matterDirs]),
     readme_files: files.filter((file) => /^README(\.[a-z0-9]+)?$/i.test(path.basename(file.path))).map((file) => file.path)
   };
 }
@@ -1725,6 +1714,40 @@ function isAgentEntryFile(relativePath) {
   return ["AGENTS.md", "CLAUDE.md", ".cursorrules"].includes(relativePath)
     || relativePath.endsWith("/AGENTS.md")
     || relativePath.endsWith("/CLAUDE.md");
+}
+
+function isAgentRuleFile(relativePath) {
+  const base = path.basename(relativePath).toLowerCase();
+  return [".cursorrules", ".cursorignore", "agents.md", "claude.md"].includes(base)
+    || relativePath.includes(".agents/")
+    || relativePath.includes(".claude/");
+}
+
+function isProjectStatusFile(relativePath) {
+  const normalized = normalizeRelativePath(relativePath).toLowerCase();
+  const base = path.basename(normalized);
+  return includesAny(base, ["项目状态", "当前项目", "project-status", "current-project", "current-projects"]);
+}
+
+function isCurrentWorkFile(relativePath) {
+  const normalized = normalizeRelativePath(relativePath).toLowerCase();
+  const base = path.basename(normalized);
+  return includesAny(base, ["当前工作", "current-work", "current_work", "todo", "tasks"]);
+}
+
+function isDecisionFile(relativePath) {
+  const normalized = normalizeRelativePath(relativePath).toLowerCase();
+  const base = path.basename(normalized);
+  return includesAny(base, ["decisions", "decision", "决策"]);
+}
+
+function isSkillMountDirectory(relativePath) {
+  const normalized = normalizeRelativePath(relativePath);
+  return normalized === "skills"
+    || normalized === ".agents/skills"
+    || normalized === ".claude/skills"
+    || normalized.endsWith("/.agents/skills")
+    || normalized.endsWith("/.claude/skills");
 }
 
 function isSystemDirectory(relativePath) {
@@ -1828,6 +1851,18 @@ function detectLegacyWorkspace(dir, signals = null) {
   const candidate = signalCount >= 2 || ((references.length > 0 || signalReferences.length > 0) && (outputs.length > 0 || signalOutputs.length > 0));
   const language = inferLegacyLanguage(found);
   const workspaceType = hasMatters || signalMatters.length > 0 ? "single-matter" : "single-light";
+  const reasons = buildLegacyReasons({
+    found,
+    signalReferences,
+    signalOutputs,
+    signalMatters,
+    signalEntries,
+    signalSystems,
+    signalIdentity,
+    signalLessons,
+    language,
+    workspaceType
+  });
   const primaryTrace = [
     ...found.entryRules,
     ...signalEntries,
@@ -1849,7 +1884,49 @@ function detectLegacyWorkspace(dir, signals = null) {
     primaryTrace,
     found,
     references: uniqueList([...references, ...signalReferences]),
-    outputs: uniqueList([...outputs, ...signalOutputs])
+    outputs: uniqueList([...outputs, ...signalOutputs]),
+    reasons
+  };
+}
+
+function buildLegacyReasons({
+  found,
+  signalReferences,
+  signalOutputs,
+  signalMatters,
+  signalEntries,
+  signalSystems,
+  signalIdentity,
+  signalLessons,
+  language,
+  workspaceType
+}) {
+  const languageReasons = [];
+  if (language === "zh") {
+    for (const item of [...found.system, ...found.matters, ...found.referencesZh, ...found.outputsZh, ...found.identitySystemZh, ...found.lessonsSystemZh]) {
+      languageReasons.push(`${item} 是中文工作区信号`);
+    }
+  } else {
+    for (const item of [...found.system, ...found.matters, ...found.referencesEn, ...found.outputsEn, ...found.identitySystemEn, ...found.lessonsSystemEn]) {
+      languageReasons.push(`${item} 是英文工作区信号`);
+    }
+  }
+
+  const workspaceTypeReasons = workspaceType === "single-matter"
+    ? [...found.matters, ...signalMatters].map((item) => `${item} 表示存在事项或多事务推进结构`)
+    : ["未检测到事项目录，暂按单事务工作区候选处理"];
+
+  return {
+    language: uniqueList(languageReasons),
+    workspace_type: uniqueList(workspaceTypeReasons),
+    references: uniqueList([...found.referencesZh, ...found.referencesEn, ...signalReferences].map((item) => `${item} 命中参考资料候选信号`)),
+    outputs: uniqueList([...found.outputsZh, ...found.outputsEn, ...signalOutputs].map((item) => `${item} 命中成果或输出候选信号`)),
+    candidate: uniqueList([
+      ...signalEntries.map((item) => `${item} 是 Agent 入口信号`),
+      ...signalSystems.map((item) => `${item} 是系统目录信号`),
+      ...signalIdentity.map((item) => `${item} 是身份记忆信号`),
+      ...signalLessons.map((item) => `${item} 是经验教训信号`)
+    ])
   };
 }
 
@@ -1886,7 +1963,8 @@ function buildLegacySignals(legacy) {
       language: legacy.language,
       workspace_type: legacy.workspaceType,
       references: legacy.references,
-      outputs: legacy.outputs
+      outputs: legacy.outputs,
+      reasons: legacy.reasons
     }
   };
 }
@@ -1978,6 +2056,7 @@ function printDoctorResult(result, options) {
     console.log(`  检测为：历史模板候选（${result.upgrade.confidence} confidence）`);
     console.log(`  推测类型：${result.upgrade.inferred.workspace_type}`);
     console.log(`  推测语言：${result.upgrade.inferred.language}`);
+    console.log("  这些只是候选信号，不是迁移方案；请交给 starworkDoctor 做诊断和 blueprint 设计。");
     console.log("");
   }
 

@@ -32,7 +32,6 @@ npx @jennie-shawn/starwork --help
 ```bash
 npx skills add jennie-shawn/starwork --skill starworkInit -g -a codex -y
 npx skills add jennie-shawn/starwork --skill starworkDoctor -g -a codex -y
-npx skills add jennie-shawn/starwork --skill starworkUpgrade -g -a codex -y
 npx skills add jennie-shawn/starwork --skill starworkMultiagent -g -a codex -y
 ```
 
@@ -43,6 +42,8 @@ npx skills add jennie-shawn/starwork --skill starworkInit -g -a codex -y
 ```
 
 说明：`starworkSpawn` 现在是 Hub Kit 自带 Skill，会在 `starwork init --type hub` 时进入 Hub 工作台；`neat-freak` 是单项目 Kit 自带 Skill，会在单项目初始化时进入项目。
+
+说明：历史模板诊断和升级蓝图生成统一由 `starworkDoctor` 负责；`starwork upgrade` CLI 只执行已经确认过的 blueprint。
 
 ## 最小测试流程
 
@@ -130,6 +131,5 @@ npm pack --dry-run
 - `skills/starworkInit/`
 - `skills/starworkSpawn/`
 - `skills/starworkDoctor/`
-- `skills/starworkUpgrade/`
 - `skills/starworkMultiagent/`
 - `skills/neat-freak/`

@@ -552,6 +552,8 @@ test("doctor reports legacy signals for an English legacy template", () => {
   assert.equal(Object.hasOwn(report.upgrade, "next_steps"), false);
   assert.deepEqual(report.upgrade.inferred.references, ["references"]);
   assert(report.upgrade.inferred.outputs.includes("outputs"));
+  assert(report.upgrade.inferred.reasons.language.some((reason) => reason.includes("英文工作区信号")));
+  assert(report.upgrade.inferred.reasons.outputs.some((reason) => reason.includes("outputs")));
   assert(report.checks.some((check) => check.id === "legacy.references.detected" && check.level === "info"));
 });
 
@@ -573,6 +575,9 @@ test("doctor exposes inventory and semantic signals for non-standard legacy fold
   assert(report.signals.possible_reference_dirs.includes("资料库"));
   assert(report.signals.possible_output_dirs.includes("成稿"));
   assert(report.signals.possible_current_work_dirs.includes("推进"));
+  assert(report.signals.readonly_candidate_dirs.includes("资料库"));
+  assert(report.signals.writable_candidate_dirs.includes("推进"));
+  assert(report.upgrade.inferred.reasons.references.some((reason) => reason.includes("资料库")));
   assert.equal(report.upgrade.candidate, true);
 });
 
@@ -589,6 +594,8 @@ test("doctor reports legacy signals for a Chinese matter legacy template", () =>
   assert.match(result.stdout, /历史模板候选/);
   assert.match(result.stdout, /推测类型：single-matter/);
   assert.match(result.stdout, /推测语言：zh/);
+  assert.match(result.stdout, /候选信号，不是迁移方案/);
+  assert.match(result.stdout, /starworkDoctor/);
   assert.doesNotMatch(result.stdout, /--dry-run/);
   assert.doesNotMatch(result.stdout, /下一步/);
 });
@@ -601,7 +608,7 @@ test("upgrade blueprint dry-run does not write files", () => {
   fs.mkdirSync(path.join(dir, "成稿"), { recursive: true });
   fs.writeFileSync(path.join(blueprintDir, "upgrade-blueprint.json"), `${JSON.stringify({
     schema: "starwork.upgrade_blueprint.v0.1",
-    generated_by: "starworkUpgrade",
+    generated_by: "starworkDoctor",
     source: {
       doctor_schema: "starwork.doctor.result.v0.1",
       diagnosis: "legacy-template",
@@ -645,7 +652,7 @@ test("upgrade applies a blueprint and keeps existing files", () => {
   fs.writeFileSync(path.join(blueprintDir, "upgrade-blueprint.json"), `${JSON.stringify({
     schema: "starwork.upgrade_blueprint.v0.1",
     target: ".",
-    generated_by: "starworkUpgrade",
+    generated_by: "starworkDoctor",
     source: {
       doctor_schema: "starwork.doctor.result.v0.1",
       diagnosis: "legacy-template",
@@ -779,6 +786,17 @@ test("adapt creates Cursor rules", () => {
   assert.equal(result.status, 0);
   assert.match(cursorRule, /alwaysApply: true/);
   assert.match(cursorRule, /AGENTS\.md/);
+});
+
+test("adapt refuses an unhealthy workspace using the same doctor checks", () => {
+  const dir = tempDir();
+  runInit(["--type", "single-light", "--pack", "general", "--target", dir, "--yes"]);
+  fs.rmSync(path.join(dir, "AGENTS.md"));
+
+  const result = runCommand(["adapt", "claude", "--target", dir, "--yes"]);
+
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /未通过 doctor 检查/);
 });
 
 test("pack install adds content creator pack to an existing workspace", () => {

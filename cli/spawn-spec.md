@@ -27,8 +27,8 @@ Satellite / 具体执行项目
 
 `init` 的职责是创建当前目录的工作台：
 
-- 轻量单项目
-- 长期单项目
+- 单事务项目
+- 多事务项目
 - 多项目管理中枢
 
 但 `spawn` 涉及两个工作区：
@@ -70,7 +70,7 @@ starwork spawn \
 ```bash
 starwork spawn --hub <hub-path> --name <project-name> --target <path>
 starwork spawn --hub ~/my-hub --name "新项目" --target ~/projects/new-project --mode starter
-starwork spawn --hub ~/my-hub --name "长期项目" --target ~/projects/long-project --mode matter
+starwork spawn --hub ~/my-hub --name "多阶段项目" --target ~/projects/multi-stage-project --mode matter
 starwork spawn --hub ~/my-hub --target ~/projects/custom-project --blueprint ./blueprint.json --dry-run
 starwork spawn --hub ~/my-hub --target ~/projects/custom-project --blueprint ./blueprint.json --yes
 starwork spawn --hub ~/my-hub --name "新项目" --target ~/projects/new-project --dry-run
@@ -101,7 +101,7 @@ starwork spawn --hub ~/my-hub --name "新项目" --target ~/projects/new-project
 
 v0.1 默认 `matter`。
 
-原因：卫星项目通常是长期项目，通常需要事项追踪、跨会话接力和过程沉淀。
+原因：由 Hub 生成的卫星项目通常比单事务项目更复杂，往往需要事项追踪、跨会话接力和过程沉淀。
 
 ## 执行流程
 

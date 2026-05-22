@@ -24,7 +24,7 @@ StarWork 的 Skill 机制不是一个简单的安装动作，而是一套 Agent 
 
 当前 StarWork 已经有几类不同性质的 Skill：
 
-- `starworkInit`、`starworkDoctor`、`starworkUpgrade`：帮助 Agent 理解并调用 StarWork CLI。
+- `starworkInit`、`starworkDoctor`：帮助 Agent 理解并调用 StarWork CLI；其中 `starworkDoctor` 同时承担历史模板诊断和升级蓝图设计。
 - `starworkSpawn`：Hub Kit 自带的管理 Skill，帮助 Hub 生成卫星项目定制单。
 - `neat-freak`：可作为单项目 Kit 自带的整理 Skill，帮助项目收尾、清理和归档。
 - 未来内容创作者 Pack、课程 Pack、客户交付 Pack 可能会附带自己的场景 Skill。
@@ -54,7 +54,7 @@ StarWork 的 Skill 机制不是一个简单的安装动作，而是一套 Agent 
 
 | 类型 | 示例 | 主要位置 | 作用 | 是否默认进项目 |
 |---|---|---|---|---|
-| 系统 Skill | `starworkInit`、`starworkDoctor`、`starworkUpgrade` | 用户全局 Agent Skill 环境 | 让 Agent 会操作 StarWork | 否 |
+| 系统 Skill | `starworkInit`、`starworkDoctor` | 用户全局 Agent Skill 环境 | 让 Agent 会操作 StarWork | 否 |
 | Kit 自带 Skill | `starworkSpawn`、`neat-freak` | Kit 的 `skills/` 声明或随 Kit 写入 | 配合某种工作区形态使用 | 按 Kit 默认规则进入 |
 | Pack 自带 Skill | 内容创作者审稿、发布检查等 | Pack 的 `skills/` 声明或随 Pack 写入 | 配合某个场景 Pack 使用 | 用户确认后进入 |
 | Hub 托管 Skill | 用户收藏的写作、复盘、会议、整理 Skill | Hub `skills/` | 用户跨项目复用的能力库 | 按规则或用户选择分发 |
@@ -429,7 +429,7 @@ JSON 输出建议新增：
 
 ### `starwork upgrade`
 
-`upgrade` 需要支持由 `starworkUpgrade` 生成的 Skill 安装动作。
+`upgrade` 需要支持由 `starworkDoctor` 生成的 Skill 安装动作。
 
 `upgrade blueprint` 可新增 actions：
 

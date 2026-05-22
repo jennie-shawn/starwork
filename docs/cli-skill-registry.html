@@ -432,9 +432,9 @@
           <rect x="94" y="290" width="184" height="32" rx="7" fill="#fffdf7" stroke="#cfc7b7"></rect>
           <text x="186" y="311" text-anchor="middle" font-size="13" fill="#1d211d">starworkDoctor</text>
           <rect x="94" y="330" width="184" height="32" rx="7" fill="#fffdf7" stroke="#cfc7b7"></rect>
-          <text x="186" y="351" text-anchor="middle" font-size="13" fill="#1d211d">starworkUpgrade</text>
+          <text x="186" y="351" text-anchor="middle" font-size="13" fill="#1d211d">starworkMultiagent</text>
           <rect x="94" y="370" width="184" height="32" rx="7" fill="#fffdf7" stroke="#cfc7b7"></rect>
-          <text x="186" y="391" text-anchor="middle" font-size="13" fill="#1d211d">starworkMultiagent</text>
+          <text x="186" y="391" text-anchor="middle" font-size="13" fill="#1d211d">neat-freak</text>
 
           <line x1="306" y1="272" x2="410" y2="272" stroke="#3e473e" stroke-width="3" marker-end="url(#arrow)"></line>
           <text x="358" y="255" text-anchor="middle" font-size="12" fill="#62675f">blueprint / diagnosis</text>
@@ -461,7 +461,7 @@
     <section class="section">
       <div class="section-header">
         <h2>当前总览</h2>
-        <p class="section-note">截至 alpha.7，StarWork 已有 7 个可用 CLI 命令和 6 个自研 Skill。`update` 和 `starwork skill` 仍是未来命令，不在当前可用列表里。</p>
+        <p class="section-note">截至 alpha.8，StarWork 已有 7 个可用 CLI 命令和 5 个自研 Skill。`update` 和 `starwork skill` 仍是未来命令，不在当前可用列表里。</p>
       </div>
       <div class="grid-3">
         <article class="panel">
@@ -476,8 +476,8 @@
         </article>
         <article class="panel">
           <span class="badge">状态</span>
-          <h3>alpha.7</h3>
-          <p>当前开发版本为 <code>@jennie-shawn/starwork@0.1.0-alpha.7</code>，已包含 Kit 自带 Skill、Hub 托管 Skill registry、项目 <code>.starwork/skills.json</code> 和 Agent Lanes 协作入口。</p>
+          <h3>alpha.8</h3>
+          <p>当前开发版本为 <code>@jennie-shawn/starwork@0.1.0-alpha.8</code>，已将历史模板升级蓝图生成能力合并进 <code>starworkDoctor</code>，并继续包含 Kit 自带 Skill、Hub 托管 Skill registry、项目 <code>.starwork/skills.json</code> 和 Agent Lanes 协作入口。</p>
         </article>
       </div>
     </section>
@@ -530,7 +530,7 @@
           <tr>
             <td><strong><code>starwork upgrade</code></strong></td>
             <td>按升级蓝图执行历史模板升级。</td>
-            <td>读取 <code>starworkUpgrade</code> 生成的 <code>upgrade-blueprint.json</code>；支持 dry-run、路径安全校验、workspace state 写入、Kit 缺失文件补齐和规则注入。</td>
+            <td>读取 <code>starworkDoctor</code> 生成的 <code>upgrade-blueprint.json</code>；支持 dry-run、路径安全校验、workspace state 写入、Kit 缺失文件补齐和规则注入。</td>
             <td><code>--target</code>、<code>--blueprint</code>、<code>--dry-run</code>、<code>--yes</code>、<code>--json</code></td>
             <td>可被 StarWork 接管的工作台，保留旧目录名和历史文件。</td>
             <td>不自动生成升级方案；不处理已是 StarWork 的工作台；不移动、不删除、不覆盖历史文件。</td>
@@ -624,19 +624,10 @@
           <tr>
             <td><strong><code>starworkDoctor</code></strong></td>
             <td>工作区诊断助手。</td>
-            <td>用户要理解 doctor 输出、判断旧目录和 StarWork Core 逻辑是否接近、整理升级建议。</td>
-            <td>读取 doctor JSON；解释 inventory 和 signals；建立 Core 角色映射；判断 Core 逻辑贴近程度；提出整理建议。</td>
-            <td>诊断报告、目录角色映射、缺失和风险、建议确认的问题。</td>
-            <td><code>starwork doctor</code></td>
-            <td><span class="status done">已实现</span></td>
-          </tr>
-          <tr>
-            <td><strong><code>starworkUpgrade</code></strong></td>
-            <td>升级蓝图设计助手。</td>
-            <td>用户已有旧模板或非标准目录，想无损升级成 StarWork 工作台。</td>
-            <td>基于 doctor 和 starworkDoctor 诊断采访用户；确认目录语义；选择升级策略；生成 upgrade blueprint 和规则文件。</td>
-            <td><code>upgrade-blueprint.json</code>、rules、dry-run 命令。</td>
-            <td><code>starwork upgrade --blueprint</code></td>
+            <td>用户要理解 doctor 输出、判断旧目录和 StarWork Core 逻辑是否接近、整理升级建议；或想无损生成升级蓝图。</td>
+            <td>读取 doctor JSON；解释 inventory 和 signals；建立 Core 角色映射；判断 Core 逻辑贴近程度；提出整理建议；用户确认后生成 upgrade blueprint 和规则文件。</td>
+            <td>诊断报告、目录角色映射、缺失和风险、确认问题、<code>upgrade-blueprint.json</code>、rules、dry-run 命令。</td>
+            <td><code>starwork doctor</code> / <code>starwork upgrade --blueprint</code></td>
             <td><span class="status done">已实现</span></td>
           </tr>
           <tr>
@@ -671,7 +662,7 @@
         <div class="flow-step">
           <strong>03</strong>
           <span>设计</span>
-          <p><code>starworkUpgrade</code> 采访用户，生成可执行的升级蓝图。</p>
+          <p><code>starworkDoctor</code> 在用户确认后生成可执行的升级蓝图。</p>
         </div>
         <div class="flow-step">
           <strong>04</strong>
