@@ -41,6 +41,7 @@ StarWork skills 分两类管理：
 npx skills add jennie-shawn/starwork --skill starworkInit -g -a codex -y
 npx skills add jennie-shawn/starwork --skill starworkDoctor -g -a codex -y
 npx skills add jennie-shawn/starwork --skill starworkUpgrade -g -a codex -y
+npx skills add jennie-shawn/starwork --skill starworkMultiagent -g -a codex -y
 ```
 
 如果你只想先安装初始化助手：
@@ -54,6 +55,7 @@ npx skills add jennie-shawn/starwork --skill starworkInit -g -a codex -y
 - `starworkInit`：帮助 Agent 判断工作台类型、语言、是否需要事项，并生成友好的 `starwork init` 初始化方案。
 - `starworkDoctor`：帮助 Agent 基于 `starwork doctor --json` 做目录逻辑诊断。
 - `starworkUpgrade`：帮助 Agent 生成 `starwork upgrade --blueprint` 升级蓝图。
+- `starworkMultiagent`：帮助 Agent 把“登记当前会话为常用智能体”“管理多 Agent 分工”“登记共享输出”等请求转换成 `starwork multiagent` 命令组合。
 - `starworkSpawn`：Hub Kit 自带 Skill，帮助已有 Hub 设计 `starwork spawn --blueprint` 工作台定制单。
 - `neat-freak`：单项目 Kit 自带 Skill，帮助项目收尾、整理和归档。
 

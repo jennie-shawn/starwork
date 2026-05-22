@@ -406,7 +406,7 @@
           <div class="quick"><b>CLI</b><span>负责稳定执行：创建、检查、适配、安装、升级。</span></div>
           <div class="quick"><b>Skills</b><span>负责 AI 判断：采访、诊断、生成 blueprint。</span></div>
           <div class="quick"><b>Blueprint</b><span>让 AI 的判断变成 CLI 可校验、可 dry-run 的施工图。</span></div>
-          <div class="quick"><b>维护日期</b><span>最后更新：2026-05-20。</span></div>
+          <div class="quick"><b>维护日期</b><span>最后更新：2026-05-22。</span></div>
         </div>
       </div>
 
@@ -423,7 +423,7 @@
           <text x="54" y="72" font-size="28" font-weight="900" fill="#1d211d">判断层 -> 执行层</text>
           <text x="54" y="104" font-size="14" fill="#62675f">AI 负责理解现实，CLI 负责稳定施工。</text>
 
-          <rect x="66" y="146" width="240" height="210" rx="8" fill="#d7e4ea" stroke="#2f6286" stroke-width="2"></rect>
+          <rect x="66" y="146" width="240" height="252" rx="8" fill="#d7e4ea" stroke="#2f6286" stroke-width="2"></rect>
           <text x="186" y="180" text-anchor="middle" font-size="18" font-weight="900" fill="#2f6286">Skills</text>
           <rect x="94" y="210" width="184" height="32" rx="7" fill="#fffdf7" stroke="#cfc7b7"></rect>
           <text x="186" y="231" text-anchor="middle" font-size="13" fill="#1d211d">starworkInit</text>
@@ -433,11 +433,13 @@
           <text x="186" y="311" text-anchor="middle" font-size="13" fill="#1d211d">starworkDoctor</text>
           <rect x="94" y="330" width="184" height="32" rx="7" fill="#fffdf7" stroke="#cfc7b7"></rect>
           <text x="186" y="351" text-anchor="middle" font-size="13" fill="#1d211d">starworkUpgrade</text>
+          <rect x="94" y="370" width="184" height="32" rx="7" fill="#fffdf7" stroke="#cfc7b7"></rect>
+          <text x="186" y="391" text-anchor="middle" font-size="13" fill="#1d211d">starworkMultiagent</text>
 
-          <line x1="306" y1="252" x2="410" y2="252" stroke="#3e473e" stroke-width="3" marker-end="url(#arrow)"></line>
-          <text x="358" y="235" text-anchor="middle" font-size="12" fill="#62675f">blueprint / diagnosis</text>
+          <line x1="306" y1="272" x2="410" y2="272" stroke="#3e473e" stroke-width="3" marker-end="url(#arrow)"></line>
+          <text x="358" y="255" text-anchor="middle" font-size="12" fill="#62675f">blueprint / diagnosis</text>
 
-          <rect x="410" y="146" width="244" height="210" rx="8" fill="#d8eadc" stroke="#286d4a" stroke-width="2"></rect>
+          <rect x="410" y="146" width="244" height="252" rx="8" fill="#d8eadc" stroke="#286d4a" stroke-width="2"></rect>
           <text x="532" y="180" text-anchor="middle" font-size="18" font-weight="900" fill="#286d4a">CLI</text>
           <rect x="438" y="210" width="188" height="32" rx="7" fill="#fffdf7" stroke="#cfc7b7"></rect>
           <text x="532" y="231" text-anchor="middle" font-size="13" fill="#1d211d">init / spawn</text>
@@ -447,9 +449,11 @@
           <text x="532" y="311" text-anchor="middle" font-size="13" fill="#1d211d">upgrade</text>
           <rect x="438" y="330" width="188" height="32" rx="7" fill="#fffdf7" stroke="#cfc7b7"></rect>
           <text x="532" y="351" text-anchor="middle" font-size="13" fill="#1d211d">adapt / pack install</text>
+          <rect x="438" y="370" width="188" height="32" rx="7" fill="#fffdf7" stroke="#cfc7b7"></rect>
+          <text x="532" y="391" text-anchor="middle" font-size="13" fill="#1d211d">multiagent</text>
 
-          <rect x="134" y="406" width="452" height="52" rx="8" fill="#fffdf7" stroke="#1d211d" stroke-width="2"></rect>
-          <text x="360" y="437" text-anchor="middle" font-size="15" font-weight="900" fill="#1d211d">原则：CLI 不硬猜业务语义；Skill 不直接改用户文件。</text>
+          <rect x="134" y="428" width="452" height="52" rx="8" fill="#fffdf7" stroke="#1d211d" stroke-width="2"></rect>
+          <text x="360" y="459" text-anchor="middle" font-size="15" font-weight="900" fill="#1d211d">原则：CLI 不硬猜业务语义；Skill 不静默写入。</text>
         </svg>
       </div>
     </section>
@@ -457,7 +461,7 @@
     <section class="section">
       <div class="section-header">
         <h2>当前总览</h2>
-        <p class="section-note">截至 alpha.7，StarWork 已有 7 个可用 CLI 命令和 5 个自研 Skill。`update` 和 `starwork skill` 仍是未来命令，不在当前可用列表里。</p>
+        <p class="section-note">截至 alpha.7，StarWork 已有 7 个可用 CLI 命令和 6 个自研 Skill。`update` 和 `starwork skill` 仍是未来命令，不在当前可用列表里。</p>
       </div>
       <div class="grid-3">
         <article class="panel">
@@ -473,7 +477,7 @@
         <article class="panel">
           <span class="badge">状态</span>
           <h3>alpha.7</h3>
-          <p>当前开发版本为 <code>@jennie-shawn/starwork@0.1.0-alpha.7</code>，新增 Kit 自带 Skill、Hub 托管 Skill registry 和项目 <code>.starwork/skills.json</code>。</p>
+          <p>当前开发版本为 <code>@jennie-shawn/starwork@0.1.0-alpha.7</code>，已包含 Kit 自带 Skill、Hub 托管 Skill registry、项目 <code>.starwork/skills.json</code> 和 Agent Lanes 协作入口。</p>
         </article>
       </div>
     </section>
@@ -635,6 +639,15 @@
             <td><code>starwork upgrade --blueprint</code></td>
             <td><span class="status done">已实现</span></td>
           </tr>
+          <tr>
+            <td><strong><code>starworkMultiagent</code></strong></td>
+            <td>多 Agent 协作命令包装助手。</td>
+            <td>用户想把当前会话登记为常用智能体、管理 Agent 职责位、绑定或释放 session、查看分工、登记共享输出。</td>
+            <td>判断用户语义；确认 lane ID、职责、写入范围和 session；把请求翻译成 <code>multiagent init/add/bind/release/status/share</code> 命令组合。</td>
+            <td>multiagent dry-run 命令、确认后的执行命令、当前分工解释。</td>
+            <td><code>starwork multiagent</code></td>
+            <td><span class="status done">已实现</span></td>
+          </tr>
         </tbody>
       </table>
     </section>
@@ -642,7 +655,7 @@
     <section class="section">
       <div class="section-header">
         <h2>配合关系</h2>
-        <p class="section-note">最容易混淆的是 doctor / upgrade 这一组。这里固定它们的链路。</p>
+        <p class="section-note">最容易混淆的是 doctor / upgrade 这一组，以及 multiagent 的用户语义和 CLI 子命令。这里固定它们的链路。</p>
       </div>
       <div class="flow">
         <div class="flow-step">
@@ -667,7 +680,7 @@
         </div>
       </div>
       <div class="callout">
-        <strong>固定边界：</strong>CLI 不硬猜业务语义；Skill 不静默改用户文件。所有会写入的 CLI 能力都应保留 dry-run 或明确确认。
+        <strong>固定边界：</strong>CLI 不硬猜业务语义；Skill 不静默改用户文件。所有会写入的 CLI 能力都应保留 dry-run 或明确确认。<code>multiagent init</code> 是协议初始化；“登记当前会话为常用智能体”在 Skill 层应解释为必要时先 init，再 add 和 bind。
       </div>
     </section>
 

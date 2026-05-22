@@ -33,6 +33,7 @@ npx @jennie-shawn/starwork --help
 npx skills add jennie-shawn/starwork --skill starworkInit -g -a codex -y
 npx skills add jennie-shawn/starwork --skill starworkDoctor -g -a codex -y
 npx skills add jennie-shawn/starwork --skill starworkUpgrade -g -a codex -y
+npx skills add jennie-shawn/starwork --skill starworkMultiagent -g -a codex -y
 ```
 
 只安装 init skill：
@@ -108,6 +109,7 @@ starwork doctor --target ~/Desktop/starwork-alpha-project
 - `doctor` 的检查结果是否能指导修复问题。
 - `spawn` 从 Hub 创建项目的过程是否清楚。
 - 系统 skills 是否能被 Codex 识别和调用。
+- `starworkMultiagent` 是否能把“登记当前会话为常用智能体”正确转换成 `starwork multiagent init/add/bind` 建议。
 - Hub Kit 自带的 `starworkSpawn` 与单项目 Kit 自带的 `neat-freak` 是否能在对应工作台内被发现。
 
 ## 发布前检查
@@ -129,4 +131,5 @@ npm pack --dry-run
 - `skills/starworkSpawn/`
 - `skills/starworkDoctor/`
 - `skills/starworkUpgrade/`
+- `skills/starworkMultiagent/`
 - `skills/neat-freak/`
