@@ -782,6 +782,7 @@ function collectDoctorResult(targetDir, options = {}) {
   checkCoreRoles(result, workspaceRoot, state);
   checkPackInstallations(result, workspaceRoot, state);
   checkBlueprintCustomization(result, workspaceRoot, state);
+  checkUpgradeRoleMappings(result, workspaceRoot, state);
   checkSkillInstallations(result, workspaceRoot, state);
   result.ok = result.summary.fail === 0;
   result.strict_ok = result.ok;
@@ -964,13 +965,20 @@ function loadUpgradeBlueprint(blueprintPath) {
   const kit = blueprint.base.kit;
   const allowedKits = {
     "single-light": "local-starter",
-    "single-matter": "local-matter"
+    "single-matter": "local-matter",
+    hub: "hub"
   };
   if (!allowedKits[workspaceType]) {
-    throw new Error("upgrade blueprint base.workspace_type 只支持 single-light 或 single-matter。");
+    throw new Error("upgrade blueprint base.workspace_type 只支持 single-light、single-matter 或 hub。");
   }
   if (kit !== allowedKits[workspaceType]) {
     throw new Error(`upgrade blueprint base.kit (${kit}) 与 ${workspaceType} 不匹配，应为 ${allowedKits[workspaceType]}。`);
+  }
+  if (Object.hasOwn(blueprint.base, "pack") && blueprint.base.pack !== null && typeof blueprint.base.pack !== "string") {
+    throw new Error("upgrade blueprint base.pack 必须是字符串或 null。");
+  }
+  if (blueprint.base.pack === null && workspaceType !== "hub") {
+    throw new Error("upgrade blueprint 只有 hub 工作区允许 base.pack 为 null。");
   }
   if (!["zh", "en"].includes(blueprint.base.language)) {
     throw new Error("upgrade blueprint base.language 只支持 zh 或 en。");
@@ -1043,7 +1051,11 @@ function buildUpgradePlan({ targetDir, blueprint }) {
     throw new Error(`找不到 Kit：${blueprint.base.kit}`);
   }
 
-  const packId = blueprint.base.pack || "general";
+  const packId = Object.hasOwn(blueprint.base, "pack")
+    ? blueprint.base.pack
+    : blueprint.base.workspace_type === "hub"
+      ? null
+      : "general";
   const pack = packId ? loadPack(packId, blueprint.base.language) : null;
   if (pack) validatePack(pack, blueprint.base.workspace_type);
 
@@ -1060,7 +1072,7 @@ function buildUpgradePlan({ targetDir, blueprint }) {
     } else if (action.type === "write_workspace_state") {
       actions.push(strictFileAction(targetDir, path.join(".starwork", "workspace.json"), renderUpgradeWorkspaceState(blueprint, pack, now)));
     } else if (action.type === "copy_kit_missing_files") {
-      actions.push(...buildUpgradeKitActions(targetDir, kitDir, injectedTargets));
+      actions.push(...buildUpgradeKitActions(targetDir, kitDir, injectedTargets, blueprint));
     } else if (action.type === "inject_agent_rules") {
       actions.push(buildUpgradeAgentRuleAction(targetDir, kitDir, blueprint, action, variables));
     } else if (action.type === "write_file") {
@@ -1098,16 +1110,33 @@ function buildUpgradePlan({ targetDir, blueprint }) {
   };
 }
 
-function buildUpgradeKitActions(targetDir, kitDir, injectedTargets) {
+function buildUpgradeKitActions(targetDir, kitDir, injectedTargets, blueprint = null) {
   const actions = [];
   for (const source of walkFiles(kitDir)) {
     const relativePath = normalizeRelativePath(path.relative(kitDir, source));
+    if (isHubPreserveNamesUpgradeBlueprint(blueprint) && !isHubPreserveNamesKitFile(relativePath)) continue;
     if (injectedTargets.has(relativePath)) continue;
     const target = path.join(targetDir, relativePath);
     if (fs.existsSync(target)) continue;
     actions.push(strictFileAction(targetDir, relativePath, fs.readFileSync(source, "utf8")));
   }
   return actions;
+}
+
+function isHubPreserveNamesUpgradeBlueprint(blueprint) {
+  return blueprint?.base?.workspace_type === "hub" && blueprint.strategy === "preserve-names";
+}
+
+function isHubPreserveNamesUpgradeState(state) {
+  return state?.workspace_type === "hub"
+    && state?.upgrade?.type === "upgrade_blueprint"
+    && state?.upgrade?.strategy === "preserve-names";
+}
+
+function isHubPreserveNamesKitFile(relativePath) {
+  return relativePath === "AGENTS.md"
+    || relativePath === "README.md"
+    || relativePath.startsWith("_系统/");
 }
 
 function buildUpgradeAgentRuleAction(targetDir, kitDir, blueprint, action, variables) {
@@ -1276,7 +1305,9 @@ function checkKit(result, workspaceRoot, state) {
     addCheck(result, "kit.workspace_type.match", "fail", `Kit ${state.kit} 与工作区类型 ${state.workspace_type || "(missing)"} 不匹配。`);
   }
 
-  const files = walkFiles(kitDir);
+  const files = isHubPreserveNamesUpgradeState(state)
+    ? walkFiles(kitDir).filter(isHubPreserveNamesKitFile)
+    : walkFiles(kitDir);
   const missing = [];
   for (const source of files) {
     const relativePath = path.relative(kitDir, source);
@@ -1395,6 +1426,23 @@ function checkBlueprintCustomization(result, workspaceRoot, state) {
     } else {
       addCheck(result, "blueprint.rule.injected", "fail", `Blueprint 规则未注入 AGENTS.md：${rule.slot}`, "AGENTS.md");
     }
+  }
+}
+
+function checkUpgradeRoleMappings(result, workspaceRoot, state) {
+  const mappings = state.upgrade?.core_role_mapping;
+  if (!Array.isArray(mappings) || mappings.length === 0) return;
+  for (const mapping of mappings) {
+    if (!mapping?.path) continue;
+    const rolePath = normalizeSafeRelativePath(mapping.path, "upgrade core_role_mapping.path");
+    checkPathExists(
+      result,
+      workspaceRoot,
+      rolePath,
+      "upgrade.role_mapping.exists",
+      `Upgrade role mapping exists: ${mapping.role || "role"} -> ${rolePath}`,
+      `升级映射缺少目录或文件：${rolePath}`
+    );
   }
 }
 
@@ -1689,6 +1737,11 @@ function detectWorkspaceSignals(inventory) {
   const systemDirs = directories.filter((dir) => isSystemDirectory(dir.path)).map((dir) => dir.path);
   const identityDirs = directories.filter((dir) => isIdentityDirectory(dir.path)).map((dir) => dir.path);
   const lessonsDirs = directories.filter((dir) => isLessonsDirectory(dir.path)).map((dir) => dir.path);
+  const hubProjectDirs = directories.filter((dir) => isHubProjectDirectory(dir.path)).map((dir) => dir.path);
+  const hubCoordinationDirs = directories.filter((dir) => isHubCoordinationDirectory(dir.path)).map((dir) => dir.path);
+  const hubIncomingDirs = directories.filter((dir) => isHubIncomingDirectory(dir.path)).map((dir) => dir.path);
+  const hubKnowledgeDirs = directories.filter((dir) => isHubKnowledgeDirectory(dir.path)).map((dir) => dir.path);
+  const projectRegistryFiles = files.filter((file) => isProjectRegistryFile(file.path)).map((file) => file.path);
   return {
     agent_entry: files.filter((file) => isAgentEntryFile(file.path)).map((file) => file.path),
     agent_rule_files: files.filter((file) => isAgentEntryFile(file.path) || isAgentRuleFile(file.path)).map((file) => file.path),
@@ -1704,6 +1757,21 @@ function detectWorkspaceSignals(inventory) {
     identity_dirs: identityDirs,
     lessons_dirs: lessonsDirs,
     skill_mount_dirs: directories.filter((dir) => isSkillMountDirectory(dir.path)).map((dir) => dir.path),
+    hub_project_dirs: hubProjectDirs,
+    hub_coordination_dirs: hubCoordinationDirs,
+    hub_incoming_dirs: hubIncomingDirs,
+    hub_knowledge_dirs: hubKnowledgeDirs,
+    project_registry_files: projectRegistryFiles,
+    hub_candidate_paths: uniqueList([
+      ...hubProjectDirs,
+      ...projectRegistryFiles,
+      ...hubCoordinationDirs,
+      ...hubIncomingDirs,
+      ...identityDirs,
+      ...lessonsDirs,
+      ...hubKnowledgeDirs,
+      ...directories.filter((dir) => isSkillMountDirectory(dir.path)).map((dir) => dir.path)
+    ]),
     readonly_candidate_dirs: uniqueList([...possibleReferences, ...identityDirs, ...lessonsDirs, ...systemDirs]),
     writable_candidate_dirs: uniqueList([...possibleDrafts, ...possibleCurrentWork, ...possibleOutputs, ...matterDirs]),
     readme_files: files.filter((file) => /^README(\.[a-z0-9]+)?$/i.test(path.basename(file.path))).map((file) => file.path)
@@ -1748,6 +1816,32 @@ function isSkillMountDirectory(relativePath) {
     || normalized === ".claude/skills"
     || normalized.endsWith("/.agents/skills")
     || normalized.endsWith("/.claude/skills");
+}
+
+function isHubProjectDirectory(relativePath) {
+  const normalized = normalizeRelativePath(relativePath);
+  return normalized === "projects" || normalized === "项目";
+}
+
+function isHubCoordinationDirectory(relativePath) {
+  const normalized = normalizeRelativePath(relativePath);
+  return normalized === "projects/coordination"
+    || normalized === "projects/coordination/messages"
+    || normalized === "项目/联络";
+}
+
+function isHubIncomingDirectory(relativePath) {
+  return normalizeRelativePath(relativePath) === ".incoming";
+}
+
+function isHubKnowledgeDirectory(relativePath) {
+  const normalized = normalizeRelativePath(relativePath);
+  return normalized === "knowledge" || normalized === "知识";
+}
+
+function isProjectRegistryFile(relativePath) {
+  const normalized = normalizeRelativePath(relativePath);
+  return normalized === "projects/registry.json" || normalized === "项目/registry.json";
 }
 
 function isSystemDirectory(relativePath) {
@@ -1812,7 +1906,13 @@ function detectLegacyWorkspace(dir, signals = null) {
     identitySystemZh: ["_系统/身份"],
     lessonsSystemZh: ["_系统/教训"],
     identitySystemEn: ["_system/identity"],
-    lessonsSystemEn: ["_system/lessons"]
+    lessonsSystemEn: ["_system/lessons"],
+    projectsRoot: ["projects", "项目"],
+    projectRegistry: ["projects/registry.json", "项目/registry.json"],
+    coordination: ["projects/coordination", "projects/coordination/messages", "项目/联络"],
+    incoming: [".incoming"],
+    knowledgeRoot: ["knowledge", "知识"],
+    skillsRoot: ["skills"]
   };
   const found = {};
   for (const [key, candidates] of Object.entries(groups)) {
@@ -1828,6 +1928,12 @@ function detectLegacyWorkspace(dir, signals = null) {
   const signalSystems = signals?.system_dirs || [];
   const signalIdentity = signals?.identity_dirs || [];
   const signalLessons = signals?.lessons_dirs || [];
+  const signalHubProjects = signals?.hub_project_dirs || [];
+  const signalProjectRegistries = signals?.project_registry_files || [];
+  const signalHubCoordination = signals?.hub_coordination_dirs || [];
+  const signalHubIncoming = signals?.hub_incoming_dirs || [];
+  const signalHubKnowledge = signals?.hub_knowledge_dirs || [];
+  const signalSkillMounts = signals?.skill_mount_dirs || [];
   const hasSystem = found.system.length > 0;
   const hasEntry = found.entryRules.length > 0;
   const hasMatters = found.matters.length > 0;
@@ -1839,6 +1945,28 @@ function detectLegacyWorkspace(dir, signals = null) {
     ...found.identitySystemEn,
     ...found.lessonsSystemEn
   ].length > 0;
+  const hubSignals = uniqueList([
+    ...found.projectsRoot,
+    ...signalHubProjects,
+    ...found.projectRegistry,
+    ...signalProjectRegistries,
+    ...found.coordination,
+    ...signalHubCoordination,
+    ...found.incoming,
+    ...signalHubIncoming,
+    ...found.identityRoot,
+    ...signalIdentity,
+    ...found.lessonsRoot,
+    ...signalLessons,
+    ...found.knowledgeRoot,
+    ...signalHubKnowledge,
+    ...found.skillsRoot,
+    ...signalSkillMounts
+  ]);
+  const hasProjectRegistry = found.projectRegistry.length > 0 || signalProjectRegistries.length > 0;
+  const hasHubCoordination = found.coordination.length > 0 || signalHubCoordination.length > 0;
+  const hasHubLikeRepository = (hasProjectRegistry || ((found.projectsRoot.length + signalHubProjects.length) > 0 && hasHubCoordination))
+    && hubSignals.length >= 4;
 
   const signalCount = [
     hasEntry || signalEntries.length > 0,
@@ -1846,11 +1974,12 @@ function detectLegacyWorkspace(dir, signals = null) {
     hasMatters || signalMatters.length > 0,
     references.length > 0 || signalReferences.length > 0,
     outputs.length > 0 || signalOutputs.length > 0,
-    hasIdentityOrLessons || signalIdentity.length > 0 || signalLessons.length > 0
+    hasIdentityOrLessons || signalIdentity.length > 0 || signalLessons.length > 0,
+    hasHubLikeRepository
   ].filter(Boolean).length;
   const candidate = signalCount >= 2 || ((references.length > 0 || signalReferences.length > 0) && (outputs.length > 0 || signalOutputs.length > 0));
   const language = inferLegacyLanguage(found);
-  const workspaceType = hasMatters || signalMatters.length > 0 ? "single-matter" : "single-light";
+  const workspaceType = hasHubLikeRepository ? "hub" : hasMatters || signalMatters.length > 0 ? "single-matter" : "single-light";
   const reasons = buildLegacyReasons({
     found,
     signalReferences,
@@ -1860,6 +1989,8 @@ function detectLegacyWorkspace(dir, signals = null) {
     signalSystems,
     signalIdentity,
     signalLessons,
+    hubSignals,
+    hasHubLikeRepository,
     language,
     workspaceType
   });
@@ -1881,6 +2012,8 @@ function detectLegacyWorkspace(dir, signals = null) {
     confidence: signalCount >= 4 ? "high" : "medium",
     language,
     workspaceType,
+    hubLike: hasHubLikeRepository,
+    hubSignals,
     primaryTrace,
     found,
     references: uniqueList([...references, ...signalReferences]),
@@ -1898,6 +2031,8 @@ function buildLegacyReasons({
   signalSystems,
   signalIdentity,
   signalLessons,
+  hubSignals,
+  hasHubLikeRepository,
   language,
   workspaceType
 }) {
@@ -1912,15 +2047,18 @@ function buildLegacyReasons({
     }
   }
 
-  const workspaceTypeReasons = workspaceType === "single-matter"
-    ? [...found.matters, ...signalMatters].map((item) => `${item} 表示存在事项或多事务推进结构`)
-    : ["未检测到事项目录，暂按单事务工作区候选处理"];
+  const workspaceTypeReasons = workspaceType === "hub"
+    ? hubSignals.map((item) => `${item} 表示存在主库或多项目中枢结构`)
+    : workspaceType === "single-matter"
+      ? [...found.matters, ...signalMatters].map((item) => `${item} 表示存在事项或多事务推进结构`)
+      : ["未检测到事项目录，暂按单事务工作区候选处理"];
 
   return {
     language: uniqueList(languageReasons),
     workspace_type: uniqueList(workspaceTypeReasons),
     references: uniqueList([...found.referencesZh, ...found.referencesEn, ...signalReferences].map((item) => `${item} 命中参考资料候选信号`)),
     outputs: uniqueList([...found.outputsZh, ...found.outputsEn, ...signalOutputs].map((item) => `${item} 命中成果或输出候选信号`)),
+    hub: hasHubLikeRepository ? uniqueList(hubSignals.map((item) => `${item} 命中主库 / Hub 候选信号`)) : [],
     candidate: uniqueList([
       ...signalEntries.map((item) => `${item} 是 Agent 入口信号`),
       ...signalSystems.map((item) => `${item} 是系统目录信号`),
@@ -1957,22 +2095,29 @@ function inferLegacyLanguage(found) {
 function buildLegacySignals(legacy) {
   return {
     candidate: true,
-    source: "legacy-template",
+    source: legacy.hubLike ? "hub-like-main-repository" : "legacy-template",
     confidence: legacy.confidence,
     inferred: {
       language: legacy.language,
       workspace_type: legacy.workspaceType,
       references: legacy.references,
       outputs: legacy.outputs,
+      hub_like: legacy.hubLike,
+      hub_signals: legacy.hubSignals,
       reasons: legacy.reasons
     }
   };
 }
 
 function addLegacyChecks(result, legacy) {
-  addCheck(result, "legacy.template.detected", "info", `检测到历史模板升级候选，置信度：${legacy.confidence}。`, legacy.primaryTrace);
+  const label = legacy.hubLike ? "主库 / Hub 候选" : "历史模板升级候选";
+  addCheck(result, "legacy.template.detected", "info", `检测到${label}，置信度：${legacy.confidence}。`, legacy.primaryTrace);
   addCheck(result, "legacy.language.inferred", "info", `推测语言：${legacy.language}。`);
   addCheck(result, "legacy.workspace_type.inferred", "info", `推测工作区类型：${legacy.workspaceType}。`);
+
+  if (legacy.hubLike) {
+    addCheck(result, "legacy.hub.detected", "info", `检测到主库 / Hub 信号：${legacy.hubSignals.join(", ")}。`, legacy.hubSignals[0]);
+  }
 
   if (legacy.references.length) {
     addCheck(result, "legacy.references.detected", "info", `检测到参考资料目录：${legacy.references.join(", ")}。`, legacy.references[0]);
@@ -1982,7 +2127,7 @@ function addLegacyChecks(result, legacy) {
 
   if (legacy.outputs.length) {
     addCheck(result, "legacy.outputs.detected", "info", `检测到输出目录：${legacy.outputs.join(", ")}。`, legacy.outputs[0]);
-  } else {
+  } else if (!legacy.hubLike) {
     addCheck(result, "legacy.outputs.detected", "warn", "未检测到常见输出目录，升级时可能需要手动指定成果区。");
   }
 
@@ -2053,7 +2198,8 @@ function printDoctorResult(result, options) {
 
   if (result.upgrade?.candidate) {
     console.log("Legacy signals:");
-    console.log(`  检测为：历史模板候选（${result.upgrade.confidence} confidence）`);
+    const legacyLabel = result.upgrade.source === "hub-like-main-repository" ? "主库 / Hub 候选" : "历史模板候选";
+    console.log(`  检测为：${legacyLabel}（${result.upgrade.confidence} confidence）`);
     console.log(`  推测类型：${result.upgrade.inferred.workspace_type}`);
     console.log(`  推测语言：${result.upgrade.inferred.language}`);
     console.log("  这些只是候选信号，不是迁移方案；请交给 starworkDoctor 做诊断和 blueprint 设计。");

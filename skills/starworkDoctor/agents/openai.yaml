@@ -1,7 +1,7 @@
 interface:
   display_name: "StarWork Doctor"
-  short_description: "诊断 StarWork 工作台或历史模板，并生成升级蓝图"
-  default_prompt: "Use $starworkDoctor to interpret starwork doctor output, explain a safe upgrade path, and generate an upgrade blueprint when requested."
+  short_description: "用人能懂的话诊断工作台、旧模板或 Hub-like 主库，并生成升级蓝图"
+  default_prompt: "Use $starworkDoctor to explain starwork doctor output in user-readable language, diagnose legacy or Hub-like main repositories, and generate a safe upgrade blueprint when requested."
 
 policy:
   allow_implicit_invocation: true

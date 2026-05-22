@@ -706,6 +706,144 @@ test("upgrade applies a blueprint and keeps existing files", () => {
   assert.equal(report.ok, true);
 });
 
+test("hub upgrade dry-run does not create duplicate standard dirs", () => {
+  const dir = tempDir();
+  const blueprintDir = tempDir();
+  fs.mkdirSync(path.join(dir, "projects", "coordination"), { recursive: true });
+  fs.mkdirSync(path.join(dir, "knowledge"), { recursive: true });
+  fs.mkdirSync(path.join(dir, "identity"), { recursive: true });
+  fs.mkdirSync(path.join(dir, "lessons"), { recursive: true });
+  fs.mkdirSync(path.join(dir, "skills"), { recursive: true });
+  fs.mkdirSync(path.join(dir, ".incoming"), { recursive: true });
+  fs.writeFileSync(path.join(dir, "README.md"), "# Main Repository\n", "utf8");
+  fs.writeFileSync(path.join(dir, "AGENTS.md"), "# Existing Hub Rules\n", "utf8");
+  fs.writeFileSync(path.join(dir, "projects", "registry.json"), "[]\n", "utf8");
+  fs.writeFileSync(path.join(blueprintDir, "upgrade-blueprint.json"), `${JSON.stringify({
+    schema: "starwork.upgrade_blueprint.v0.1",
+    generated_by: "starworkDoctor",
+    source: {
+      doctor_schema: "starwork.doctor.result.v0.1",
+      diagnosis: "hub-like-main-repository",
+      core_fit: "high"
+    },
+    base: {
+      workspace_type: "hub",
+      kit: "hub",
+      language: "zh",
+      pack: null
+    },
+    strategy: "preserve-names",
+    paths: {
+      formal_source: "projects/",
+      business_work_area: "projects/coordination/"
+    },
+    core_role_mapping: [
+      { role: "projects", path: "projects/", confidence: "high", reason: "用户确认" },
+      { role: "project_registry", path: "projects/registry.json", confidence: "high", reason: "用户确认" },
+      { role: "coordination", path: "projects/coordination/", confidence: "high", reason: "用户确认" },
+      { role: "incoming", path: ".incoming/", confidence: "high", reason: "用户确认" },
+      { role: "knowledge", path: "knowledge/", confidence: "high", reason: "用户确认" },
+      { role: "identity", path: "identity/", confidence: "high", reason: "用户确认" },
+      { role: "lessons", path: "lessons/", confidence: "high", reason: "用户确认" },
+      { role: "skills", path: "skills/", confidence: "high", reason: "用户确认" }
+    ],
+    actions: [
+      { type: "ensure_dir", path: ".starwork/" },
+      { type: "write_workspace_state" },
+      { type: "copy_kit_missing_files" }
+    ],
+    preserve: ["projects/", "knowledge/", "identity/", "lessons/", "skills/", ".incoming/"]
+  }, null, 2)}\n`, "utf8");
+
+  const result = runCommand(["upgrade", "--target", dir, "--blueprint", path.join(blueprintDir, "upgrade-blueprint.json"), "--json", "--dry-run"]);
+  const plan = JSON.parse(result.stdout);
+  const plannedPaths = plan.actions.map((action) => action.path);
+
+  assert.equal(result.status, 0);
+  assert.equal(plan.workspace_type, "hub");
+  assert.equal(plan.pack, null);
+  assert.equal(fs.existsSync(path.join(dir, ".starwork", "workspace.json")), false);
+  assert(!plannedPaths.some((item) => item === "项目" || item.startsWith("项目/")));
+  assert(!plannedPaths.some((item) => item === "知识" || item.startsWith("知识/")));
+});
+
+test("upgrade applies a hub preserve-names blueprint", () => {
+  const dir = tempDir();
+  const blueprintDir = tempDir();
+  fs.mkdirSync(path.join(blueprintDir, "rules"), { recursive: true });
+  fs.mkdirSync(path.join(dir, "projects", "coordination"), { recursive: true });
+  fs.mkdirSync(path.join(dir, "knowledge"), { recursive: true });
+  fs.mkdirSync(path.join(dir, "identity"), { recursive: true });
+  fs.mkdirSync(path.join(dir, "lessons"), { recursive: true });
+  fs.mkdirSync(path.join(dir, "skills"), { recursive: true });
+  fs.mkdirSync(path.join(dir, ".incoming"), { recursive: true });
+  fs.writeFileSync(path.join(dir, "README.md"), "# Main Repository\n", "utf8");
+  fs.writeFileSync(path.join(dir, "AGENTS.md"), "# Existing Hub Rules\n\nKeep me.\n", "utf8");
+  fs.writeFileSync(path.join(dir, "projects", "registry.json"), "[]\n", "utf8");
+  fs.writeFileSync(path.join(blueprintDir, "rules", "hub-boundaries.md"), "项目登记：{{paths.formal_source}}\n跨项目协调：{{paths.business_work_area}}\n", "utf8");
+  fs.writeFileSync(path.join(blueprintDir, "upgrade-blueprint.json"), `${JSON.stringify({
+    schema: "starwork.upgrade_blueprint.v0.1",
+    generated_by: "starworkDoctor",
+    source: {
+      doctor_schema: "starwork.doctor.result.v0.1",
+      diagnosis: "hub-like-main-repository",
+      core_fit: "high"
+    },
+    base: {
+      workspace_type: "hub",
+      kit: "hub",
+      language: "zh",
+      pack: null
+    },
+    strategy: "preserve-names",
+    paths: {
+      formal_source: "projects/",
+      business_work_area: "projects/coordination/"
+    },
+    core_role_mapping: [
+      { role: "projects", path: "projects/", confidence: "high", reason: "用户确认" },
+      { role: "project_registry", path: "projects/registry.json", confidence: "high", reason: "用户确认" },
+      { role: "coordination", path: "projects/coordination/", confidence: "high", reason: "用户确认" },
+      { role: "incoming", path: ".incoming/", confidence: "high", reason: "用户确认" },
+      { role: "knowledge", path: "knowledge/", confidence: "high", reason: "用户确认" },
+      { role: "identity", path: "identity/", confidence: "high", reason: "用户确认" },
+      { role: "lessons", path: "lessons/", confidence: "high", reason: "用户确认" },
+      { role: "skills", path: "skills/", confidence: "high", reason: "用户确认" }
+    ],
+    actions: [
+      { type: "ensure_dir", path: ".starwork/" },
+      { type: "write_workspace_state" },
+      { type: "copy_kit_missing_files" },
+      { type: "inject_agent_rules", target: "AGENTS.md", from: "rules/hub-boundaries.md", slot: "upgrade.hub_boundaries" }
+    ],
+    preserve: ["projects/", "knowledge/", "identity/", "lessons/", "skills/", ".incoming/"],
+    verification: {
+      run_doctor_after: true,
+      expected_workspace_type: "hub"
+    }
+  }, null, 2)}\n`, "utf8");
+
+  const result = runCommand(["upgrade", "--target", dir, "--blueprint", path.join(blueprintDir, "upgrade-blueprint.json"), "--yes"]);
+  const state = readJson(path.join(dir, ".starwork", "workspace.json"));
+  const agents = fs.readFileSync(path.join(dir, "AGENTS.md"), "utf8");
+  const doctor = runDoctor(["--target", dir, "--json"]);
+  const report = JSON.parse(doctor.stdout);
+
+  assert.equal(result.status, 0);
+  assert.equal(state.workspace_type, "hub");
+  assert.equal(state.kit, "hub");
+  assert.deepEqual(state.packs, []);
+  assert.equal(state.paths.formal_source, "projects/");
+  assert.equal(state.paths.business_work_area, "projects/coordination/");
+  assert.equal(fs.existsSync(path.join(dir, "项目")), false);
+  assert.equal(fs.existsSync(path.join(dir, "知识")), false);
+  assert.match(agents, /Keep me/);
+  assert.match(agents, /StarWork Upgrade: upgrade\.hub_boundaries/);
+  assert.equal(doctor.status, 0);
+  assert.equal(report.ok, true);
+  assert(report.checks.some((check) => check.id === "upgrade.role_mapping.exists" && check.level === "pass"));
+});
+
 test("upgrade refuses existing StarWork workspaces", () => {
   const dir = tempDir();
   const blueprintDir = tempDir();

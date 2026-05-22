@@ -210,10 +210,10 @@ my-workspace-upgrade/
 | `target` | 否 | 仅作说明；真实目标仍以 CLI `--target` 为准。 |
 | `generated_by` | 是 | 通常为 `starworkDoctor`。 |
 | `source` | 是 | 记录 doctor / starworkDoctor 的诊断来源。 |
-| `base.workspace_type` | 是 | `single-light`、`single-matter`。v0.1 不支持把旧目录升级为 Hub。 |
-| `base.kit` | 是 | `local-starter` 或 `local-matter`。 |
+| `base.workspace_type` | 是 | `single-light`、`single-matter` 或 `hub`。Hub 仅用于已确认的主库 / 多项目中枢候选。 |
+| `base.kit` | 是 | `local-starter`、`local-matter` 或 `hub`，必须和 workspace type 匹配。 |
 | `base.language` | 是 | `zh` 或 `en`。 |
-| `base.pack` | 否 | v0.1 默认 `general`，不主动使用未定稿场景 Pack。 |
+| `base.pack` | 否 | 单项目默认 `general`；Hub preserve-names 可显式写 `null`，表示不安装 `hub-management` Pack、不创建重复标准目录。 |
 | `strategy` | 是 | 升级策略。v0.1 推荐 `preserve-names`。 |
 | `paths.formal_source` | 是 | 写入 workspace state 的正式事实源。 |
 | `paths.business_work_area` | 是 | 写入 workspace state 的当前工作区。 |
@@ -477,6 +477,7 @@ v0.1 建议先提示，不自动嵌套执行，避免输出过长。
 - 目标已有文件冲突时中止或跳过，不覆盖。
 - 路径安全校验覆盖绝对路径、`..`、`.git/`、`node_modules/`。
 - 执行后 `starwork doctor --target <path>` 可以识别为 StarWork 工作台。
+- Hub preserve-names blueprint 可写入 `workspace_type: hub`、`kit: hub`、`packs: []`，且不创建 `项目/`、`知识/` 等重复标准目录。
 
 ## 后续问题
 
