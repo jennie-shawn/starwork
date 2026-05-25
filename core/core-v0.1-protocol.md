@@ -71,7 +71,23 @@ _系统/上下文/当前项目.md
 
 Core 不强制正式事实源必须叫 `product/`。
 
-过程材料不能被悄悄当成正式事实源。比如 matter 草稿、会议笔记、AI 草稿，都必须经过用户确认或明确晋升，才能进入正式事实源。
+过程材料不能被悄悄当成正式事实源。比如 事项 草稿、会议笔记、AI 草稿，都必须经过用户确认或明确晋升，才能进入正式事实源。
+
+## `.starwork/` 机制运行层
+
+`.starwork/` 是 StarWork 机制运行层，不是隐藏的项目内容目录。
+
+它只存放在 StarWork Core、CLI、Pack、Skill、Adapter 等机制下才需要的状态、索引、manifest、队列、安装记录、缓存和报告，例如：
+
+- `.starwork/workspace.json`
+- `.starwork/skills.json`
+- `.starwork/packs/`
+- `.starwork/handoff/`
+- `.starwork/sync.json`
+
+项目状态、当前工作、参考资料、草稿、正式成果、知识、身份、教训和协作记录，即使由 StarWork 创建或由 Agent 读写，也不进入 `.starwork/`。`.starwork/` 可以引用这些内容的路径，但不拥有这些内容。
+
+详细边界见：[StarWork Runtime Layer SPEC](./starwork-runtime-layer-spec.md)。
 
 ## v0.1 可选能力
 
@@ -80,7 +96,6 @@ Core v0.1 把额外功能做成 capabilities。能力可以组合，但不能改
 | 能力 | 作用 |
 |---|---|
 | `starter-outputs` | 提供 `references/`、`outputs/drafts/`、`outputs/final/` 的轻量工作流。 |
-| `matter-mode` | 提供事项机制，适合长期项目和跨会话接力；具体路径由语言 profile 决定。 |
 | `decisions` | 提供高影响决策记录，不记录普通会议流水；具体文件名由语言 profile 决定。 |
 | `local-identity` | 在项目内维护本地身份信息。 |
 | `local-lessons` | 在项目内维护本地可复用教训。 |
@@ -88,16 +103,13 @@ Core v0.1 把额外功能做成 capabilities。能力可以组合，但不能改
 | `skill-mount` | 通过软链接挂载主库共享 skills。 |
 | `agent-lanes` | 支持同一项目内多个 Agent 会话按职责位分工协作。 |
 
-## 五种首批形态
+## 两种正式形态
 
-v0.1 先保留五种工作区形态。Kit 名称不携带语言标签；当前正式 Kit 默认以中文 profile 落地，其他语言通过 profile 扩展。
+v0.1 只保留两种正式工作区形态。Kit 名称不携带语言标签；当前正式 Kit 默认以中文 profile 落地，其他语言通过 profile 扩展。
 
 | Preset | 面向谁 | 默认特点 |
 |---|---|---|
-| `local-starter` | 学员、轻量单项目用户 | 本地身份/教训，轻量输入输出工作流，不启用事项。 |
-| `local-matter` | 单项目长期用户 | 本地身份/教训，启用 Matter Mode 和高影响决策。 |
-| `satellite-starter` | 接入主库的轻量卫星项目 | 主库分发身份、教训、知识、skills；卫星项目不默认启用事项。 |
-| `satellite-matter` | 主库 + 多卫星项目用户 | 主库分发身份、教训、知识、skills；卫星项目维护自己的事项和正式事实源。 |
+| `project` | 具体项目用户 | 项目状态、当前工作、参考资料、草稿、确认成果；可独立使用，也可由 Hub 管理。 |
 | `hub` | 多项目管理中枢用户 | 统一维护身份、教训、知识、skills、项目注册表和跨项目联络。 |
 
 Preset 是配方，不是协议本身。它选择 profile、capabilities 和默认正式事实源。
@@ -149,21 +161,11 @@ Core 支持单项目工作区，也支持主库 + 多卫星项目。
 多项目工作区中，采用 Hub + Satellite 模型：
 
 - Hub 维护跨项目共享身份、教训、知识、skills、项目注册表、跨项目联络和回写审核。
-- Satellite 维护自己的项目状态、当前工作、事项过程、项目决策和正式事实源。
+- Satellite 维护自己的项目状态、当前工作、项目决策和正式事实源。
 
 Hub 可以读取 Satellite 的项目状态，但不能把项目进度正文复制进 registry。
 
 Satellite 也不能把主库快照、共享知识或软链接 skills 当成本地内容随意改写。
-
-## 事项机制
-
-Matter Mode 是增强能力，不是所有用户必需能力。
-
-学员或轻量用户可以只使用 `references/outputs`。
-
-长期项目、跨会话接力、复杂推进过程更适合使用事项机制。中文 Kit 使用 `事项/`，英文 Kit 可使用 `matters/`。
-
-启用 Matter Mode 时，应配套事项维护规则或 skill。否则目录存在了，但创建、更新、暂停、归档的动作仍然容易混乱。
 
 ## 决策记录
 
@@ -184,9 +186,8 @@ Core v0.1 可以封版，至少需要满足：
 
 - 普通人能读懂 Core 是什么、不是什么。
 - Agent 能知道开始前读哪里、当前工作写哪里、正式事实源在哪里。
-- 五种首批工作区形态边界清楚。
+- Project 和 Hub 两种正式工作区形态边界清楚。
 - 单项目和多项目不互相污染。
-- Matter Mode 是可选增强，不强迫所有用户使用。
 - Kit 被定位为参考实现或 CLI 输出，不被误认为协议事实源。
 - CLI 的职责被清楚留出，但不在 Core 中实现。
 

@@ -136,8 +136,8 @@ my-workspace-upgrade/
     "core_fit": "medium"
   },
   "base": {
-    "workspace_type": "single-matter",
-    "kit": "local-matter",
+    "workspace_type": "project",
+    "kit": "project",
     "language": "zh",
     "pack": "general"
   },
@@ -194,7 +194,7 @@ my-workspace-upgrade/
   ],
   "verification": {
     "run_doctor_after": true,
-    "expected_workspace_type": "single-matter"
+    "expected_workspace_type": "project"
   },
   "notes": [
     "v0.1 不移动旧内容，只建立 StarWork state 和入口规则。"
@@ -210,8 +210,8 @@ my-workspace-upgrade/
 | `target` | 否 | 仅作说明；真实目标仍以 CLI `--target` 为准。 |
 | `generated_by` | 是 | 通常为 `starworkDoctor`。 |
 | `source` | 是 | 记录 doctor / starworkDoctor 的诊断来源。 |
-| `base.workspace_type` | 是 | `single-light`、`single-matter` 或 `hub`。Hub 仅用于已确认的主库 / 多项目中枢候选。 |
-| `base.kit` | 是 | `local-starter`、`local-matter` 或 `hub`，必须和 workspace type 匹配。 |
+| `base.workspace_type` | 是 | `single-light`、`project` 或 `hub`。Hub 仅用于已确认的主库 / 多项目中枢候选。 |
+| `base.kit` | 是 | `local-starter`、`project` 或 `hub`，必须和 workspace type 匹配。 |
 | `base.language` | 是 | `zh` 或 `en`。 |
 | `base.pack` | 否 | 单项目默认 `general`；Hub preserve-names 可显式写 `null`，表示不安装 `hub-management` Pack、不创建重复标准目录。 |
 | `strategy` | 是 | 升级策略。v0.1 推荐 `preserve-names`。 |
@@ -383,8 +383,8 @@ StarWork upgrade plan
 
 Target: /path/to/workspace
 Strategy: preserve-names
-Workspace type: single-matter
-Kit: local-matter
+Workspace type: project
+Kit: project
 Language: zh
 
 Will create:
@@ -477,7 +477,7 @@ v0.1 建议先提示，不自动嵌套执行，避免输出过长。
 - 目标已有文件冲突时中止或跳过，不覆盖。
 - 路径安全校验覆盖绝对路径、`..`、`.git/`、`node_modules/`。
 - 执行后 `starwork doctor --target <path>` 可以识别为 StarWork 工作台。
-- Hub preserve-names blueprint 可写入 `workspace_type: hub`、`kit: hub`、`packs: []`，且不创建 `项目/`、`知识/` 等重复标准目录。
+- Hub preserve-names blueprint 可写入 `workspace_type: hub`、`kit: hub`、`packs: []`，且不创建重复标准目录。
 
 ## 后续问题
 

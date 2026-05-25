@@ -51,21 +51,22 @@ npx skills add jennie-shawn/starwork --skill starworkInit -g -a codex -y
 
 当前 skills：
 
-- `starworkInit`：帮助 Agent 判断工作台类型、语言、是否需要事项，并生成友好的 `starwork init` 初始化方案。
-- `starworkDoctor`：帮助 Agent 基于 `starwork doctor --json` 做目录逻辑诊断；用户明确要求升级时，也负责生成 `starwork upgrade --blueprint` 升级蓝图。
+- `starworkInit`：帮助 Agent 判断是创建 Project 还是 Hub，选择语言，并生成友好的 `starwork init` 初始化方案。
+- `starworkDoctor`：帮助 Agent 基于 `starwork doctor --json` 做用户能看懂的目录逻辑诊断；可识别历史模板和 Hub-like 旧主库，用户明确要求升级时，也负责生成 `starwork upgrade --blueprint` 升级蓝图。
 - `starworkMultiagent`：帮助 Agent 把“登记当前会话为常用智能体”“管理多 Agent 分工”“登记共享输出”等请求转换成 `starwork multiagent` 命令组合。
 - `starworkSpawn`：Hub Kit 自带 Skill，帮助已有 Hub 设计 `starwork spawn --blueprint` 工作台定制单。
+- `starworkAudit`：帮助 Agent 解读 `starwork audit --json`，判断 Hub 旗下 Project Satellite 的健康状况，并生成保守的 `starwork repair --blueprint` 修复蓝图。
 - `neat-freak`：单项目 Kit 自带 Skill，帮助项目收尾、整理和归档。
 
 如果你希望让 Agent 帮你完成安装，可以把 [Agent 安装指南](docs/agent-install-guide.md) 里的提示词发给你的 Agent。
 
 ## 快速开始
 
-创建一个单事务项目工作台：
+创建一个 Project 工作台：
 
 ```bash
 starwork init \
-  --type single-light \
+  --type project \
   --pack general \
   --language zh \
   --name "StarWork A Test" \
@@ -97,7 +98,7 @@ starwork spawn \
   --hub ~/Desktop/starwork-hub-a-test \
   --name "Alpha Project" \
   --target ~/Desktop/starwork-alpha-project \
-  --mode matter \
+  --language zh \
   --yes
 ```
 
@@ -105,6 +106,12 @@ starwork spawn \
 
 ```bash
 starwork doctor --target ~/Desktop/starwork-alpha-project
+```
+
+从 Hub 巡检项目：
+
+```bash
+starwork audit --hub ~/Desktop/starwork-hub-a-test
 ```
 
 ## CLI 能力
@@ -121,10 +128,10 @@ starwork multiagent
 
 当前能力：
 
-- `init`：创建单事务项目、多事务项目或多项目 Hub；交互默认推荐单事务项目。
-- `doctor`：检查工作台健康状态、必需文件、Pack 落地结果和 blueprint 定制结果。
-- `spawn`：从已有 Hub 创建并登记卫星项目。
-- `upgrade`：按 `starworkDoctor` skill 生成的升级蓝图，把历史模板安全升级为 StarWork 工作台。
+- `init`：创建单事务项目、项目工作台或多项目 Hub；交互默认推荐单事务项目。
+- `doctor`：检查工作台健康状态、必需文件、Pack 落地结果和 blueprint 定制结果；也会为历史模板和 Hub-like 旧主库暴露 inventory / signals 事实，交给 `starworkDoctor` 判断。
+- `spawn`：从已有 Hub 创建并登记卫星项目，支持中文或英文卫星项目目录镜像。
+- `upgrade`：按 `starworkDoctor` skill 生成的升级蓝图，把历史模板或 Hub-like 旧主库安全接入 StarWork 工作台。
 - `adapt`：生成 Claude Code、Cursor 等 Agent 的适配文件。
 - `pack install`：向兼容工作台安装支持的 Pack。
 - `multiagent`：为同一项目建立自定义 Agent 职责位、绑定会话，并登记跨 lane 共享输出。

@@ -13,3 +13,4 @@ baseline/ + profiles/ + capabilities/ + presets/
 ## 结构参考
 
 - [Kit Structure Reference](./kit-structure-reference.md)
+- [Two-Kit Architecture SPEC](./two-kit-architecture-spec.md)

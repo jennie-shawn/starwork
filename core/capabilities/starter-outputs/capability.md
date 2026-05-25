@@ -1,6 +1,6 @@
 # Capability: starter-outputs v0.1
 
-Starter Outputs 是面向不使用 Matter Mode 用户的轻量工作模式。
+Starter Outputs 是面向轻量项目用户的输入输出工作模式。
 
 ## 新增
 

@@ -82,7 +82,7 @@ Kit 可以声明某种工作区形态天然应该具备哪些 Skill。
 
 - `hub` Kit 可以自带 `starworkSpawn`，因为 Hub 需要创建和管理卫星项目。
 - 单项目 Kit 可以自带或推荐 `neat-freak`，因为单项目需要阶段性清理、收尾和归档。
-- `satellite-matter` Kit 可以自带事项协作相关 Skill。
+- `project` Kit 可以自带事项协作相关 Skill。
 
 建议在 Kit 中保留声明文件：
 
@@ -250,7 +250,7 @@ Hub registry 只记录 Hub 额外托管和准备分发的 Skill。
       "type": "kit-bundled",
       "source": {
         "kind": "kit",
-        "kit": "local-matter",
+        "kit": "project",
         "manifest_id": "neat-freak"
       },
       "mounts": [
@@ -364,7 +364,7 @@ v0.1 可以先只支持：
 3. 创建 `.agents/skills/` 和 `.claude/skills/` 目录。
 4. 对每个被选择的 Skill 单独创建链接或复制。
 5. 写入 Satellite `.starwork/skills.json`。
-6. 在 `.core-sync.json` 中记录被挂载的 Skill 清单。
+6. 在 `.starwork/sync.json` 中记录被挂载的 Skill 清单。legacy 工作台可继续读取 `.core-sync.json`。
 
 `spawn blueprint` 需要新增字段：
 
@@ -396,7 +396,7 @@ v0.1 可以先只支持：
 - Satellite 是否存在 `.starwork/skills.json`。
 - `.starwork/skills.json` 中的挂载路径是否存在。
 - 软链接是否指向 Hub 中对应 Skill。
-- `.core-sync.json` 中的 skills 记录是否和项目 skill manifest 一致。
+- `.starwork/sync.json` 中的 skills 记录是否和项目 skill manifest 一致；legacy `.core-sync.json` 可作为兼容读取来源。
 
 JSON 输出建议新增：
 
@@ -565,7 +565,7 @@ CLI 负责执行和校验。
 
 1. Kit 自带 Skill 的声明文件放在 Kit 内 `skills/manifest.json`，还是放在 preset / workspace state 中？
 2. `starworkSpawn` 是否随 Hub Kit 直接复制进 Hub `skills/`，还是以 npm 包中的 Skill 源为只读引用？
-3. `neat-freak` 作为单项目 Kit 自带 Skill 时，是默认写入所有单项目 Kit，还是只写入 matter 型长期项目 Kit？
+3. `neat-freak` 作为单项目 Kit 自带 Skill 时，是默认写入所有单项目 Kit，还是只写入 事项 型长期项目 Kit？
 4. Hub registry 是否允许登记全局 Skill 的引用路径，还是必须先复制进 Hub？
 5. Pack 自带 Skill 初期是否随 npm 包发布，还是允许用户从 GitHub / 本地路径导入？
 6. `.agents/skills/` 是否作为所有 Agent 的通用入口长期保留？

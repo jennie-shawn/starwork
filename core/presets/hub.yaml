@@ -4,7 +4,7 @@ core: "0.1"
 profile: zh
 capabilities:
   - skill-mount
-formal_source_default: 项目/
+formal_source_default: projects/
 description: >
   面向需要建立主库 / 中枢的用户。中枢维护共享身份、教训、
-  知识、skills、项目注册表和跨项目联络机制；不直接创建卫星项目。
+  knowledge、skills、项目注册表和跨项目联络机制；不直接创建卫星项目。

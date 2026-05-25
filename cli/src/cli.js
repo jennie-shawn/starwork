@@ -6,17 +6,17 @@ const PRODUCT_ROOT = path.resolve(__dirname, "..", "..");
 const PACKAGE_VERSION = require(path.join(PRODUCT_ROOT, "package.json")).version;
 
 const WORKSPACE_TYPES = {
+  project: {
+    label: "项目工作台",
+    kit: "project",
+    defaultPack: "general",
+    description: "适合具体项目执行；可独立使用，也可由 Hub 管理。"
+  },
   "single-light": {
     label: "单事务项目",
-    kit: "local-starter",
+    kit: "project",
     defaultPack: "general",
-    description: "适合一个明确事务、一个阶段目标或一次成果交付。"
-  },
-  "single-matter": {
-    label: "多事务项目",
-    kit: "local-matter",
-    defaultPack: "general",
-    description: "适合同一项目下有多个事项需要追踪、交接和复盘。"
+    description: "兼容别名：等同于 project。"
   },
   hub: {
     label: "多项目管理中枢",
@@ -27,20 +27,45 @@ const WORKSPACE_TYPES = {
 };
 
 const SPAWN_MODES = {
-  starter: {
-    label: "轻量项目",
-    workspaceType: "satellite-starter",
-    kit: "satellite-starter",
+  project: {
+    label: "项目工作台",
+    workspaceType: "project",
+    kit: "project",
     formalSource: "输出/确认成果/",
     businessWorkArea: "参考资料/"
   },
-  matter: {
-    label: "事项型项目",
-    workspaceType: "satellite-matter",
-    kit: "satellite-matter",
+  starter: {
+    label: "轻量项目",
+    workspaceType: "project",
+    kit: "project",
     formalSource: "输出/确认成果/",
-    businessWorkArea: "事项/"
+    businessWorkArea: "参考资料/"
   }
+};
+
+const SPAWN_MODE_LANGUAGE_OVERRIDES = {
+  en: {
+    project: {
+      label: "Project workspace",
+      formalSource: "outputs/final/",
+      businessWorkArea: "references/"
+    },
+    starter: {
+      label: "Project workspace",
+      formalSource: "outputs/final/",
+      businessWorkArea: "references/"
+    }
+  }
+};
+
+const HUB_STANDARD_PATHS = {
+  projectRegistry: "projects/registry.json",
+  coordination: "projects/coordination/",
+  localHandoff: ".starwork/handoff/",
+  incoming: ".incoming/",
+  formalSkills: "skills/",
+  draftsAndExperiments: "workspace/",
+  knowledge: "knowledge/"
 };
 
 const PACK_LABELS = {
@@ -85,6 +110,21 @@ const KIT_BUNDLED_SKILLS = {
       ]
     }
   ],
+  project: [
+    {
+      id: "neat-freak",
+      name: "Neat Freak",
+      source: path.join("skills", "neat-freak"),
+      sourceKind: "kit",
+      type: "kit-bundled",
+      distribution: "copy",
+      reason: "Project Kit 自带：用于阶段性清理、收尾和归档。",
+      install: [
+        { agent: "codex", path: path.join(".agents", "skills", "neat-freak"), mode: "copy" },
+        { agent: "claude", path: path.join(".claude", "skills", "neat-freak"), mode: "copy" }
+      ]
+    }
+  ],
   "local-starter": [
     {
       id: "neat-freak",
@@ -100,21 +140,6 @@ const KIT_BUNDLED_SKILLS = {
       ]
     }
   ],
-  "local-matter": [
-    {
-      id: "neat-freak",
-      name: "Neat Freak",
-      source: path.join("skills", "neat-freak"),
-      sourceKind: "kit",
-      type: "kit-bundled",
-      distribution: "copy",
-      reason: "多事务项目 Kit 自带：用于事项收尾、项目记忆清理和归档。",
-      install: [
-        { agent: "codex", path: path.join(".agents", "skills", "neat-freak"), mode: "copy" },
-        { agent: "claude", path: path.join(".claude", "skills", "neat-freak"), mode: "copy" }
-      ]
-    }
-  ]
 };
 
 async function run(argv) {
@@ -142,6 +167,17 @@ async function run(argv) {
 
   if (command === "spawn") {
     await spawnWorkspace(argv.slice(1));
+    return;
+  }
+
+  if (command === "audit") {
+    const result = audit(argv.slice(1));
+    process.exitCode = result.exitCode;
+    return;
+  }
+
+  if (command === "repair") {
+    await repairWorkspace(argv.slice(1));
     return;
   }
 
@@ -183,10 +219,12 @@ async function init(argv) {
   }
 
   printInitIntro(options, targetDir);
-  const workspaceType = options.type || await chooseWorkspaceType(options);
+  const requestedWorkspaceType = options.type || await chooseWorkspaceType(options);
+  const workspaceType = normalizeWorkspaceType(requestedWorkspaceType);
+  warnDeprecatedWorkspaceType(requestedWorkspaceType, workspaceType);
   const workspaceConfig = WORKSPACE_TYPES[workspaceType];
   if (!workspaceConfig) {
-    throw new Error(`不支持的工作区类型：${workspaceType}`);
+    throw new Error(`不支持的工作区类型：${requestedWorkspaceType}`);
   }
 
   const language = options.language || await chooseLanguage(options);
@@ -256,12 +294,16 @@ async function spawnWorkspace(argv) {
   const targetDir = path.resolve(options.target || path.join(process.cwd(), slugifyProjectId(projectName) || "project"));
   assertSpawnTargetIsEmpty(targetDir);
 
-  const mode = options.mode || blueprint?.base?.mode || "matter";
-  const baseModeConfig = SPAWN_MODES[mode];
+  const requestedMode = options.mode || blueprint?.base?.mode || "project";
+  const mode = normalizeSpawnMode(requestedMode);
+  warnDeprecatedSpawnMode(requestedMode, mode);
+  const language = options.language || blueprint?.base?.language || hubState.language || "zh";
+  validateLanguage(language);
+  const baseModeConfig = getSpawnModeConfig(mode, language);
   if (!baseModeConfig) {
-    throw new Error(`不支持的 spawn 模式：${mode}。可选值：starter、matter。`);
+    throw new Error(`不支持的 spawn 模式：${requestedMode}。可选值：project。`);
   }
-  validateSpawnBlueprintForMode(blueprint, mode, baseModeConfig);
+  validateSpawnBlueprintForMode(blueprint, requestedMode, mode, baseModeConfig);
   const modeConfig = applySpawnBlueprintModeConfig(baseModeConfig, blueprint);
 
   const status = options.status || "active";
@@ -278,6 +320,7 @@ async function spawnWorkspace(argv) {
     projectId,
     status,
     mode,
+    language,
     modeConfig,
     blueprint
   });
@@ -292,7 +335,246 @@ async function spawnWorkspace(argv) {
   console.log("");
   console.log("下一步建议：");
   console.log(`1. 运行 starwork doctor --target ${plan.targetDir}`);
-  console.log("2. 打开 _系统/上下文/当前项目.md，补充项目目标和近期重点。");
+  const rolePaths = getCoreRolePaths({ workspace_type: modeConfig.workspaceType, kit: modeConfig.kit, language });
+  console.log(`2. 打开 ${rolePaths.projectStatus}，补充项目目标和近期重点。`);
+}
+
+function audit(argv) {
+  const options = parseArgs(argv);
+  if (options.help) {
+    printAuditHelp();
+    return { exitCode: 0 };
+  }
+  const result = collectAuditResult(options);
+  if (options.json) {
+    console.log(JSON.stringify(auditPublicResult(result), null, 2));
+  } else {
+    printAuditResult(result);
+  }
+  return result;
+}
+
+function collectAuditResult(options = {}) {
+  const hubTarget = path.resolve(options.hub || process.cwd());
+  const result = {
+    schema: "starwork.audit.result.v0.1",
+    ok: false,
+    strict_ok: false,
+    hub: {
+      path: hubTarget,
+      ok: false,
+      workspace: null,
+      doctor: null
+    },
+    registry: {
+      path: null,
+      ok: false,
+      projects_total: 0,
+      duplicate_ids: [],
+      missing_paths: []
+    },
+    summary: {
+      projects_total: 0,
+      projects_checked: 0,
+      projects_reachable: 0,
+      pass: 0,
+      info: 0,
+      warn: 0,
+      fail: 0
+    },
+    projects: [],
+    checks: [],
+    exitCode: 1
+  };
+
+  let hubRoot;
+  try {
+    hubRoot = resolveHubRoot(hubTarget);
+  } catch (error) {
+    auditAddCheck(result, "hub.workspace.exists", "fail", error.message, hubTarget);
+    return finalizeAuditResult(result, options);
+  }
+  result.hub.path = hubRoot;
+
+  let hubState;
+  try {
+    hubState = readWorkspaceState(hubRoot);
+  } catch (error) {
+    auditAddCheck(result, "hub.workspace_state.parse", "fail", error.message, ".starwork/workspace.json");
+    return finalizeAuditResult(result, options);
+  }
+  result.hub.workspace = {
+    core: hubState.core || null,
+    workspace_type: hubState.workspace_type || null,
+    kit: hubState.kit || null,
+    language: hubState.language || null
+  };
+  if (hubState.workspace_type === "hub" && hubState.kit === "hub") {
+    auditAddCheck(result, "hub.workspace_type", "pass", "Hub workspace state is valid", ".starwork/workspace.json");
+  } else {
+    auditAddCheck(result, "hub.workspace_type", "fail", "audit 必须从 Hub 工作台执行。", ".starwork/workspace.json");
+    return finalizeAuditResult(result, options);
+  }
+
+  const hubDoctor = doctorCollect(hubRoot);
+  result.hub.doctor = {
+    ok: hubDoctor.ok,
+    summary: hubDoctor.summary
+  };
+  result.hub.ok = hubDoctor.ok;
+  auditAddCheck(result, "hub.doctor", hubDoctor.ok ? "pass" : "fail", hubDoctor.ok ? "Hub doctor passed" : "Hub doctor has blocking issues", hubRoot);
+
+  const hubPaths = getHubPaths(hubState);
+  const registryRelativePath = hubPaths.projectRegistry;
+  result.registry.path = registryRelativePath;
+  const registryPath = path.join(hubRoot, registryRelativePath);
+  const registryRead = readProjectRegistryTolerant(registryPath);
+  if (!registryRead.ok) {
+    auditAddCheck(result, "registry.parse", "fail", registryRead.error, registryRelativePath);
+    return finalizeAuditResult(result, options);
+  }
+  result.registry.ok = true;
+  const allProjects = Array.isArray(registryRead.registry.projects) ? registryRead.registry.projects : [];
+  result.registry.projects_total = allProjects.length;
+  result.summary.projects_total = allProjects.length;
+  const duplicateIds = findDuplicateProjectIds(allProjects);
+  result.registry.duplicate_ids = duplicateIds;
+  if (duplicateIds.length) {
+    auditAddCheck(result, "registry.duplicate_ids", "fail", `项目 ID 重复：${duplicateIds.join(", ")}`, registryRelativePath);
+  } else {
+    auditAddCheck(result, "registry.duplicate_ids", "pass", "No duplicate project ids", registryRelativePath);
+  }
+
+  const projects = options.project
+    ? allProjects.filter((project) => getRegistryProjectId(project) === options.project)
+    : allProjects;
+  if (options.project && projects.length === 0) {
+    auditAddCheck(result, "registry.project.exists", "fail", `Hub registry 中不存在项目：${options.project}`, registryRelativePath);
+    return finalizeAuditResult(result, options);
+  }
+
+  for (const project of projects) {
+    result.projects.push(collectAuditProjectResult({ hubRoot, hubState, registryProject: project, options }));
+  }
+
+  result.summary.projects_checked = result.projects.length;
+  result.summary.projects_reachable = result.projects.filter((project) => project.reachable).length;
+  for (const project of result.projects) {
+    for (const check of project.checks) {
+      if (result.summary[check.level] != null) result.summary[check.level] += 1;
+    }
+  }
+  return finalizeAuditResult(result, options);
+}
+
+function collectAuditProjectResult({ hubRoot, registryProject, options }) {
+  const projectId = getRegistryProjectId(registryProject);
+  const projectPath = registryProject?.path ? path.resolve(registryProject.path) : null;
+  const result = {
+    project_id: projectId || null,
+    name: registryProject?.name || projectId || null,
+    status: registryProject?.status || "unknown",
+    path: projectPath,
+    reachable: false,
+    workspace_type: null,
+    kit: null,
+    language: null,
+    doctor_ok: false,
+    sync_ok: false,
+    checks: [],
+    legacy_signals: []
+  };
+  if (!projectId) {
+    auditAddProjectCheck(result, "registry.project_id.exists", "fail", "项目记录缺少 id。");
+  }
+  if (!projectPath) {
+    auditAddProjectCheck(result, "satellite.path.exists", "fail", "项目记录缺少 path。");
+    return result;
+  }
+  if (!fs.existsSync(projectPath) || !fs.statSync(projectPath).isDirectory()) {
+    auditAddProjectCheck(result, "satellite.path.exists", "fail", `Satellite path 不存在或不是目录：${projectPath}`, projectPath);
+    return result;
+  }
+  result.reachable = true;
+  auditAddProjectCheck(result, "satellite.path.exists", "pass", "Satellite path exists", projectPath);
+
+  let state;
+  try {
+    state = readWorkspaceState(projectPath);
+  } catch (error) {
+    auditAddProjectCheck(result, "satellite.workspace_state.parse", "fail", error.message, ".starwork/workspace.json");
+    return result;
+  }
+  result.workspace_type = state.workspace_type || null;
+  result.kit = state.kit || null;
+  result.language = state.language || "zh";
+  if (state.workspace_type === "project" && state.kit === "project" && state.hub?.project_id) {
+    auditAddProjectCheck(result, "satellite.binding.exists", "pass", "Project has Hub binding", ".starwork/workspace.json");
+  } else if (state.workspace_type === "satellite-starter") {
+    result.legacy_signals.push(state.workspace_type);
+    auditAddProjectCheck(result, "satellite.legacy_type", "warn", `检测到兼容期旧 Satellite 类型：${state.workspace_type}`, ".starwork/workspace.json");
+  } else {
+    auditAddProjectCheck(result, "satellite.binding.exists", "fail", "正式 Satellite 应为 project workspace 且带 hub binding。", ".starwork/workspace.json");
+  }
+  if (state.hub?.project_id === projectId) {
+    auditAddProjectCheck(result, "satellite.project_id.match", "pass", "Hub project id matches registry", ".starwork/workspace.json");
+  } else {
+    auditAddProjectCheck(result, "satellite.project_id.match", "warn", "Satellite hub.project_id 与 registry id 不一致。", ".starwork/workspace.json");
+  }
+  if (state.hub?.path && path.resolve(state.hub.path) === path.resolve(hubRoot)) {
+    auditAddProjectCheck(result, "satellite.hub_path.match", "pass", "Hub path matches", ".starwork/workspace.json");
+  } else {
+    auditAddProjectCheck(result, "satellite.hub_path.match", "warn", "Satellite hub.path 未指向当前 Hub。", ".starwork/workspace.json");
+  }
+
+  const sync = readSyncState(projectPath);
+  if (sync.ok && sync.data?.project_id === projectId && sync.data?.hub_path && path.resolve(sync.data.hub_path) === path.resolve(hubRoot)) {
+    result.sync_ok = true;
+    auditAddProjectCheck(result, "satellite.sync.match", "pass", `Sync metadata matches (${sync.source})`, sync.source);
+  } else {
+    auditAddProjectCheck(result, "satellite.sync.match", "warn", sync.ok ? "同步元数据与 Hub registry 不一致。" : sync.error, sync.source || ".starwork/sync.json");
+  }
+
+  const doctor = doctorCollect(projectPath);
+  result.doctor_ok = doctor.ok;
+  auditAddProjectCheck(result, "satellite.doctor", doctor.ok ? "pass" : "fail", doctor.ok ? "Satellite doctor passed" : "Satellite doctor has blocking issues", projectPath);
+  result.doctor = {
+    ok: doctor.ok,
+    summary: doctor.summary
+  };
+
+  const satellitePaths = getSatellitePaths(result.language);
+  checkAuditProjectPath(result, projectPath, satellitePaths.knowledge, "satellite.knowledge.exists", "Knowledge entry exists");
+  checkAuditProjectPath(result, projectPath, ".starwork/handoff/state.json", "satellite.handoff.exists", "Local handoff state exists");
+  if (fs.existsSync(path.join(projectPath, "_系统", "跨项目")) || fs.existsSync(path.join(projectPath, "_system", "cross-project"))) {
+    result.legacy_signals.push("legacy-local-handoff");
+    auditAddProjectCheck(result, "satellite.legacy_handoff", "warn", "检测到旧跨项目本地联络路径。", "_系统/跨项目");
+  }
+  return result;
+}
+
+function repairWorkspace(argv) {
+  const options = parseArgs(argv);
+  if (options.help) {
+    printRepairHelp();
+    return;
+  }
+  if (!options.blueprint) {
+    throw new Error("repair 需要 --blueprint <repair-blueprint.json>。");
+  }
+  const blueprint = loadRepairBlueprint(options.blueprint);
+  const plan = buildRepairPlan(blueprint);
+  if (options.json) {
+    console.log(JSON.stringify(repairPlanResult(plan, options.dryRun), null, 2));
+  } else {
+    printGenericPlan(options.dryRun ? "Repair dry run：" : "Repair 计划：", plan.actions);
+  }
+  if (options.dryRun) return;
+  return confirmOrThrow(options, "是否按 repair blueprint 执行修复？").then(() => {
+    applyPlan(plan);
+    console.log("");
+    console.log("StarWork repair 已执行。建议重新运行 starwork audit。");
+  });
 }
 
 function parseArgs(argv) {
@@ -319,6 +601,8 @@ function parseArgs(argv) {
       options.agent = readValue(argv, ++i, arg);
     } else if (arg === "--hub") {
       options.hub = readValue(argv, ++i, arg);
+    } else if (arg === "--project") {
+      options.project = readValue(argv, ++i, arg);
     } else if (arg === "--blueprint") {
       options.blueprint = readValue(argv, ++i, arg);
     } else if (arg === "--mode") {
@@ -858,7 +1142,7 @@ function buildAdaptPlan({ workspaceRoot, state, agents }) {
   for (const agent of agents) {
     const config = ADAPTERS[agent];
     if (!config.path) continue;
-    actions.push(fileAction(workspaceRoot, config.path, renderAdapterContent(agent, state)));
+    actions.push(overwriteFileAction(workspaceRoot, config.path, renderAdapterContent(agent, state)));
   }
 
   const nextState = {
@@ -968,14 +1252,14 @@ function loadUpgradeBlueprint(blueprintPath) {
   const workspaceType = blueprint.base.workspace_type;
   const kit = blueprint.base.kit;
   const allowedKits = {
+    project: "project",
     "single-light": "local-starter",
-    "single-matter": "local-matter",
     hub: "hub"
   };
   if (!allowedKits[workspaceType]) {
-    throw new Error("upgrade blueprint base.workspace_type 只支持 single-light、single-matter 或 hub。");
+    throw new Error("upgrade blueprint base.workspace_type 只支持 project、hub 或 single-light 兼容别名。");
   }
-  if (kit !== allowedKits[workspaceType]) {
+  if (normalizeKitId(kit) !== normalizeKitId(allowedKits[workspaceType])) {
     throw new Error(`upgrade blueprint base.kit (${kit}) 与 ${workspaceType} 不匹配，应为 ${allowedKits[workspaceType]}。`);
   }
   if (Object.hasOwn(blueprint.base, "pack") && blueprint.base.pack !== null && typeof blueprint.base.pack !== "string") {
@@ -1139,8 +1423,7 @@ function isHubPreserveNamesUpgradeState(state) {
 
 function isHubPreserveNamesKitFile(relativePath) {
   return relativePath === "AGENTS.md"
-    || relativePath === "README.md"
-    || relativePath.startsWith("_系统/");
+    || relativePath === "README.md";
 }
 
 function buildUpgradeAgentRuleAction(targetDir, kitDir, blueprint, action, variables) {
@@ -1248,10 +1531,10 @@ function checkWorkspaceState(result, state) {
     addCheck(result, "workspace.state.core", "fail", "workspace core 必须兼容 0.1。", ".starwork/workspace.json");
   }
 
-  if (["single-light", "single-matter", "hub", "satellite-starter", "satellite-matter"].includes(state.workspace_type)) {
+  if (["project", "hub", "single-light", "satellite-starter"].includes(state.workspace_type)) {
     addCheck(result, "workspace.state.type", "pass", `workspace_type is ${state.workspace_type}`, ".starwork/workspace.json");
   } else {
-    addCheck(result, "workspace.state.type", "fail", "workspace_type 必须是 single-light、single-matter、hub、satellite-starter 或 satellite-matter。", ".starwork/workspace.json");
+    addCheck(result, "workspace.state.type", "fail", "workspace_type 必须是 project、hub 或 single-light / satellite-starter 兼容别名。", ".starwork/workspace.json");
   }
 
   if (state.kit) {
@@ -1296,11 +1579,10 @@ function checkKit(result, workspaceRoot, state) {
   addCheck(result, "kit.source.exists", "pass", `Kit source exists: ${state.kit}`);
 
   const allowedKits = {
+    project: ["project"],
     "single-light": ["local-starter"],
-    "single-matter": ["local-matter"],
     hub: ["hub"],
-    "satellite-starter": ["satellite-starter"],
-    "satellite-matter": ["satellite-matter"]
+    "satellite-starter": ["satellite-starter"]
   };
   const allowed = allowedKits[state.workspace_type];
   if (allowed && allowed.includes(state.kit)) {
@@ -1314,7 +1596,10 @@ function checkKit(result, workspaceRoot, state) {
     : walkFiles(kitDir);
   const missing = [];
   for (const source of files) {
-    const relativePath = path.relative(kitDir, source);
+    const sourceRelativePath = normalizeRelativePath(path.relative(kitDir, source));
+    const relativePath = state.kit === "project" || state.kit?.startsWith("satellite-")
+      ? mapKitRelativePathForLanguage(sourceRelativePath, state.language || "zh")
+      : sourceRelativePath;
     if (!fs.existsSync(path.join(workspaceRoot, relativePath))) {
       missing.push(relativePath);
     }
@@ -1329,6 +1614,11 @@ function checkKit(result, workspaceRoot, state) {
 function checkCoreRoles(result, workspaceRoot, state) {
   checkPathExists(result, workspaceRoot, "AGENTS.md", "core.entry_rules.exists", "Agent entry rules exist", "缺少 Agent 入口规则 AGENTS.md。");
 
+  if (state.workspace_type === "hub") {
+    checkHubCoreRoles(result, workspaceRoot, state);
+    return;
+  }
+
   const rolePaths = getCoreRolePaths(state);
   checkPathExists(result, workspaceRoot, rolePaths.projectStatus, "core.project_status.exists", "Project status exists", "缺少项目状态文件。");
   checkPathExists(result, workspaceRoot, rolePaths.currentWork, "core.current_work.exists", "Current work exists", "缺少当前工作入口文件。");
@@ -1342,12 +1632,42 @@ function checkCoreRoles(result, workspaceRoot, state) {
   }
 }
 
+function checkHubCoreRoles(result, workspaceRoot, state) {
+  if (isHubPreserveNamesUpgradeState(state)) {
+    if (state.paths?.formal_source) {
+      checkPathExists(result, workspaceRoot, state.paths.formal_source, "hub.formal_source.exists", "Hub formal source exists", "缺少 Hub 正式事实源。");
+    }
+    if (state.paths?.business_work_area) {
+      checkPathExists(result, workspaceRoot, state.paths.business_work_area, "hub.business_work_area.exists", "Hub business work area exists", "缺少 Hub 当前协调工作区。");
+    }
+    return;
+  }
+  const hubPaths = getHubPaths(state);
+  checkPathExists(result, workspaceRoot, hubPaths.projectRegistry, "hub.project_registry.exists", "Hub project registry exists", "缺少 Hub 项目注册表。");
+  checkPathExists(result, workspaceRoot, hubPaths.coordination, "hub.coordination.exists", "Hub coordination layer exists", "缺少 Hub 跨项目协调层。");
+  checkPathExists(result, workspaceRoot, hubPaths.localHandoff, "hub.local_handoff.exists", "Hub local handoff queue exists", "缺少 Hub 本地收发队列。");
+  checkPathExists(result, workspaceRoot, hubPaths.incoming, "hub.incoming.exists", "Hub incoming review queue exists", "缺少 Hub 回写待审区。");
+  checkPathExists(result, workspaceRoot, "identity", "hub.identity.exists", "Hub identity source exists", "缺少 Hub identity/。");
+  checkPathExists(result, workspaceRoot, "lessons", "hub.lessons.exists", "Hub lessons source exists", "缺少 Hub lessons/。");
+  checkPathExists(result, workspaceRoot, hubPaths.knowledge, "hub.knowledge.exists", "Hub knowledge source exists", "缺少 Hub knowledge/。");
+  checkPathExists(result, workspaceRoot, path.join(hubPaths.formalSkills, "registry.json"), "hub.skills_registry.exists", "Hub skill registry exists", "缺少 Hub skills/registry.json。");
+  checkPathExists(result, workspaceRoot, hubPaths.draftsAndExperiments, "hub.workspace.exists", "Hub workspace exists", "缺少 Hub workspace/。");
+}
+
 function getCoreRolePaths(state) {
   const kit = state.kit || "";
-  if (kit.startsWith("satellite-")) {
+  const language = state.language || "zh";
+  if (kit === "project" || kit.startsWith("satellite-") || state.hub) {
+    const satellitePaths = getSatellitePaths(language);
     return {
-      projectStatus: "_系统/上下文/当前项目.md",
-      currentWork: "_系统/任务/当前工作.md"
+      projectStatus: satellitePaths.projectStatus,
+      currentWork: satellitePaths.currentWork
+    };
+  }
+  if (language === "en") {
+    return {
+      projectStatus: "_system/context/project-status.md",
+      currentWork: "_system/tasks/current-work.md"
     };
   }
   return {
@@ -1380,7 +1700,7 @@ function checkPackInstallations(result, workspaceRoot, state) {
       addCheck(result, "pack.core.compatible", "fail", `Pack ${installedPack.id} 不兼容 Core ${state.core || "(missing)"}。`);
     }
 
-    if (pack.supports_workspace_types?.includes(state.workspace_type)) {
+    if (packSupportsWorkspaceType(pack, state.workspace_type)) {
       addCheck(result, "pack.workspace_type.supported", "pass", `${installedPack.id} supports ${state.workspace_type}`);
     } else {
       addCheck(result, "pack.workspace_type.supported", "fail", `Pack ${installedPack.id} 不支持工作区类型 ${state.workspace_type || "(missing)"}。`);
@@ -1983,7 +2303,7 @@ function detectLegacyWorkspace(dir, signals = null) {
   ].filter(Boolean).length;
   const candidate = signalCount >= 2 || ((references.length > 0 || signalReferences.length > 0) && (outputs.length > 0 || signalOutputs.length > 0));
   const language = inferLegacyLanguage(found);
-  const workspaceType = hasHubLikeRepository ? "hub" : hasMatters || signalMatters.length > 0 ? "single-matter" : "single-light";
+  const workspaceType = hasHubLikeRepository ? "hub" : "project";
   const reasons = buildLegacyReasons({
     found,
     signalReferences,
@@ -2053,9 +2373,7 @@ function buildLegacyReasons({
 
   const workspaceTypeReasons = workspaceType === "hub"
     ? hubSignals.map((item) => `${item} 表示存在主库或多项目中枢结构`)
-    : workspaceType === "single-matter"
-      ? [...found.matters, ...signalMatters].map((item) => `${item} 表示存在事项或多事务推进结构`)
-      : ["未检测到事项目录，暂按单事务工作区候选处理"];
+    : ["按 Project 工作台候选处理；事项目录只作为历史内容信号，不再决定工作区类型。"];
 
   return {
     language: uniqueList(languageReasons),
@@ -2230,13 +2548,30 @@ function readValue(argv, index, flag) {
 
 async function chooseWorkspaceType(options) {
   if (options.yes || !process.stdin.isTTY) {
-    return "single-light";
+    return "project";
   }
   return choose("第 1 步：你要创建哪种工作台？", [
-    ["single-light", "单事务项目（推荐）：一个明确目标，资料、草稿、成果分开即可"],
-    ["single-matter", "多事务项目（进阶）：同一项目里有多个事项，需要推进、交接和复盘"],
+    ["project", "项目工作台（推荐）：具体项目执行，资料、草稿、成果分开"],
     ["hub", "多项目管理中枢：统一维护身份、教训、知识、skills 和项目登记"]
   ], { defaultIndex: 0 });
+}
+
+function normalizeWorkspaceType(workspaceType) {
+  if (workspaceType === "single-light") return "project";
+  return workspaceType;
+}
+
+function normalizeWorkspaceTypeForSupport(workspaceType) {
+  if (["project", "single-light", "satellite-starter"].includes(workspaceType)) {
+    return "project";
+  }
+  return workspaceType;
+}
+
+function warnDeprecatedWorkspaceType(requested, normalized) {
+  if (requested && requested !== normalized) {
+    console.warn(`提示：${requested} 已进入兼容期，本次按 ${normalized} 工作台处理。`);
+  }
 }
 
 async function choosePack(workspaceType, workspaceConfig, options) {
@@ -2273,7 +2608,7 @@ async function chooseLanguage(options) {
   }
   return choose("第 2 步：工作台使用哪种语言？", [
     ["zh", "中文（推荐）：目录、规则和 Pack 内容使用中文"],
-    ["en", "English：Pack 内容使用英文；当前 Core Kit 仍以中文结构为主"]
+    ["en", "English：目录、规则和 Pack 内容使用英文镜像"]
   ], { defaultIndex: 0 });
 }
 
@@ -2403,7 +2738,16 @@ function buildInitPlan({ targetDir, workspaceName, workspaceType, workspaceConfi
     language: pack.language || "zh",
     paths: {
       formal_source: formalSource,
-      business_work_area: pack.overrides?.business_work_area || formalSource
+      business_work_area: pack.overrides?.business_work_area || formalSource,
+      ...(workspaceType === "hub" ? {
+        project_registry: HUB_STANDARD_PATHS.projectRegistry,
+        coordination: HUB_STANDARD_PATHS.coordination,
+        local_handoff: HUB_STANDARD_PATHS.localHandoff,
+        incoming: HUB_STANDARD_PATHS.incoming,
+        formal_skills: HUB_STANDARD_PATHS.formalSkills,
+        drafts_and_experiments: HUB_STANDARD_PATHS.draftsAndExperiments,
+        knowledge: HUB_STANDARD_PATHS.knowledge
+      } : {})
     },
     created_by: "starwork init"
   };
@@ -2617,18 +2961,31 @@ function assertHealthyHub(hubRoot, hubState) {
   if (health.summary.fail > 0) {
     throw new Error("Hub 工作台未通过 doctor 检查，请先修复阻塞问题。");
   }
+  const hubPaths = getHubPaths(hubState);
   const required = [
-    "项目/registry.json",
+    hubPaths.projectRegistry,
     "identity",
     "lessons",
-    "skills",
-    "知识"
+    hubPaths.formalSkills,
+    hubPaths.knowledge
   ];
   for (const relativePath of required) {
     if (!fs.existsSync(path.join(hubRoot, relativePath))) {
       throw new Error(`Hub 缺少必要资源：${relativePath}`);
     }
   }
+}
+
+function getHubPaths(hubState = {}) {
+  return {
+    projectRegistry: hubState.paths?.project_registry || HUB_STANDARD_PATHS.projectRegistry,
+    coordination: hubState.paths?.coordination || HUB_STANDARD_PATHS.coordination,
+    localHandoff: hubState.paths?.local_handoff || HUB_STANDARD_PATHS.localHandoff,
+    incoming: hubState.paths?.incoming || HUB_STANDARD_PATHS.incoming,
+    formalSkills: hubState.paths?.formal_skills || HUB_STANDARD_PATHS.formalSkills,
+    draftsAndExperiments: hubState.paths?.drafts_and_experiments || HUB_STANDARD_PATHS.draftsAndExperiments,
+    knowledge: hubState.paths?.knowledge || HUB_STANDARD_PATHS.knowledge
+  };
 }
 
 function assertSpawnTargetIsEmpty(targetDir) {
@@ -2663,8 +3020,8 @@ function loadSpawnBlueprint(blueprintPath) {
   if (!blueprint.base || typeof blueprint.base !== "object") {
     throw new Error("blueprint 缺少 base 配置。");
   }
-  if (blueprint.base.language && blueprint.base.language !== "zh") {
-    throw new Error("spawn blueprint v0.1 只支持 language=zh。");
+  if (blueprint.base.language && !["zh", "en"].includes(blueprint.base.language)) {
+    throw new Error("spawn blueprint v0.1 只支持 language=zh 或 language=en。");
   }
   return {
     ...blueprint,
@@ -2673,12 +3030,15 @@ function loadSpawnBlueprint(blueprintPath) {
   };
 }
 
-function validateSpawnBlueprintForMode(blueprint, mode, modeConfig) {
+function validateSpawnBlueprintForMode(blueprint, requestedMode, mode, modeConfig) {
   if (!blueprint) return;
-  if (blueprint.base.mode && blueprint.base.mode !== mode) {
-    throw new Error(`blueprint base.mode (${blueprint.base.mode}) 与本次 spawn 模式 (${mode}) 不一致。`);
+  if (blueprint.base.mode && normalizeSpawnMode(blueprint.base.mode) !== mode) {
+    throw new Error(`blueprint base.mode (${blueprint.base.mode}) 与本次 spawn 模式 (${requestedMode}) 不一致。`);
   }
-  if (blueprint.base.kit && blueprint.base.kit !== modeConfig.kit) {
+  if (blueprint.base.language && blueprint.base.language !== modeConfig.language) {
+    throw new Error(`blueprint base.language (${blueprint.base.language}) 与本次 spawn 语言 (${modeConfig.language}) 不一致。`);
+  }
+  if (blueprint.base.kit && normalizeKitId(blueprint.base.kit) !== modeConfig.kit) {
     throw new Error(`blueprint base.kit (${blueprint.base.kit}) 与模式 ${mode} 的 Kit (${modeConfig.kit}) 不匹配。`);
   }
   if (blueprint.renames && Object.keys(blueprint.renames).length > 0) {
@@ -2720,6 +3080,32 @@ function validateSpawnBlueprintForMode(blueprint, mode, modeConfig) {
   }
 }
 
+function normalizeSpawnMode(mode) {
+  if (!mode || mode === "starter") return "project";
+  return mode;
+}
+
+function normalizeKitId(kit) {
+  if (["local-starter", "satellite-starter"].includes(kit)) return "project";
+  return kit;
+}
+
+function warnDeprecatedSpawnMode(requested, normalized) {
+  if (requested && requested !== normalized) {
+    console.warn(`提示：spawn --mode ${requested} 已进入兼容期，本次按 ${normalized} 项目工作台处理。`);
+  }
+}
+
+function getSpawnModeConfig(mode, language = "zh") {
+  const base = SPAWN_MODES[mode];
+  if (!base) return null;
+  return {
+    ...base,
+    language,
+    ...(SPAWN_MODE_LANGUAGE_OVERRIDES[language]?.[mode] || {})
+  };
+}
+
 function applySpawnBlueprintModeConfig(modeConfig, blueprint) {
   if (!blueprint) return modeConfig;
   return {
@@ -2729,13 +3115,15 @@ function applySpawnBlueprintModeConfig(modeConfig, blueprint) {
   };
 }
 
-function buildSpawnPlan({ hubRoot, hubState, targetDir, projectName, projectId, status, mode, modeConfig, blueprint }) {
+function buildSpawnPlan({ hubRoot, hubState, targetDir, projectName, projectId, status, mode, language, modeConfig, blueprint }) {
   const kitDir = path.join(PRODUCT_ROOT, "core", "kits", modeConfig.kit);
   if (!fs.existsSync(kitDir)) {
     throw new Error(`找不到 Kit：${modeConfig.kit}`);
   }
 
-  const registryPath = path.join(hubRoot, "项目", "registry.json");
+  const hubPaths = getHubPaths(hubState);
+  const satellitePaths = getSatellitePaths(language);
+  const registryPath = path.join(hubRoot, hubPaths.projectRegistry);
   const registry = readProjectRegistry(registryPath);
   const targetPath = path.resolve(targetDir);
   ensureProjectCanBeRegistered(registry, projectId, targetPath);
@@ -2744,15 +3132,18 @@ function buildSpawnPlan({ hubRoot, hubState, targetDir, projectName, projectId, 
   const actions = [];
 
   for (const source of walkFiles(kitDir)) {
-    const relativePath = path.relative(kitDir, source);
-    if (shouldSpawnOverrideKitFile(relativePath)) continue;
+    const sourceRelativePath = normalizeRelativePath(path.relative(kitDir, source));
+    if (shouldSpawnOverrideKitFile(sourceRelativePath)) continue;
+    const relativePath = mapKitRelativePathForLanguage(sourceRelativePath, language);
     let content = fs.readFileSync(source, "utf8");
+    content = renderSatelliteKitContent(relativePath, content, { language, mode, modeConfig });
     if (normalizeRelativePath(relativePath) === "AGENTS.md") {
       content = appendBlueprintRulesToAgents(content, blueprint, {
         projectName,
         projectId,
         mode,
-        modeConfig
+        modeConfig,
+        language
       });
     }
     actions.push(fileAction(targetDir, relativePath, content));
@@ -2768,20 +3159,21 @@ function buildSpawnPlan({ hubRoot, hubState, targetDir, projectName, projectId, 
       projectName,
       projectId,
       mode,
-      modeConfig
+      modeConfig,
+      language
     }));
   }
 
-  actions.push(...copyDirectoryFiles(hubRoot, "identity", targetDir, path.join("_系统", "身份")));
-  actions.push(...copyDirectoryFiles(hubRoot, "lessons", targetDir, path.join("_系统", "教训")));
+  actions.push(...copyDirectoryFiles(hubRoot, "identity", targetDir, satellitePaths.identity));
+  actions.push(...copyDirectoryFiles(hubRoot, "lessons", targetDir, satellitePaths.lessons));
   if (fs.existsSync(path.join(hubRoot, ".internal"))) {
-    actions.push(...copyDirectoryFiles(hubRoot, ".internal", targetDir, ".internal"));
+    actions.push(...copyDirectoryFiles(hubRoot, ".internal", targetDir, path.join(".starwork", "internal")));
   }
   if (fs.existsSync(path.join(hubRoot, ".obsidian"))) {
     actions.push(...copyDirectoryFiles(hubRoot, ".obsidian", targetDir, ".obsidian"));
   }
 
-  actions.push(symlinkAction(targetDir, "知识", path.join(hubRoot, "知识")));
+  actions.push(symlinkAction(targetDir, satellitePaths.knowledge, path.join(hubRoot, hubPaths.knowledge)));
   actions.push(directoryAction(targetDir, path.join(".agents", "skills")));
   actions.push(directoryAction(targetDir, path.join(".claude", "skills")));
   const skillPlan = buildSpawnSkillPlan({
@@ -2799,7 +3191,7 @@ function buildSpawnPlan({ hubRoot, hubState, targetDir, projectName, projectId, 
     workspace_type: modeConfig.workspaceType,
     kit: modeConfig.kit,
     packs: [],
-    language: hubState.language || "zh",
+    language,
     paths: {
       formal_source: modeConfig.formalSource,
       business_work_area: modeConfig.businessWorkArea
@@ -2839,17 +3231,17 @@ function buildSpawnPlan({ hubRoot, hubState, targetDir, projectName, projectId, 
     resources: {
       identity: {
         source: "identity/",
-        target: "_系统/身份/",
+        target: satellitePaths.identity,
         mode: "snapshot"
       },
       lessons: {
         source: "lessons/",
-        target: "_系统/教训/",
+        target: satellitePaths.lessons,
         mode: "snapshot"
       },
       knowledge: {
-        source: "知识/",
-        target: "知识/",
+        source: hubPaths.knowledge,
+        target: satellitePaths.knowledge,
         mode: "readonly-link"
       },
       skills: {
@@ -2864,15 +3256,26 @@ function buildSpawnPlan({ hubRoot, hubState, targetDir, projectName, projectId, 
       }
     }
   };
+  const runtimeSync = {
+    ...coreSync,
+    schema: "starwork.sync.v0.1",
+    legacy_mirror: ".core-sync.json"
+  };
+  const legacyCoreSync = {
+    ...coreSync,
+    legacy_of: ".starwork/sync.json"
+  };
 
   actions.push(fileAction(targetDir, path.join(".starwork", "workspace.json"), `${JSON.stringify(workspaceState, null, 2)}\n`));
   actions.push(fileAction(targetDir, path.join(".starwork", "skills.json"), renderProjectSkillsManifest(skillPlan.records)));
-  actions.push(fileAction(targetDir, ".core-sync.json", `${JSON.stringify(coreSync, null, 2)}\n`));
-  actions.push(fileAction(targetDir, path.join("_系统", "上下文", "当前项目.md"), renderSpawnProjectStatus({
+  actions.push(fileAction(targetDir, path.join(".starwork", "sync.json"), `${JSON.stringify(runtimeSync, null, 2)}\n`));
+  actions.push(fileAction(targetDir, ".core-sync.json", `${JSON.stringify(legacyCoreSync, null, 2)}\n`));
+  actions.push(fileAction(targetDir, satellitePaths.projectStatus, renderSpawnProjectStatus({
     projectName,
     projectId,
     hubRoot,
     mode,
+    language,
     modeConfig,
     blueprint
   })));
@@ -2902,7 +3305,7 @@ function buildSpawnPlan({ hubRoot, hubState, targetDir, projectName, projectId, 
       }
     ]
   };
-  actions.push(overwriteFileAction(hubRoot, path.join("项目", "registry.json"), `${JSON.stringify(nextRegistry, null, 2)}\n`));
+  actions.push(overwriteFileAction(hubRoot, hubPaths.projectRegistry, `${JSON.stringify(nextRegistry, null, 2)}\n`));
 
   return {
     hubRoot,
@@ -2911,6 +3314,7 @@ function buildSpawnPlan({ hubRoot, hubState, targetDir, projectName, projectId, 
     projectId,
     status,
     mode,
+    language,
     modeLabel: modeConfig.label,
     kit: modeConfig.kit,
     blueprint,
@@ -2926,6 +3330,163 @@ function shouldSpawnOverrideKitFile(relativePath) {
     || normalized.startsWith("_系统/身份/")
     || normalized.startsWith("_系统/教训/")
     || normalized.startsWith("知识/");
+}
+
+function getSatellitePaths(language = "zh") {
+  if (language === "en") {
+    return {
+      projectStatus: "_system/context/current-project.md",
+      currentWork: "_system/tasks/current-work.md",
+      identity: "_system/identity",
+      lessons: "_system/lessons",
+      mainRepoSync: "_system/main-repo-sync",
+      knowledge: "knowledge",
+      references: "references",
+      outputDrafts: "outputs/drafts",
+      outputFinal: "outputs/final"
+    };
+  }
+  return {
+    projectStatus: "_系统/上下文/当前项目.md",
+    currentWork: "_系统/任务/当前工作.md",
+    identity: "_系统/身份",
+    lessons: "_系统/教训",
+    mainRepoSync: "_系统/主库同步",
+    knowledge: "知识",
+    references: "参考资料",
+    outputDrafts: "输出/草稿",
+    outputFinal: "输出/确认成果"
+  };
+}
+
+function mapKitRelativePathForLanguage(relativePath, language = "zh") {
+  const normalized = normalizeRelativePath(relativePath);
+  if (language !== "en") return normalized;
+  return normalized
+    .split("/")
+    .map((segment) => ({
+      "_系统": "_system",
+      "上下文": "context",
+      "任务": "tasks",
+      "身份": "identity",
+      "教训": "lessons",
+      "主库同步": "main-repo-sync",
+      "当前项目.md": "current-project.md",
+      "决策.md": "decisions.md",
+      "当前工作.md": "current-work.md",
+      "知识": "knowledge",
+      "参考资料": "references",
+      "输出": "outputs",
+      "草稿": "drafts",
+      "确认成果": "final"
+    })[segment] || segment)
+    .join("/");
+}
+
+function renderSatelliteKitContent(relativePath, content, { language, mode, modeConfig }) {
+  if (language !== "en") return content;
+  const normalized = normalizeRelativePath(relativePath);
+  if (normalized === "AGENTS.md") {
+    return renderEnglishSatelliteAgents(mode);
+  }
+  if (normalized === "README.md") {
+    return renderEnglishSatelliteReadme(mode, modeConfig);
+  }
+  if (normalized === "_system/main-repo-sync/README.md") {
+    return renderEnglishMainRepoSyncReadme();
+  }
+  if (normalized === "knowledge/README.md") {
+    return "# Knowledge\n\nThis path should be a read-only link to the Hub `knowledge/` directory.\n\nDo not edit shared knowledge directly inside a satellite project. Submit reusable knowledge candidates through the Hub review flow.\n";
+  }
+  if (normalized === "references/README.md") {
+    return "# References\n\nStore source materials and reference files for this project here.\n";
+  }
+  if (normalized === "outputs/drafts/README.md") {
+    return "# Drafts\n\nStore AI drafts and working drafts here.\n";
+  }
+  if (normalized === "outputs/final/README.md") {
+    return "# Final Outputs\n\nStore user-approved outputs and confirmed deliverables here, unless this project declares another formal source of truth.\n";
+  }
+  if (normalized === "_system/tasks/current-work.md") {
+    return "# Current Work\n\n## Now\n\n- Fill in the current focus.\n\n## Next\n\n- Run `starwork doctor` after initialization.\n";
+  }
+  if (normalized === "_system/context/decisions.md") {
+    return "# Decisions\n\nOnly record high-impact decisions that change project direction, structure, ownership, or irreversible commitments.\n";
+  }
+  if (normalized === "_system/identity/README.md") {
+    return "# Identity\n\nThis folder contains Hub identity snapshots or project-local identity candidates. Treat Hub identity as read-only by default.\n";
+  }
+  if (normalized === "_system/lessons/README.md") {
+    return "# Lessons\n\nThis folder contains Hub lessons snapshots and project-local reusable lesson candidates.\n";
+  }
+  return content;
+}
+
+function renderEnglishSatelliteAgents(mode) {
+  return `# StarWork Workspace Rules
+
+## Read First
+
+1. \`_system/context/current-project.md\`
+2. \`_system/tasks/current-work.md\`
+3. When shared Hub resources, skills, or cross-project coordination are involved, read \`_system/main-repo-sync/README.md\`
+
+## Write Boundaries
+
+- Project status belongs in \`_system/context/current-project.md\`.
+- Current work belongs in \`_system/tasks/current-work.md\`.
+- Identity belongs in \`_system/identity/\` and is read-only by default.
+- Lessons belong in \`_system/lessons/\`.
+- Shared knowledge is mounted at \`knowledge/\` and is read-only by default.
+- Source materials belong in \`references/\`.
+- AI drafts belong in \`outputs/drafts/\`.
+- User-approved outputs belong in the project-declared formal source of truth.
+- Local cross-project inbox, outbox, sent, and archived records live in \`.starwork/handoff/\`.
+- Hub central routing lives in \`projects/coordination/\`.
+
+## Confirmation Required
+
+- Changing identity, lessons, shared knowledge, or Hub sync content.
+- Promoting drafts into the formal source of truth.
+`;
+}
+
+function renderEnglishSatelliteReadme(mode, modeConfig) {
+  return `# StarWork Project Kit
+
+Preset: \`${modeConfig.kit}\`
+
+This is a project workspace. It can be used independently or connected to a Hub as a Satellite Project.
+
+## Includes
+
+- \`_system/context/current-project.md\`
+- \`_system/tasks/current-work.md\`
+- \`_system/main-repo-sync/\`
+- \`.starwork/handoff/\`
+- \`knowledge/\`
+- \`references/\`
+- \`outputs/\`
+When connected to a Hub, shared identity, lessons, knowledge, skills, and project registration come from the Hub. This project keeps its own work, drafts, and confirmed outputs.
+`;
+}
+
+function renderEnglishMainRepoSyncReadme() {
+  return `# Hub Sync
+
+This folder explains the relationship between this satellite project and its Hub.
+
+The Hub is not a parent work folder and should not receive project progress bodies. This project keeps its own status, current work, references, drafts, and final outputs.
+
+| Local path | Source | Rule |
+|---|---|---|
+| \`_system/identity/\` | Hub \`identity/\` | Read-only by default. |
+| \`_system/lessons/\` | Hub \`lessons/\` | Project candidates may be reviewed before Hub merge. |
+| \`.internal/\` | Hub internal protocols | Stable protocol snapshot. |
+| \`knowledge/\` | Hub \`knowledge/\` | Read-only link. |
+| \`.agents/skills/\` and \`.claude/skills/\` | Hub or kit skills | Selected mounts only. |
+| \`.starwork/handoff/\` | This project | Local cross-project inbox and outbox. |
+`;
 }
 
 function appendBlueprintRulesToAgents(content, blueprint, variables) {
@@ -3006,6 +3567,258 @@ function readProjectRegistry(registryPath) {
   }
 }
 
+function readProjectRegistryTolerant(registryPath) {
+  try {
+    return { ok: true, registry: readProjectRegistry(registryPath) };
+  } catch (error) {
+    return { ok: false, error: error.message };
+  }
+}
+
+function getRegistryProjectId(project) {
+  return project?.id || project?.project_id || null;
+}
+
+function findDuplicateProjectIds(projects) {
+  const seen = new Set();
+  const duplicates = new Set();
+  for (const project of projects) {
+    const id = getRegistryProjectId(project);
+    if (!id) continue;
+    if (seen.has(id)) duplicates.add(id);
+    seen.add(id);
+  }
+  return [...duplicates];
+}
+
+function auditAddCheck(result, id, level, message, trace) {
+  result.checks.push({ id, level, message, ...(trace ? { trace } : {}) });
+  if (result.summary?.[level] != null) result.summary[level] += 1;
+}
+
+function auditAddProjectCheck(project, id, level, message, trace) {
+  project.checks.push({ id, level, message, ...(trace ? { trace } : {}) });
+}
+
+function finalizeAuditResult(result, options = {}) {
+  result.ok = result.summary.fail === 0 && result.projects.every((project) => !project.checks.some((check) => check.level === "fail"));
+  result.strict_ok = result.ok && (options.strict ? result.summary.warn === 0 && result.projects.every((project) => !project.checks.some((check) => check.level === "warn")) : true);
+  result.exitCode = result.strict_ok ? 0 : 1;
+  return result;
+}
+
+function auditPublicResult(result) {
+  return {
+    schema: result.schema,
+    ok: result.ok,
+    strict_ok: result.strict_ok,
+    hub: result.hub,
+    registry: result.registry,
+    summary: result.summary,
+    projects: result.projects,
+    checks: result.checks
+  };
+}
+
+function printAuditResult(result) {
+  console.log("");
+  console.log("StarWork Audit");
+  console.log("");
+  console.log(`Hub: ${result.hub.path}`);
+  console.log(`Projects: ${result.summary.projects_checked}/${result.summary.projects_total}`);
+  for (const project of result.projects) {
+    const fails = project.checks.filter((check) => check.level === "fail").length;
+    const warns = project.checks.filter((check) => check.level === "warn").length;
+    const label = fails ? "fail" : warns ? "warn" : "pass";
+    console.log(`- [${label}] ${project.project_id || "(missing id)"} ${project.path || ""}`);
+  }
+  console.log("");
+  console.log(result.ok ? "Audit passed." : "Audit found blocking issues.");
+}
+
+function checkAuditProjectPath(result, projectRoot, relativePath, id, passMessage) {
+  if (fs.existsSync(path.join(projectRoot, relativePath))) {
+    auditAddProjectCheck(result, id, "pass", passMessage, relativePath);
+  } else {
+    auditAddProjectCheck(result, id, "warn", `缺少 ${relativePath}。`, relativePath);
+  }
+}
+
+function readSyncState(workspaceRoot) {
+  const runtimePath = path.join(workspaceRoot, ".starwork", "sync.json");
+  const legacyPath = path.join(workspaceRoot, ".core-sync.json");
+  const source = fs.existsSync(runtimePath) ? ".starwork/sync.json" : fs.existsSync(legacyPath) ? ".core-sync.json" : null;
+  if (!source) return { ok: false, error: "缺少同步元数据。", source: ".starwork/sync.json" };
+  try {
+    const filePath = source === ".starwork/sync.json" ? runtimePath : legacyPath;
+    return { ok: true, source, data: JSON.parse(fs.readFileSync(filePath, "utf8")) };
+  } catch (error) {
+    return { ok: false, source, error: `无法解析同步元数据：${error.message}` };
+  }
+}
+
+function loadRepairBlueprint(blueprintPath) {
+  const filePath = path.resolve(blueprintPath);
+  let blueprint;
+  try {
+    blueprint = JSON.parse(fs.readFileSync(filePath, "utf8"));
+  } catch (error) {
+    throw new Error(`无法读取 repair blueprint：${error.message}`);
+  }
+  if (blueprint.schema !== "starwork.repair_blueprint.v0.1") {
+    throw new Error("repair blueprint schema 必须是 starwork.repair_blueprint.v0.1。");
+  }
+  if (!blueprint.source?.hub) {
+    throw new Error("repair blueprint 缺少 source.hub。");
+  }
+  if (!Array.isArray(blueprint.actions) || blueprint.actions.length === 0) {
+    throw new Error("repair blueprint 必须包含 actions。");
+  }
+  return {
+    ...blueprint,
+    __path: filePath,
+    __dir: path.dirname(filePath)
+  };
+}
+
+function buildRepairPlan(blueprint) {
+  const hubRoot = requireWorkspaceRoot(path.resolve(blueprint.source.hub));
+  const hubState = readWorkspaceState(hubRoot);
+  if (hubState.workspace_type !== "hub") {
+    throw new Error("repair blueprint source.hub 必须指向 Hub 工作台。");
+  }
+  const hubPaths = getHubPaths(hubState);
+  const registryPath = path.join(hubRoot, hubPaths.projectRegistry);
+  const registry = readProjectRegistry(registryPath);
+  const projectMap = new Map((registry.projects || []).map((project) => [getRegistryProjectId(project), project]));
+  const actions = [];
+  let nextRegistry = registry;
+
+  for (const action of blueprint.actions) {
+    if (!action?.type) throw new Error("repair action 缺少 type。");
+    if (action.target === "satellite" && !action.project_id) {
+      throw new Error(`repair action ${action.type} 写入 satellite 时必须包含 project_id。`);
+    }
+    const targetRoot = resolveRepairTargetRoot({ hubRoot, projectMap, action });
+    if (action.type === "ensure_dir") {
+      actions.push(directoryAction(targetRoot, normalizeSafeRelativePath(action.path, "repair ensure_dir.path")));
+    } else if (action.type === "write_file_if_missing") {
+      const relativePath = normalizeSafeRelativePath(action.path, "repair write_file_if_missing.path");
+      const target = path.join(targetRoot, relativePath);
+      actions.push(fs.existsSync(target)
+        ? { type: "file", mode: "skip", target, relativePath, content: action.content || "" }
+        : strictFileAction(targetRoot, relativePath, action.content || ""));
+    } else if (action.type === "rewrite_core_sync") {
+      const project = projectMap.get(action.project_id);
+      const projectRoot = path.resolve(project.path);
+      const state = readWorkspaceState(projectRoot);
+      const sync = renderCoreSyncForProject({ hubRoot, hubState, project, projectId: action.project_id, language: state.language || "zh" });
+      actions.push(overwriteFileAction(projectRoot, path.join(".starwork", "sync.json"), `${JSON.stringify({ ...sync, schema: "starwork.sync.v0.1", legacy_mirror: ".core-sync.json" }, null, 2)}\n`));
+      actions.push(overwriteFileAction(projectRoot, ".core-sync.json", `${JSON.stringify({ ...sync, legacy_of: ".starwork/sync.json" }, null, 2)}\n`));
+    } else if (action.type === "update_hub_registry") {
+      nextRegistry = patchProjectRegistry(nextRegistry, action.project_id, action.patch || {});
+    } else if (action.type === "update_workspace_state") {
+      const current = readWorkspaceState(targetRoot);
+      const patched = applyDottedPatch(current, action.patch || {}, allowedWorkspaceStateRepairPaths());
+      actions.push(overwriteFileAction(targetRoot, path.join(".starwork", "workspace.json"), `${JSON.stringify(patched, null, 2)}\n`));
+    } else {
+      throw new Error(`repair blueprint 暂不支持 action.type：${action.type}`);
+    }
+  }
+  if (nextRegistry !== registry) {
+    actions.push(overwriteFileAction(hubRoot, hubPaths.projectRegistry, `${JSON.stringify(nextRegistry, null, 2)}\n`));
+  }
+  return { hubRoot, actions: dedupeActions(actions) };
+}
+
+function resolveRepairTargetRoot({ hubRoot, projectMap, action }) {
+  if (action.target === "hub" || !action.target) return hubRoot;
+  if (action.target !== "satellite") throw new Error(`repair action target 不支持：${action.target}`);
+  const project = projectMap.get(action.project_id);
+  if (!project?.path) throw new Error(`Hub registry 中不存在项目或路径：${action.project_id}`);
+  const projectRoot = path.resolve(project.path);
+  if (!fs.existsSync(projectRoot)) throw new Error(`项目路径不存在：${projectRoot}`);
+  return projectRoot;
+}
+
+function renderCoreSyncForProject({ hubRoot, hubState, project, projectId, language }) {
+  const paths = getSatellitePaths(language);
+  const hubPaths = getHubPaths(hubState);
+  return {
+    schema: "starwork.core_sync.v0.1",
+    hub_path: hubRoot,
+    project_id: projectId,
+    project_name: project.name || projectId,
+    core: "0.1",
+    mode: "project",
+    created_at: project.created_at || new Date().toISOString(),
+    last_sync_at: new Date().toISOString(),
+    resources: {
+      identity: { source: "identity/", target: paths.identity, mode: "snapshot" },
+      lessons: { source: "lessons/", target: paths.lessons, mode: "snapshot" },
+      knowledge: { source: hubPaths.knowledge, target: paths.knowledge, mode: "readonly-link" },
+      skills: { source: "skills/registry.json", target: [".agents/skills/", ".claude/skills/"], mode: "selected", items: [] }
+    }
+  };
+}
+
+function patchProjectRegistry(registry, projectId, patch) {
+  const allowed = new Set(["path", "status", "name", "updated_at", "metadata"]);
+  return {
+    ...registry,
+    projects: (registry.projects || []).map((project) => {
+      if (getRegistryProjectId(project) !== projectId) return project;
+      const next = { ...project };
+      for (const [key, value] of Object.entries(patch)) {
+        if (!allowed.has(key)) throw new Error(`update_hub_registry 不允许修改字段：${key}`);
+        next[key] = value;
+      }
+      return next;
+    })
+  };
+}
+
+function applyDottedPatch(object, patch, allowed) {
+  const next = JSON.parse(JSON.stringify(object));
+  for (const [key, value] of Object.entries(patch)) {
+    if (!allowed.some((prefix) => key === prefix || key.startsWith(`${prefix}.`))) {
+      throw new Error(`update_workspace_state 不允许修改字段：${key}`);
+    }
+    const parts = key.split(".");
+    let cursor = next;
+    for (let i = 0; i < parts.length - 1; i += 1) {
+      cursor[parts[i]] = cursor[parts[i]] && typeof cursor[parts[i]] === "object" ? cursor[parts[i]] : {};
+      cursor = cursor[parts[i]];
+    }
+    cursor[parts[parts.length - 1]] = value;
+  }
+  return next;
+}
+
+function allowedWorkspaceStateRepairPaths() {
+  return ["workspace_type", "kit", "hub", "paths", "language", "capabilities", "repair"];
+}
+
+function repairPlanResult(plan, dryRun) {
+  return {
+    schema: "starwork.repair.result.v0.1",
+    dry_run: Boolean(dryRun),
+    hub: plan.hubRoot,
+    summary: {
+      actions_total: plan.actions.length,
+      planned: plan.actions.length,
+      applied: dryRun ? 0 : plan.actions.length,
+      skipped: plan.actions.filter((action) => action.mode === "skip" || action.mode === "exists").length,
+      failed: 0
+    },
+    actions: plan.actions.map((action) => ({
+      type: action.type,
+      mode: action.mode,
+      path: action.relativePath
+    }))
+  };
+}
+
 function ensureProjectCanBeRegistered(registry, projectId, targetPath) {
   const projects = Array.isArray(registry.projects) ? registry.projects : [];
   if (projects.some((project) => project?.id === projectId)) {
@@ -3016,7 +3829,56 @@ function ensureProjectCanBeRegistered(registry, projectId, targetPath) {
   }
 }
 
-function renderSpawnProjectStatus({ projectName, projectId, hubRoot, mode, modeConfig, blueprint }) {
+function renderSpawnProjectStatus({ projectName, projectId, hubRoot, mode, language, modeConfig, blueprint }) {
+  if (language === "en") {
+    const description = blueprint?.description
+      ? `\n## Project Positioning\n\n${blueprint.description}\n`
+      : "";
+    const customization = blueprint
+      ? `\n## Workspace Customization\n\n- Blueprint: ${path.basename(blueprint.__path)}\n- Formal source: \`${modeConfig.formalSource}\`\n- Business work area: \`${modeConfig.businessWorkArea}\`\n- Custom folders: ${(blueprint.folders || []).map((folder) => `\`${normalizeSafeRelativePath(folder, "blueprint.folders")}\``).join(", ") || "None"}\n`
+      : "";
+    return `# Current Project
+
+## Project Goal
+
+${projectName}
+${description}
+
+## Project Info
+
+- Project ID: ${projectId}
+- Workspace type: ${modeConfig.workspaceType}
+- Kit: ${modeConfig.kit}
+- Mode: ${mode}
+- Hub: ${hubRoot}
+${customization}
+
+## Current Stage
+
+Created by \`starwork spawn\`; project goal, near-term focus, and execution boundaries still need to be filled in.
+
+## Near-Term Focus
+
+- Fill in the project goal.
+- Confirm formal source: \`${modeConfig.formalSource}\`.
+- Confirm business work area: \`${modeConfig.businessWorkArea}\`.
+- Confirm current work entry: \`_system/tasks/current-work.md\`.
+
+## Key Risks
+
+- Do not treat the Hub project registry as project progress.
+- Hub sync resources are read-only by default; project updates should use handoff or writeback flows.
+
+## Formal Source
+
+\`${modeConfig.formalSource}\`
+
+## Next
+
+- Run \`starwork doctor\`.
+- Update this file based on the actual project.
+`;
+  }
   const description = blueprint?.description
     ? `\n## 项目定位\n\n${blueprint.description}\n`
     : "";
@@ -3355,12 +4217,17 @@ function mergePackLanguage(basePack, languagePack, requestedLanguage) {
 }
 
 function validatePack(pack, workspaceType) {
-  if (!pack.supports_workspace_types?.includes(workspaceType)) {
+  if (!packSupportsWorkspaceType(pack, workspaceType)) {
     throw new Error(`Pack ${pack.id} 不支持工作区类型 ${workspaceType}。`);
   }
   if (!pack.paths || Object.keys(pack.paths).length === 0) {
     throw new Error(`Pack ${pack.id} 缺少语言化路径配置。`);
   }
+}
+
+function packSupportsWorkspaceType(pack, workspaceType) {
+  const supported = pack.supports_workspace_types || [];
+  return supported.includes(workspaceType) || supported.includes(normalizeWorkspaceTypeForSupport(workspaceType));
 }
 
 function renderPackRules(pack, variables) {
@@ -3550,6 +4417,7 @@ function printSpawnPlan(plan, dryRun) {
   console.log(`项目 ID：${plan.projectId}`);
   console.log(`目标目录：${plan.targetDir}`);
   console.log(`模式：${plan.modeLabel} (${plan.mode})`);
+  console.log(`语言：${plan.language}`);
   console.log(`Kit：${plan.kit}`);
   if (plan.skills?.length) {
     console.log(`分发 Skill：${plan.skills.map((skill) => skill.id).join(", ")}`);
@@ -3706,7 +4574,7 @@ function findWorkspaceRoot(startDir) {
 }
 
 function getKitDefaultFormalSource(kit) {
-  if (kit === "hub") return "项目/";
+  if (kit === "hub") return "projects/";
   return "输出/确认成果/";
 }
 
@@ -3721,20 +4589,22 @@ Usage:
   starwork <command> [options]
 
 Commands:
-  init             创建单项目工作台或多项目 Hub。
+  init             创建项目工作台或多项目 Hub。
   doctor           检查工作台或历史模板目录，并输出事实。
   spawn            从健康 Hub 生成新的项目工作台。
+  audit            从 Hub 巡检已登记项目。
+  repair           执行由 starworkAudit 生成的修复 blueprint。
   upgrade          执行由 skill 生成的升级 blueprint。
   adapt            生成轻量 Agent 适配入口。
   pack install     向健康工作台安装兼容 Pack。
   multiagent       管理多 Agent 职责位、会话绑定和共享索引。
 
 常用开始：
-  starwork init --type single-light --pack general --language zh --target ./my-workspace --yes
+  starwork init --type project --pack general --language zh --target ./my-workspace --yes
   starwork init --type hub --language zh --target ./my-hub --yes
   starwork doctor --target ./my-workspace
   starwork multiagent init --lanes research,writing,review --target ./my-workspace --yes
-  starwork spawn --hub ./my-hub --name "New Project" --target ./new-project --mode matter --yes
+  starwork spawn --hub ./my-hub --name "New Project" --target ./new-project --yes
 
 全局选项：
   --help, -h       查看帮助。
@@ -3744,6 +4614,8 @@ Commands:
   starwork init --help
   starwork doctor --help
   starwork spawn --help
+  starwork audit --help
+  starwork repair --help
   starwork upgrade --help
   starwork adapt --help
   starwork pack install --help
@@ -3765,7 +4637,7 @@ Usage:
 Hub 工作台使用 hub-management Pack。
 
 Options:
-  --type <single-light|single-matter|hub>
+  --type <project|hub>
   --pack <general|content-creator|hub-management|path>
   --language <zh|en>
   --name <name>
@@ -3776,9 +4648,9 @@ Options:
   --yes, -y
 
 示例：
-  starwork init --type single-light --pack general --language zh --target ./my-workspace --yes
+  starwork init --type project --pack general --language zh --target ./my-workspace --yes
   starwork init --type hub --language zh --target ./my-hub --yes
-  starwork init --type single-matter --pack general --target ./complex-project --dry-run
+  starwork init --type single-light --pack general --target ./legacy-alias --dry-run
 `);
 }
 
@@ -3794,15 +4666,57 @@ Options:
   --blueprint <path>
   --name <name>
   --target <path>
-  --mode <starter|matter>
+  --mode <project>
+  --language <zh|en>
   --id <project-id>
   --status <active|paused>
   --dry-run
   --yes, -y
 
 示例：
-  starwork spawn --hub ./my-hub --name "New Project" --target ./new-project --mode matter --yes
+  starwork spawn --hub ./my-hub --name "New Project" --target ./new-project --language zh --yes
+  starwork spawn --hub ./my-hub --name "English Project" --target ./en-project --language en --yes
   starwork spawn --hub ./my-hub --target ./new-project --blueprint ./blueprint.json --dry-run
+`);
+}
+
+function printAuditHelp() {
+  console.log(`StarWork Audit
+
+Usage:
+  starwork audit [options]
+
+Options:
+  --hub <path>
+  --project <project-id>
+  --json
+  --strict
+  --inventory-depth <number|all>
+  --inventory-limit <number>
+  --help
+
+示例：
+  starwork audit --hub ./my-hub --json
+  starwork audit --hub ./my-hub --project content-site
+`);
+}
+
+function printRepairHelp() {
+  console.log(`StarWork Repair
+
+Usage:
+  starwork repair --blueprint <repair-blueprint.json> [options]
+
+Options:
+  --blueprint <path>
+  --dry-run
+  --json
+  --yes, -y
+  --help
+
+示例：
+  starwork repair --blueprint ./repair-blueprint.json --dry-run
+  starwork repair --blueprint ./repair-blueprint.json --yes
 `);
 }
 

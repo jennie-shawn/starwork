@@ -81,8 +81,8 @@ test("creates a single-light workspace with general pack", () => {
 
   const state = readJson(path.join(dir, ".starwork", "workspace.json"));
   const skills = readJson(path.join(dir, ".starwork", "skills.json"));
-  assert.equal(state.workspace_type, "single-light");
-  assert.equal(state.kit, "local-starter");
+  assert.equal(state.workspace_type, "project");
+  assert.equal(state.kit, "project");
   assert.equal(state.packs[0].id, "general");
   assert.equal(skills.skills[0].id, "neat-freak");
   assert.equal(skills.skills[0].source.kind, "kit");
@@ -93,19 +93,27 @@ test("creates a single-light workspace with general pack", () => {
   assert.equal(fs.existsSync(path.join(dir, "_系统", "教训", "README.md")), true);
 });
 
-test("creates a single-matter workspace with content creator pack", () => {
+test("creates a project workspace with content creator pack", () => {
   const dir = tempDir();
-  runInit(["--type", "single-matter", "--pack", "content-creator", "--target", dir, "--yes"]);
+  runInit(["--type", "project", "--pack", "content-creator", "--target", dir, "--yes"]);
 
   const state = readJson(path.join(dir, ".starwork", "workspace.json"));
   const agents = fs.readFileSync(path.join(dir, "AGENTS.md"), "utf8");
-  assert.equal(state.workspace_type, "single-matter");
+  assert.equal(state.workspace_type, "project");
   assert.equal(state.packs[0].id, "content-creator");
   assert.equal(state.paths.formal_source, "发布记录/");
   assert.match(agents, /自媒体内容生产流/);
-  assert.equal(fs.existsSync(path.join(dir, "事项", "注册表.md")), true);
+  assert.equal(fs.existsSync(path.join(dir, "事项", "注册表.md")), false);
   assert.equal(fs.existsSync(path.join(dir, "发布记录", "README.md")), true);
   assert.equal(fs.existsSync(path.join(dir, ".starwork", "packs", "content-creator", "templates", "content-brief.md")), true);
+});
+
+test("init rejects removed matter workspace type", () => {
+  const dir = tempDir();
+  const result = runCommand(["init", "--type", "single-matter", "--target", dir, "--yes"]);
+
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /不支持的工作区类型：single-matter/);
 });
 
 test("creates a hub workspace with hub management pack", () => {
@@ -121,8 +129,10 @@ test("creates a hub workspace with hub management pack", () => {
   assert.equal(skills.skills[0].source.kind, "kit");
   assert.equal(fs.existsSync(path.join(dir, "skills", "starworkSpawn", "SKILL.md")), true);
   assert.equal(fs.existsSync(path.join(dir, "skills", "registry.json")), true);
-  assert.equal(fs.existsSync(path.join(dir, "项目", "registry.json")), true);
-  assert.equal(fs.existsSync(path.join(dir, "知识", "README.md")), true);
+  assert.equal(fs.existsSync(path.join(dir, "projects", "registry.json")), true);
+  assert.equal(fs.existsSync(path.join(dir, "knowledge", "README.md")), true);
+  assert.equal(fs.existsSync(path.join(dir, ".starwork", "handoff", "state.json")), true);
+  assert.equal(fs.existsSync(path.join(dir, "_系统")), false);
   assert.equal(fs.existsSync(path.join(dir, ".incoming", "README.md")), true);
 });
 
@@ -146,16 +156,16 @@ test("doctor passes on a single-light workspace with general pack", () => {
   assert.match(result.stdout, /Workspace is healthy/);
 });
 
-test("doctor passes on a single-matter workspace with content creator pack", () => {
+test("doctor passes on a project workspace with content creator pack", () => {
   const dir = tempDir();
-  runInit(["--type", "single-matter", "--pack", "content-creator", "--target", dir, "--yes"]);
+  runInit(["--type", "project", "--pack", "content-creator", "--target", dir, "--yes"]);
 
   const result = runDoctor(["--target", dir, "--json"]);
   const report = JSON.parse(result.stdout);
 
   assert.equal(result.status, 0);
   assert.equal(report.ok, true);
-  assert.equal(report.workspace.workspace_type, "single-matter");
+  assert.equal(report.workspace.workspace_type, "project");
   assert.deepEqual(report.workspace.packs, ["content-creator"]);
 });
 
@@ -254,31 +264,43 @@ test("multiagent status infers workspace for legacy registries", () => {
   assert.equal(report.lanes[0].workspace, "lanes/legacy/workspace");
 });
 
-test("spawn creates a matter project from a hub", () => {
+test("spawn creates a project from a hub", () => {
   const hub = tempDir();
   const target = tempDir();
   runInit(["--type", "hub", "--target", hub, "--yes"]);
 
-  const spawn = runCommand(["spawn", "--hub", hub, "--name", "Content Site", "--id", "content-site", "--target", target, "--mode", "matter", "--yes"]);
+  const spawn = runCommand(["spawn", "--hub", hub, "--name", "Content Site", "--id", "content-site", "--target", target, "--mode", "project", "--yes"]);
   const state = readJson(path.join(target, ".starwork", "workspace.json"));
   const sync = readJson(path.join(target, ".core-sync.json"));
   const skills = readJson(path.join(target, ".starwork", "skills.json"));
-  const registry = readJson(path.join(hub, "项目", "registry.json"));
+  const registry = readJson(path.join(hub, "projects", "registry.json"));
   const doctor = runDoctor(["--target", target, "--json"]);
   const report = JSON.parse(doctor.stdout);
 
   assert.equal(spawn.status, 0);
-  assert.equal(state.workspace_type, "satellite-matter");
-  assert.equal(state.kit, "satellite-matter");
+  assert.equal(state.workspace_type, "project");
+  assert.equal(state.kit, "project");
   assert.equal(state.hub.project_id, "content-site");
   assert.equal(sync.project_id, "content-site");
   assert.equal(registry.projects[0].id, "content-site");
   assert.equal(registry.projects[0].path, path.resolve(target));
   assert.equal(fs.lstatSync(path.join(target, "知识")).isSymbolicLink(), true);
+  assert.equal(fs.existsSync(path.join(target, ".starwork", "handoff", "state.json")), true);
   assert.equal(fs.lstatSync(path.join(target, ".agents", "skills")).isDirectory(), true);
-  assert.deepEqual(skills.skills, []);
+  assert(skills.skills.some((skill) => skill.id === "neat-freak"));
   assert.equal(sync.resources.skills.mode, "selected");
   assert.equal(doctor.status, 0);
+});
+
+test("spawn rejects removed matter mode", () => {
+  const hub = tempDir();
+  const target = tempDir();
+  runInit(["--type", "hub", "--target", hub, "--yes"]);
+
+  const spawn = runCommand(["spawn", "--hub", hub, "--name", "Old Matter", "--target", target, "--mode", "matter", "--yes"]);
+
+  assert.equal(spawn.status, 1);
+  assert.match(spawn.stderr, /不支持的 spawn 模式：matter/);
 });
 
 test("spawn creates a starter project from a hub", () => {
@@ -292,10 +314,40 @@ test("spawn creates a starter project from a hub", () => {
   const report = JSON.parse(doctor.stdout);
 
   assert.equal(spawn.status, 0);
-  assert.equal(state.workspace_type, "satellite-starter");
-  assert.equal(state.kit, "satellite-starter");
+  assert.equal(state.workspace_type, "project");
+  assert.equal(state.kit, "project");
   assert.equal(fs.existsSync(path.join(target, "事项")), false);
   assert.equal(doctor.status, 0);
+});
+
+test("spawn creates an English starter satellite from a hub", () => {
+  const hub = tempDir();
+  const target = tempDir();
+  runInit(["--type", "hub", "--language", "en", "--target", hub, "--yes"]);
+
+  const spawn = runCommand(["spawn", "--hub", hub, "--name", "English Project", "--id", "english-project", "--target", target, "--mode", "starter", "--language", "en", "--yes"]);
+  const state = readJson(path.join(target, ".starwork", "workspace.json"));
+  const sync = readJson(path.join(target, ".core-sync.json"));
+  const doctor = runDoctor(["--target", target, "--json"]);
+  const report = JSON.parse(doctor.stdout);
+
+  assert.equal(spawn.status, 0);
+  assert.equal(state.language, "en");
+  assert.equal(state.workspace_type, "project");
+  assert.equal(state.paths.formal_source, "outputs/final/");
+  assert.equal(state.paths.business_work_area, "references/");
+  assert.equal(sync.resources.identity.target, "_system/identity");
+  assert.equal(sync.resources.knowledge.target, "knowledge");
+  assert.equal(fs.existsSync(path.join(target, "_system", "context", "current-project.md")), true);
+  assert.equal(fs.existsSync(path.join(target, "_system", "tasks", "current-work.md")), true);
+  assert.equal(fs.existsSync(path.join(target, "references", "README.md")), true);
+  assert.equal(fs.existsSync(path.join(target, "outputs", "final", "README.md")), true);
+  assert.equal(fs.lstatSync(path.join(target, "knowledge")).isSymbolicLink(), true);
+  assert.equal(fs.existsSync(path.join(target, ".starwork", "handoff", "state.json")), true);
+  assert.equal(fs.existsSync(path.join(target, "_系统")), false);
+  assert.equal(fs.existsSync(path.join(target, "知识")), false);
+  assert.equal(doctor.status, 0);
+  assert.equal(report.ok, true);
 });
 
 test("spawn creates a customized project from a blueprint", () => {
@@ -313,13 +365,13 @@ test("spawn creates a customized project from a blueprint", () => {
     project_id: "blueprint-project",
     description: "用 blueprint 生成的定制项目。",
     base: {
-      mode: "matter",
-      kit: "satellite-matter",
+      mode: "project",
+      kit: "project",
       language: "zh"
     },
     paths: {
       formal_source: "交付物/确认版本/",
-      business_work_area: "事项/"
+      business_work_area: "资料库/"
     },
     folders: [
       "资料库/",
@@ -342,12 +394,12 @@ test("spawn creates a customized project from a blueprint", () => {
   const agents = fs.readFileSync(path.join(target, "AGENTS.md"), "utf8");
   const projectStatus = fs.readFileSync(path.join(target, "_系统", "上下文", "当前项目.md"), "utf8");
   const seed = fs.readFileSync(path.join(target, "会议纪要", "README.md"), "utf8");
-  const registry = readJson(path.join(hub, "项目", "registry.json"));
+  const registry = readJson(path.join(hub, "projects", "registry.json"));
   const doctor = runDoctor(["--target", target, "--json"]);
   const report = JSON.parse(doctor.stdout);
 
   assert.equal(spawn.status, 0);
-  assert.equal(state.workspace_type, "satellite-matter");
+  assert.equal(state.workspace_type, "project");
   assert.equal(state.paths.formal_source, "交付物/确认版本/");
   assert.equal(state.customization.type, "spawn_blueprint");
   assert.equal(state.customization.agent_rules[0].slot, "project.file_boundaries");
@@ -412,13 +464,13 @@ test("spawn distributes selected hub-managed skills from registry", () => {
   const report = JSON.parse(doctor.stdout);
 
   assert.equal(result.status, 0);
-  assert.equal(skills.skills[0].id, "meeting-summary");
-  assert.equal(skills.skills[0].source.kind, "hub");
-  assert.equal(skills.skills[0].distribution, "symlink");
+  const meetingSkill = skills.skills.find((skill) => skill.id === "meeting-summary");
+  assert.equal(meetingSkill.source.kind, "hub");
+  assert.equal(meetingSkill.distribution, "symlink");
   assert.equal(fs.lstatSync(path.join(target, ".agents", "skills")).isDirectory(), true);
   assert.equal(fs.lstatSync(path.join(target, ".agents", "skills", "meeting-summary")).isSymbolicLink(), true);
   assert.equal(fs.existsSync(path.join(target, ".agents", "skills", "starworkSpawn")), false);
-  assert.equal(sync.resources.skills.items[0].id, "meeting-summary");
+  assert(sync.resources.skills.items.some((item) => item.id === "meeting-summary"));
   assert.equal(doctor.status, 0);
   assert(report.skills.mounts.some((mount) => mount.id === "meeting-summary" && mount.status === "ok"));
 });
@@ -444,7 +496,7 @@ test("spawn blueprint dry-run does not write target or registry", () => {
   runInit(["--type", "hub", "--target", hub, "--yes"]);
 
   const result = runCommand(["spawn", "--hub", hub, "--target", target, "--blueprint", path.join(blueprintDir, "blueprint.json"), "--dry-run"]);
-  const registry = readJson(path.join(hub, "项目", "registry.json"));
+  const registry = readJson(path.join(hub, "projects", "registry.json"));
 
   assert.equal(result.status, 0);
   assert.match(result.stdout, /Blueprint/);
@@ -460,13 +512,13 @@ test("spawn blueprint rejects unsafe paths", () => {
     schema: "starwork.spawn_blueprint.v0.1",
     name: "Unsafe Blueprint",
     base: {
-      mode: "matter",
-      kit: "satellite-matter",
+      mode: "project",
+      kit: "project",
       language: "zh"
     },
     paths: {
       formal_source: "../escape/",
-      business_work_area: "事项/"
+      business_work_area: "参考资料/"
     }
   }, null, 2)}\n`, "utf8");
   runInit(["--type", "hub", "--target", hub, "--yes"]);
@@ -539,7 +591,7 @@ test("doctor fails when the formal source is missing", () => {
 
 test("doctor fails when pack seed is missing", () => {
   const dir = tempDir();
-  runInit(["--type", "single-matter", "--pack", "content-creator", "--target", dir, "--yes"]);
+  runInit(["--type", "project", "--pack", "content-creator", "--target", dir, "--yes"]);
   fs.rmSync(path.join(dir, "选题池", "README.md"));
 
   const result = runDoctor(["--target", dir, "--json"]);
@@ -572,7 +624,7 @@ test("doctor reports legacy signals for an English legacy template", () => {
   assert.equal(report.upgrade.candidate, true);
   assert.equal(report.upgrade.source, "legacy-template");
   assert.equal(report.upgrade.inferred.language, "en");
-  assert.equal(report.upgrade.inferred.workspace_type, "single-light");
+  assert.equal(report.upgrade.inferred.workspace_type, "project");
   assert.equal(Object.hasOwn(report.upgrade.inferred, "pack"), false);
   assert.equal(Object.hasOwn(report.upgrade, "next_steps"), false);
   assert.deepEqual(report.upgrade.inferred.references, ["references"]);
@@ -606,7 +658,7 @@ test("doctor exposes inventory and semantic signals for non-standard legacy fold
   assert.equal(report.upgrade.candidate, true);
 });
 
-test("doctor reports legacy signals for a Chinese matter legacy template", () => {
+test("doctor reports legacy signals for a Chinese legacy template with matter folder", () => {
   const dir = tempDir();
   fs.mkdirSync(path.join(dir, "_系统", "身份"), { recursive: true });
   fs.mkdirSync(path.join(dir, "事项"), { recursive: true });
@@ -617,7 +669,7 @@ test("doctor reports legacy signals for a Chinese matter legacy template", () =>
 
   assert.equal(result.status, 1);
   assert.match(result.stdout, /历史模板候选/);
-  assert.match(result.stdout, /推测类型：single-matter/);
+  assert.match(result.stdout, /推测类型：project/);
   assert.match(result.stdout, /推测语言：zh/);
   assert.match(result.stdout, /候选信号，不是迁移方案/);
   assert.match(result.stdout, /starworkDoctor/);
@@ -684,15 +736,15 @@ test("upgrade applies a blueprint and keeps existing files", () => {
       core_fit: "medium"
     },
     base: {
-      workspace_type: "single-matter",
-      kit: "local-matter",
+      workspace_type: "project",
+      kit: "project",
       language: "zh",
       pack: "general"
     },
     strategy: "preserve-names",
     paths: {
       formal_source: "成稿/",
-      business_work_area: "事项/"
+      business_work_area: "资料库/"
     },
     core_role_mapping: [
       { role: "references", path: "资料库/", confidence: "high", reason: "用户确认" },
@@ -704,10 +756,10 @@ test("upgrade applies a blueprint and keeps existing files", () => {
       { type: "copy_kit_missing_files" },
       { type: "inject_agent_rules", target: "AGENTS.md", from: "rules/core-boundaries.md", slot: "upgrade.core_boundaries" }
     ],
-    preserve: ["资料库/", "成稿/", "事项/"],
+    preserve: ["资料库/", "成稿/"],
     verification: {
       run_doctor_after: true,
-      expected_workspace_type: "single-matter"
+      expected_workspace_type: "project"
     }
   }, null, 2)}\n`, "utf8");
 
@@ -718,15 +770,15 @@ test("upgrade applies a blueprint and keeps existing files", () => {
   const report = JSON.parse(doctor.stdout);
 
   assert.equal(result.status, 0);
-  assert.equal(state.workspace_type, "single-matter");
-  assert.equal(state.kit, "local-matter");
+  assert.equal(state.workspace_type, "project");
+  assert.equal(state.kit, "project");
   assert.equal(state.paths.formal_source, "成稿/");
-  assert.equal(state.paths.business_work_area, "事项/");
+  assert.equal(state.paths.business_work_area, "资料库/");
   assert.equal(state.upgrade.type, "upgrade_blueprint");
   assert.match(agents, /Keep me/);
   assert.match(agents, /StarWork Upgrade: upgrade\.core_boundaries/);
   assert.match(agents, /正式成果：成稿\//);
-  assert.equal(fs.existsSync(path.join(dir, "_系统", "上下文", "项目状态.md")), true);
+  assert.equal(fs.existsSync(path.join(dir, "_系统", "上下文", "当前项目.md")), true);
   assert.equal(doctor.status, 0);
   assert.equal(report.ok, true);
 });
@@ -998,4 +1050,72 @@ test("pack install skips already installed packs", () => {
 
   assert.equal(result.status, 0);
   assert.match(result.stdout, /已安装/);
+});
+
+test("audit checks a healthy hub and project satellite", () => {
+  const hub = tempDir();
+  const target = tempDir();
+  runInit(["--type", "hub", "--target", hub, "--yes"]);
+  runCommand(["spawn", "--hub", hub, "--name", "Audit Project", "--id", "audit-project", "--target", target, "--yes"]);
+
+  const result = runCommand(["audit", "--hub", hub, "--json"]);
+  const report = JSON.parse(result.stdout);
+
+  assert.equal(result.status, 0);
+  assert.equal(report.schema, "starwork.audit.result.v0.1");
+  assert.equal(report.ok, true);
+  assert.equal(report.summary.projects_checked, 1);
+  assert.equal(report.projects[0].workspace_type, "project");
+  assert.equal(report.projects[0].kit, "project");
+  assert.equal(report.projects[0].sync_ok, true);
+  assert.equal(Object.hasOwn(report, "next_steps"), false);
+});
+
+test("audit reports a missing satellite path", () => {
+  const hub = tempDir();
+  const target = path.join(tempDir(), "missing-project");
+  runInit(["--type", "hub", "--target", hub, "--yes"]);
+  const registryPath = path.join(hub, "projects", "registry.json");
+  const registry = readJson(registryPath);
+  registry.projects.push({ id: "missing-project", name: "Missing Project", path: target, status: "active" });
+  fs.writeFileSync(registryPath, `${JSON.stringify(registry, null, 2)}\n`, "utf8");
+
+  const result = runCommand(["audit", "--hub", hub, "--json"]);
+  const report = JSON.parse(result.stdout);
+
+  assert.equal(result.status, 1);
+  assert.equal(report.ok, false);
+  assert.equal(report.projects[0].reachable, false);
+  assert(report.projects[0].checks.some((check) => check.id === "satellite.path.exists" && check.level === "fail"));
+});
+
+test("repair dry-run and apply can restore satellite handoff state", () => {
+  const hub = tempDir();
+  const target = tempDir();
+  const blueprintDir = tempDir();
+  runInit(["--type", "hub", "--target", hub, "--yes"]);
+  runCommand(["spawn", "--hub", hub, "--name", "Repair Project", "--id", "repair-project", "--target", target, "--yes"]);
+  fs.rmSync(path.join(target, ".starwork", "handoff"), { recursive: true, force: true });
+  const blueprintPath = path.join(blueprintDir, "repair-blueprint.json");
+  fs.writeFileSync(blueprintPath, `${JSON.stringify({
+    schema: "starwork.repair_blueprint.v0.1",
+    generated_by: "starworkAudit",
+    source: { audit_schema: "starwork.audit.result.v0.1", hub },
+    scope: { projects: ["repair-project"] },
+    actions: [
+      { type: "ensure_dir", target: "satellite", project_id: "repair-project", path: ".starwork/handoff/inbox" },
+      { type: "ensure_dir", target: "satellite", project_id: "repair-project", path: ".starwork/handoff/outbox" },
+      { type: "ensure_dir", target: "satellite", project_id: "repair-project", path: ".starwork/handoff/sent" },
+      { type: "ensure_dir", target: "satellite", project_id: "repair-project", path: ".starwork/handoff/archived" },
+      { type: "write_file_if_missing", target: "satellite", project_id: "repair-project", path: ".starwork/handoff/state.json", content: JSON.stringify({ schema: "starwork.handoff.state.v0.1" }, null, 2) + "\n" }
+    ]
+  }, null, 2)}\n`, "utf8");
+
+  const dryRun = runCommand(["repair", "--blueprint", blueprintPath, "--dry-run"]);
+  assert.equal(dryRun.status, 0);
+  assert.equal(fs.existsSync(path.join(target, ".starwork", "handoff", "state.json")), false);
+
+  const apply = runCommand(["repair", "--blueprint", blueprintPath, "--yes"]);
+  assert.equal(apply.status, 0);
+  assert.equal(fs.existsSync(path.join(target, ".starwork", "handoff", "state.json")), true);
 });

@@ -9,4 +9,4 @@ capabilities:
 formal_source_default: outputs/final/
 description: >
   A lightweight English workspace preset with local identity, local lessons,
-  and the references/outputs workflow. Matter Mode is not enabled by default.
+  and the references/outputs workflow.

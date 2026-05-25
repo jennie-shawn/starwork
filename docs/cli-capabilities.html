@@ -588,7 +588,7 @@
           </div>
           <p>把 Core Kit 和场景 Pack 组装成一个可直接使用的 StarWork 工作台。普通用户不需要理解 Kit、Profile、Capability。</p>
           <ul>
-            <li>支持单事务项目、多事务项目、多项目管理中枢。</li>
+            <li>支持单事务项目、项目工作台、多项目管理中枢。</li>
             <li>交互默认推荐单事务项目；单项目默认使用通用 Pack。</li>
             <li>写入前预览，不静默覆盖已有内容。</li>
             <li>生成 `.starwork/workspace.json`，供后续命令读取。</li>
@@ -603,12 +603,12 @@
           </div>
           <p>从健康的多项目中枢生成一个被管理的新项目工作台，并把它登记回 Hub 的项目注册表。</p>
           <ul>
-            <li>支持 <code>starter</code> 和 <code>matter</code> 两种项目模式。</li>
+            <li>支持 <code>starter</code> 和 <code>事项</code> 两种项目模式。</li>
             <li>复制 Hub 的身份和教训快照。</li>
             <li>软链接 Hub 的知识和 skills 入口。</li>
-            <li>写入 <code>.core-sync.json</code> 和 Hub <code>项目/registry.json</code>。</li>
+            <li>写入 <code>.core-sync.json</code> 和 Hub <code>projects/registry.json</code>。</li>
           </ul>
-          <pre>node cli/bin/starwork.js spawn --hub ./hub --name "新项目" --target ./project --mode matter --yes</pre>
+          <pre>node cli/bin/starwork.js spawn --hub ./hub --name "新项目" --target ./project --mode project --language zh --yes</pre>
         </article>
 
         <article class="command">
@@ -651,7 +651,7 @@
             <li>不内置固定职责，lane 由项目场景定义。</li>
             <li>使用 <code>_系统/协作/agent-lanes.md</code> 作为分工索引。</li>
             <li>使用 <code>_系统/协作/shared.md</code> 登记跨 lane 共享输出。</li>
-            <li>不写入 Matter registry，不引入任务系统或锁机制。</li>
+            <li>不写入任务系统或锁机制。</li>
           </ul>
           <pre>node cli/bin/starwork.js multiagent init --lanes research,writing,review --target ./workspace --yes</pre>
         </article>
@@ -696,7 +696,7 @@
               <h4>具备的能力</h4>
               <ul>
                 <li>识别目标目录是否已经是 StarWork 工作台。</li>
-                <li>根据 <code>--type</code> 选择 Kit：单事务项目、多事务项目、多项目中枢。</li>
+                <li>根据 <code>--type</code> 选择 Kit：单事务项目、项目工作台、多项目中枢。</li>
                 <li>根据 <code>--pack</code> 安装通用、内容创作者或中枢管理 Pack。</li>
                 <li>生成 <code>AGENTS.md</code>、系统状态文件、工作目录、Pack seed 和 templates。</li>
                 <li>写入 <code>.starwork/workspace.json</code>，作为后续命令读取的机器状态。</li>
@@ -723,13 +723,14 @@
           <div>
             <span class="mini-label">02 / 生成中枢项目</span>
             <h3><code>starwork spawn</code></h3>
-            <p>从 Hub 生成一个新项目工作台。用户面对的是“生成一个新项目”，内部使用 <code>satellite-starter</code> 或 <code>satellite-matter</code> Kit。</p>
+            <p>从 Hub 生成一个新项目工作台。用户面对的是“生成一个新项目”，内部使用 <code>satellite-starter</code> 或 <code>project</code> Kit。</p>
             <pre>node cli/bin/starwork.js spawn \
   --hub ./hub \
   --name "内容产品官网" \
   --id content-site \
   --target ./content-site \
-  --mode matter \
+  --mode project \
+  --language zh \
   --yes</pre>
           </div>
           <div class="detail-columns">
@@ -738,7 +739,7 @@
               <ul>
                 <li>检查 Hub 是否健康，且必须是 <code>hub</code> 工作区。</li>
                 <li>只允许写入不存在或空目录。</li>
-                <li>按 <code>--mode</code> 选择 <code>satellite-starter</code> 或 <code>satellite-matter</code>。</li>
+                <li>按 <code>--mode</code> 选择 <code>satellite-starter</code> 或 <code>project</code>。</li>
                 <li>写入项目自己的 workspace state 和同步说明。</li>
                 <li>回写 Hub 项目注册表，拒绝重复 ID 或重复路径。</li>
                 <li><code>--blueprint</code> 支持按工作台定制单创建目录、写入路径、注入规则和复制 seed。</li>
@@ -752,7 +753,7 @@
                 <li>复制项目 Kit。</li>
                 <li>同步身份、教训、知识和 skills 入口。</li>
                 <li>写入 <code>.starwork/workspace.json</code> 与 <code>.core-sync.json</code>。</li>
-                <li>更新 Hub <code>项目/registry.json</code>。</li>
+                <li>更新 Hub <code>projects/registry.json</code>。</li>
                 <li>提示运行 <code>doctor</code>。</li>
               </ol>
             </div>
@@ -877,7 +878,7 @@ node cli/bin/starwork.js multiagent bind research \
                 <li>校验 lane ID 和安全相对路径。</li>
                 <li>按命令更新 lane 表或 shared outputs 表。</li>
                 <li>确认后写回 Markdown 事实源。</li>
-                <li>不写入 Matter registry，不创建任务看板。</li>
+                <li>不创建任务看板。</li>
               </ol>
             </div>
           </div>
@@ -1014,7 +1015,7 @@ node cli/bin/starwork.js doctor --target "$TEST_DIR"</pre>
 
         <div class="test-card">
           <h3>方式三：手动测试 spawn</h3>
-          <p>这会先生成一个 Hub，再从 Hub 生成一个事项型项目工作台，并检查两边是否健康。</p>
+          <p>这会先生成一个 Hub，再从 Hub 生成一个项目项目工作台，并检查两边是否健康。</p>
           <pre>cd /Users/shuxinding/satellite-starwork/product
 
 HUB_DIR=/tmp/starwork-hub-test
@@ -1031,7 +1032,8 @@ node cli/bin/starwork.js spawn \
   --name "内容产品官网" \
   --id content-site \
   --target "$PROJECT_DIR" \
-  --mode matter \
+  --mode project \
+  --language zh \
   --yes
 
 node cli/bin/starwork.js doctor --target "$PROJECT_DIR"</pre>
@@ -1057,7 +1059,7 @@ cat > "$BLUEPRINT_DIR/blueprint.json" <<'EOF'
   "schema": "starwork.spawn_blueprint.v0.1",
   "name": "定制项目",
   "project_id": "custom-project",
-  "base": { "mode": "matter", "kit": "satellite-matter", "language": "zh" },
+  "base": { "mode": "project", "kit": "project", "language": "zh" },
   "paths": {
     "formal_source": "交付物/确认版本/",
     "business_work_area": "事项/"

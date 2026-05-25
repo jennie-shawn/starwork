@@ -52,7 +52,7 @@
 
 完成后请告诉我：
 - StarWork CLI 安装版本。
-- starwork --version 是否返回版本号。
+- starwork --version 是否返回版本号；当前 npm `latest` 应为 `0.1.0-alpha.9`。
 - starwork --help 是否可用。
 - starworkInit、starworkDoctor、starworkMultiagent 是否已安装。
 - 单项目工作台内是否有 `.starwork/skills.json` 和 `neat-freak`。

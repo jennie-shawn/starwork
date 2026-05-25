@@ -11,7 +11,6 @@
 | `work.starter.references` | 否 | Starter Mode 中默认只读的原始资料。 |
 | `work.starter.outputs_drafts` | 否 | 等待用户审阅的 AI 草稿。 |
 | `work.starter.outputs_final` | 否 | 用户确认后的成果。 |
-| `work.matters.registry` | 否 | Matter Mode 的事项索引。 |
 | `identity.local` | 否 | 项目本地身份参考。 |
 | `lessons.local` | 否 | 项目本地可复用教训。 |
 | `main_repo.sync_metadata` | 否 | 卫星项目与主库同步的元数据。 |

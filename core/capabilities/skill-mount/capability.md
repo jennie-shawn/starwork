@@ -23,13 +23,16 @@
 
 用于记录本项目实际可用的 Skill、来源、挂载方式和放入原因。
 
+`.starwork/skills.json` 是 StarWork 机制 manifest，不存放 Skill 正文，也不替代 `.agents/skills/`、`.claude/skills/` 等工具入口。
+
 ## 边界
 
 - 共享 skills 仍然由主库拥有。
 - 项目专用 skill 修改必须放在项目专用 skill 路径中。
 - 卫星项目不能把软链接的共享 skill 当成本地项目代码来改。
 - Kit manifest、Pack 声明和 Hub 的 `skills/registry.json` 共同构成分发来源；Satellite 的 `.starwork/skills.json` 是项目已挂载清单。
+- Hub 的 `skills/` 是共享资产库，不进入 `.starwork/`；`.starwork/skills.json` 只记录当前项目实际可用的 Skill 状态。
 
 ## CLI 职责
 
-CLI 应通过创建逐个软链接安装共享 skills，并把挂载信息记录到 `.core-sync.json` 和 `.starwork/skills.json`。
+CLI 应通过创建逐个软链接安装共享 skills，并把挂载信息记录到 `.starwork/sync.json` 和 `.starwork/skills.json`。legacy 工作台中的 `.core-sync.json` 可以继续读取。

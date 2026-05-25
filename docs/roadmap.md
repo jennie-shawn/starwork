@@ -106,7 +106,7 @@ M8 v1.0 稳定产品
 
 - `starwork init` 第一版已落地。
 - `init` 已支持工作区类型选择、Pack 选择、语言配置、dry-run 和冲突保护。
-- `starwork spawn` 第一版已落地，可从健康 Hub 创建 `satellite-starter` / `satellite-matter` 项目工作台，并回写 Hub 项目注册表。
+- `starwork spawn` 第一版已落地，可从健康 Hub 创建 `satellite-starter` / `project` 项目工作台，并回写 Hub `projects/registry.json`。
 - `starwork doctor` 第一版已落地，可检查 workspace state、Core 必需角色、Kit 文件、正式事实源、业务工作区和 Pack 落地结果。
 - `starwork adapt` 第一版已落地，可为 Codex、Claude Code、Cursor、Trae 生成或登记轻量适配入口。
 - `starwork pack install` 第一版已落地，可在健康工作台上补装 Pack。
@@ -135,21 +135,22 @@ M8 v1.0 稳定产品
 
 - GitHub 仓库已推送到 `jennie-shawn/starwork`。
 - npm 包名为 `@jennie-shawn/starwork`。
-- `starworkInit`、`starworkDoctor` 可通过 `npx skills add` 安装为系统 Skill；`starworkDoctor` 同时承担历史模板诊断和升级蓝图生成；`starworkSpawn` 改为 Hub Kit 自带 Skill。
+- `starworkInit`、`starworkDoctor`、`starworkMultiagent` 可通过 `npx skills add` 安装为系统 Skill；`starworkDoctor` 同时承担历史模板诊断、Hub-like 旧主库诊断和升级蓝图生成；`starworkSpawn` 改为 Hub Kit 自带 Skill。
 - 公开 README 已改为中文首页。
 - 已新增面向 Agent 的安装指南：`product/docs/agent-install-guide.md`。
-- 当前开发版本准备推进到 `0.1.0-alpha.10`。
+- npm `latest` 已发布到 `@jennie-shawn/starwork@0.1.0-alpha.9`，本机 CLI 与系统 Skills 已完成更新验证。
 - `starwork --version` 已可直接输出包版本，`starwork --help` 已改为面向 A 测用户的命令入口说明。
-- `starwork upgrade --blueprint`、`starworkDoctor` 和 Skill 分发第一版已进入公开包。
+- `starwork upgrade --blueprint`、`starworkDoctor`、Hub-like 旧主库 preserve-names 接入和 Skill 分发第一版已进入公开包。
 
 验收标准：
 
 - A 测用户能安装 CLI 并看到 `starwork --help`。
-- A 测用户能安装系统 Skills，并让 Agent 识别 `starworkInit`、`starworkDoctor`。
+- A 测用户能安装系统 Skills，并让 Agent 识别 `starworkInit`、`starworkDoctor`、`starworkMultiagent`。
 - Hub 工作台能带出 Kit 自带的 `starworkSpawn`，单项目工作台能带出 Kit 自带的 `neat-freak`。
 - `init -> doctor -> hub init -> spawn -> doctor` 的最小流程能被外部用户跑通。
 - 历史模板用户能跑通 `doctor --json -> starworkDoctor -> upgrade --blueprint -> doctor` 的保守升级验证流程。
-- A 测反馈中暴露的安装和 skill 调用问题被记录到 matter。
+- Hub-like 旧主库用户能在确认路径映射后，以保留原目录名的方式接入 StarWork，不创建重复的标准目录壳。
+- A 测反馈中暴露的安装和 skill 调用问题被记录到 事项。
 
 ## M3 Content Creator Pack v0.1
 
@@ -177,7 +178,7 @@ Pack 应覆盖的最小内容闭环：
 
 还需要做：
 
-- 创建内容创作者 Pack v0.1 matter。
+- 创建内容创作者 Pack v0.1 事项。
 - 确认目录结构。
 - 确认每个目录下的 Agent 规则。
 - 确认模板和 seed 示例。
@@ -296,7 +297,7 @@ v1.0 应具备：
 
 1. 继续优化 CLI 与 `starworkInit` / `starworkSpawn` skills 的体验。
 2. 慢慢收集 A 测用户对 CLI 安装、Skills 安装、`init`、`doctor`、`spawn` 的反馈。
-3. 等 GFM 新一期课程敲定时，再启动 Content Creator Pack v0.1 matter，把首个场景 Pack 的目录、规则、模板和 Demo 定下来。
+3. 等 GFM 新一期课程敲定时，再启动 Content Creator Pack v0.1 事项，把首个场景 Pack 的目录、规则、模板和 Demo 定下来。
 
 如果只能选一个，先优化 `init` 与对应 skill 的真实用户入口体验。
 

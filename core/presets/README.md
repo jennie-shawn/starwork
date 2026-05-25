@@ -13,11 +13,11 @@ Presets 主要供 CLI 和 kit 生成使用。
 
 ## v0.1 包含
 
-- `local-starter.yaml`
-- `local-matter.yaml`
-- `satellite-starter.yaml`
-- `satellite-matter.yaml`
+- `project.yaml`
 - `hub.yaml`
+
+`local-starter`、`project`、`satellite-starter` 和 `project`
+进入兼容期，不再作为正式 v0.1 主入口。
 
 ## 命名原则
 

@@ -575,7 +575,8 @@ starwork spawn \
   --hub ~/my-hub \
   --name "内容产品官网" \
   --target ~/projects/content-site \
-  --mode matter \
+  --mode project \
+  --language zh \
   --yes
 
 starwork doctor --target ~/projects/content-site</pre>
@@ -612,7 +613,7 @@ starwork doctor --target ~/projects/content-site</pre>
             </tr>
             <tr>
               <td>共享知识库</td>
-              <td><code>知识/</code> 或 <code>knowledge/</code></td>
+              <td><code>knowledge/</code></td>
               <td>只读链接</td>
               <td>避免多个项目各自修改同一份公共知识。</td>
             </tr>
@@ -642,8 +643,8 @@ starwork doctor --target ~/projects/content-site</pre>
             </tr>
             <tr>
               <td>项目之间的请求、同步和交接</td>
-              <td><code>项目/联络/</code> 或中枢联络入口</td>
-              <td><code>_系统/跨项目/</code></td>
+              <td><code>projects/coordination/</code></td>
+              <td><code>.starwork/handoff/</code></td>
               <td>联络单负责“项目和项目怎么说话”，不替代项目状态，也不直接改变 Hub 正式知识。</td>
             </tr>
           </tbody>
@@ -675,7 +676,7 @@ starwork doctor --target ~/projects/content-site</pre>
         <div class="flow-step">
           <span class="tag">发送</span>
           <h3>项目 A 写联络单</h3>
-          <p>在本项目 <code>_系统/跨项目/</code> 留一份发送记录，说明要找谁、为什么找、希望对方做什么。</p>
+          <p>在本项目 <code>.starwork/handoff/</code> 留一份发送记录，说明要找谁、为什么找、希望对方做什么。</p>
         </div>
         <div class="arrow">→</div>
         <div class="flow-step">
@@ -705,7 +706,7 @@ starwork doctor --target ~/projects/content-site</pre>
       <div class="grid-2">
         <article class="panel">
           <h3>Hub 不是项目进度数据库</h3>
-          <p>Hub 的 <code>项目/registry.json</code> 只回答“有哪些项目、在哪里、什么状态”。具体进度、事项、判断和产物仍在各自 Satellite。</p>
+          <p>Hub 的 <code>projects/registry.json</code> 只回答“有哪些项目、在哪里、什么状态”。具体进度、事项、判断和产物仍在各自 Satellite。</p>
         </article>
 
         <article class="panel">

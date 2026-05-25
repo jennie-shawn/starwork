@@ -3,7 +3,7 @@
   "id": "general",
   "version": "0.1.0",
   "compatible_core": "0.1",
-  "supports_workspace_types": ["single-light", "single-matter"],
+  "supports_workspace_types": ["project", "single-light", "single-matter"],
   "requires_capabilities": [],
   "roles": {
     "references": { "kind": "source" },

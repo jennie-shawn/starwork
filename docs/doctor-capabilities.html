@@ -459,7 +459,7 @@
         <tbody>
           <tr><td><code>workspace state</code></td><td>schema、Core 版本、工作区类型、Kit、语言、Pack 列表、正式事实源、业务工作区。</td><td>缺少 <code>.starwork/workspace.json</code>，或 state 里缺少关键字段。</td></tr>
           <tr><td><code>Core roles</code></td><td><code>AGENTS.md</code>、项目状态、当前工作、正式事实源、业务工作区。</td><td>Agent 入口规则被删，项目状态或当前工作文件缺失。</td></tr>
-          <tr><td><code>Kit</code></td><td>Kit 源目录是否存在，工作区类型和 Kit 是否匹配，Kit 文件是否完整。</td><td>把 <code>single-matter</code> 的 state 配成了 <code>local-starter</code>，或误删 Kit 文件。</td></tr>
+          <tr><td><code>Kit</code></td><td>Kit 源目录是否存在，工作区类型和 Kit 是否匹配，Kit 文件是否完整。</td><td>把 <code>project</code> 的 state 配成了 <code>local-starter</code>，或误删 Kit 文件。</td></tr>
           <tr><td><code>Pack</code></td><td>Pack 是否兼容 Core，是否支持当前工作区类型，paths、seed、templates 是否落地。</td><td>Pack seed 文件被删，或 Pack 不支持当前 workspace type。</td></tr>
           <tr><td><code>Blueprint</code></td><td>定制工作台的 blueprint schema、定制目录、seed、注入规则是否存在。</td><td>spawn blueprint 生成后，用户手动删除了定制目录或 AGENTS 规则块。</td></tr>
           <tr><td><code>Legacy</code></td><td>历史模板里的入口规则、系统目录、事项、参考资料、输出、身份、教训。</td><td>目录可识别但缺少 workspace state，需要先升级或补齐。</td></tr>
@@ -504,8 +504,8 @@
           <h3>推断逻辑</h3>
           <ul>
             <li>中文路径更多，推断为 <code>zh</code>；英文路径更多，推断为 <code>en</code>。</li>
-            <li>存在 <code>事项/</code> 或 <code>matters/</code>，推断为 <code>single-matter</code>。</li>
-            <li>没有事项机制，推断为 <code>single-light</code>。</li>
+            <li>存在 <code>事项/</code> 或 <code>matters/</code> 时，只记录为历史内容信号。</li>
+            <li>非 Hub 候选统一推断为 <code>project</code>。</li>
             <li>不直接判断 Pack 贴近度；Pack 只在后续执行层作为候选参数。</li>
           </ul>
         </div>
@@ -556,8 +556,8 @@
   "workspace_root": "/path/to/workspace",
   "workspace": {
     "core": "0.1",
-    "workspace_type": "single-matter",
-    "kit": "local-matter",
+    "workspace_type": "project",
+    "kit": "project",
     "language": "zh",
     "packs": ["general"]
   },
@@ -592,11 +592,11 @@
     "confidence": "medium",
     "inferred": {
       "language": "zh",
-      "workspace_type": "single-matter",
+      "workspace_type": "project",
       "references": ["参考资料"],
       "outputs": ["输出"],
       "reasons": {
-        "workspace_type": ["事项 表示存在事项或多事务推进结构"]
+        "workspace_type": ["事项 表示存在事项或多线推进推进结构"]
       }
     }
   },

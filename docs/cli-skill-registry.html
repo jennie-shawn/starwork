@@ -461,7 +461,7 @@
     <section class="section">
       <div class="section-header">
         <h2>当前总览</h2>
-        <p class="section-note">截至 alpha.10，StarWork 已有 7 个可用 CLI 命令和 5 个自研 Skill。`update` 和 `starwork skill` 仍是未来命令，不在当前可用列表里。</p>
+        <p class="section-note">截至 alpha.9，StarWork 已有 7 个可用 CLI 命令和 5 个自研 Skill。`update` 和 `starwork skill` 仍是未来命令，不在当前可用列表里。</p>
       </div>
       <div class="grid-3">
         <article class="panel">
@@ -476,8 +476,8 @@
         </article>
         <article class="panel">
           <span class="badge">状态</span>
-          <h3>alpha.10</h3>
-          <p>当前开发版本为 <code>@jennie-shawn/starwork@0.1.0-alpha.10</code>，已将历史模板升级蓝图生成能力合并进 <code>starworkDoctor</code>，补齐 Hub-like 主库的无损接入诊断和 <code>hub + preserve-names + pack:null</code> 升级路径，并继续完善 Agent Lanes 的 lane workspace 过程工作区。</p>
+          <h3>alpha.9</h3>
+          <p>当前 npm latest 为 <code>@jennie-shawn/starwork@0.1.0-alpha.9</code>，已将历史模板升级蓝图生成能力合并进 <code>starworkDoctor</code>，补齐 Hub-like 主库的无损接入诊断和 <code>hub + preserve-names + pack:null</code> 升级路径。</p>
         </article>
       </div>
     </section>
@@ -503,7 +503,7 @@
           <tr>
             <td><strong><code>starwork init</code></strong></td>
             <td>从空目录创建 StarWork 工作台。</td>
-            <td>初始化单事务项目 <code>single-light</code>、多事务项目 <code>single-matter</code>、Hub <code>hub</code>；组装 Kit 与 Pack；写入 workspace state、Skill manifest 和入口规则。</td>
+            <td>初始化单事务项目 <code>single-light</code>、项目工作台 <code>project</code>、Hub <code>hub</code>；组装 Kit 与 Pack；写入 workspace state、Skill manifest 和入口规则。</td>
             <td><code>--type</code>、<code>--pack</code>、<code>--language</code>、<code>--target</code>、<code>--dry-run</code>、<code>--yes</code></td>
             <td>标准工作台目录、<code>.starwork/workspace.json</code>、<code>.starwork/skills.json</code>、<code>AGENTS.md</code>、Core 必需文件。</td>
             <td>不负责升级已有旧模板；不处理多项目卫星项目创建。</td>
@@ -512,7 +512,7 @@
           <tr>
             <td><strong><code>starwork spawn</code></strong></td>
             <td>从 Hub 生成 Satellite 项目。</td>
-            <td>从健康 Hub 创建 <code>satellite-starter</code> 或 <code>satellite-matter</code>；回写项目注册表；支持 <code>--blueprint</code> 定制目录、seed、规则和 Hub 托管 Skill 分发。</td>
+            <td>从健康 Hub 创建 <code>satellite-starter</code> 或 <code>project</code>；回写项目注册表；支持 <code>--blueprint</code> 定制目录、seed、规则和 Hub 托管 Skill 分发。</td>
             <td><code>--hub</code>、<code>--target</code>、<code>--mode</code>、<code>--name</code>、<code>--id</code>、<code>--blueprint</code></td>
             <td>卫星项目工作台、<code>.core-sync.json</code>、Hub 项目 registry 记录、共享资源挂载、项目 Skill manifest。</td>
             <td>不安装业务 Pack；不写入非空目标目录；只从 Hub 派生项目。</td>
@@ -530,9 +530,9 @@
           <tr>
             <td><strong><code>starwork upgrade</code></strong></td>
             <td>按升级蓝图执行历史模板升级。</td>
-            <td>读取 <code>starworkDoctor</code> 生成的 <code>upgrade-blueprint.json</code>；支持 dry-run、路径安全校验、workspace state 写入、Kit 缺失文件补齐和规则注入。</td>
+            <td>读取 <code>starworkDoctor</code> 生成的 <code>upgrade-blueprint.json</code>；支持 dry-run、路径安全校验、workspace state 写入、Kit 缺失文件补齐、规则注入和 Hub-like 旧主库 preserve-names 接入。</td>
             <td><code>--target</code>、<code>--blueprint</code>、<code>--dry-run</code>、<code>--yes</code>、<code>--json</code></td>
-            <td>可被 StarWork 接管的工作台，保留旧目录名和历史文件。</td>
+            <td>可被 StarWork 接管的工作台，保留旧目录名和历史文件；Hub-like 旧主库可写入 <code>packs: []</code>，不创建重复标准目录。</td>
             <td>不自动生成升级方案；不处理已是 StarWork 的工作台；不移动、不删除、不覆盖历史文件。</td>
             <td><span class="status done">已实现</span></td>
           </tr>
@@ -557,10 +557,10 @@
           <tr>
             <td><strong><code>starwork multiagent</code></strong></td>
             <td>管理同一项目内多个 Agent 会话的职责位协作。</td>
-            <td>初始化 Agent Lanes；新增自定义 lane；创建 lane workspace；绑定或释放 session；查看状态；登记跨 lane 可读输出。</td>
+            <td>初始化 Agent Lanes；新增自定义 lane；维护 lane worklog；绑定或释放 session；查看状态；登记跨 lane 可读输出。</td>
             <td><code>init</code>、<code>add</code>、<code>bind</code>、<code>release</code>、<code>status</code>、<code>share</code>、<code>--target</code>、<code>--session</code></td>
-            <td><code>_系统/协作/agent-lanes.md</code>、<code>_系统/协作/shared.md</code>、lane <code>worklog.md</code> 和 <code>workspace/README.md</code>。</td>
-            <td>不内置固定职责；不写入 Matter registry；不做任务系统、锁或调度。</td>
+            <td><code>_系统/协作/agent-lanes.md</code>、<code>_系统/协作/shared.md</code> 和 lane <code>worklog.md</code>。</td>
+            <td>不内置固定职责；不做任务系统、锁或调度。</td>
             <td><span class="status done">已实现</span></td>
           </tr>
           <tr>
@@ -597,8 +597,8 @@
           <tr>
             <td><strong><code>starworkInit</code></strong></td>
             <td>初始化设计助手。</td>
-            <td>用户想从 0 建工作台，但还没确定工作台类型、语言、事项机制或目录偏好。</td>
-            <td>分支式采访；判断 Hub / 单项目；判断语言；判断是否需要事项；生成初始化建议或 init blueprint。</td>
+            <td>用户想从 0 建工作台，但还没确定工作台类型、语言或目录偏好。</td>
+            <td>分支式采访；判断 Hub / Project；判断语言；生成初始化建议或 init blueprint。</td>
             <td>初始化建议、未来 init blueprint、执行命令建议。</td>
             <td><code>starwork init</code></td>
             <td><span class="status done">已实现</span></td>
@@ -607,7 +607,7 @@
             <td><strong><code>starworkSpawn</code></strong></td>
             <td>Hub Kit 自带的卫星项目定制单设计助手。</td>
             <td>用户已有 Hub，要创建一个新 Satellite 项目，并希望项目目录、规则或托管 Skill 可定制。</td>
-            <td>采访项目类型和工作方式；判断 starter / matter；生成 spawn blueprint；整理项目规则和 seed。</td>
+            <td>采访项目类型和工作方式；生成 spawn blueprint；整理项目规则和 seed。</td>
             <td><code>blueprint.json</code>、rules、seed、spawn dry-run 命令。</td>
             <td><code>starwork spawn --blueprint</code></td>
             <td><span class="status done">已实现</span></td>
@@ -625,7 +625,7 @@
             <td><strong><code>starworkDoctor</code></strong></td>
             <td>工作区诊断助手。</td>
             <td>用户要理解 doctor 输出、判断旧目录和 StarWork Core 逻辑是否接近、整理升级建议；或想无损生成升级蓝图。</td>
-            <td>读取 doctor JSON；解释 inventory 和 signals；建立 Core 角色映射；判断 Core 逻辑贴近程度；提出整理建议；用户确认后生成 upgrade blueprint 和规则文件。</td>
+            <td>读取 doctor JSON；解释 inventory 和 signals；建立 Core 角色映射；识别历史模板或 Hub-like 旧主库；判断 Core 逻辑贴近程度；提出整理建议；用户确认后生成 upgrade blueprint 和规则文件。</td>
             <td>诊断报告、目录角色映射、缺失和风险、确认问题、<code>upgrade-blueprint.json</code>、rules、dry-run 命令。</td>
             <td><code>starwork doctor</code> / <code>starwork upgrade --blueprint</code></td>
             <td><span class="status done">已实现</span></td>
@@ -634,7 +634,7 @@
             <td><strong><code>starworkMultiagent</code></strong></td>
             <td>多 Agent 协作命令包装助手。</td>
             <td>用户想把当前会话登记为常用智能体、管理 Agent 职责位、绑定或释放 session、查看分工、登记共享输出。</td>
-            <td>判断用户语义；确认 lane ID、职责、写入范围、workspace 和 session；把请求翻译成 <code>multiagent init/add/bind/release/status/share</code> 命令组合。</td>
+            <td>判断用户语义；确认 lane ID、职责、写入范围和 session；把请求翻译成 <code>multiagent init/add/bind/release/status/share</code> 命令组合。</td>
             <td>multiagent dry-run 命令、确认后的执行命令、当前分工解释、过程材料放置建议。</td>
             <td><code>starwork multiagent</code></td>
             <td><span class="status done">已实现</span></td>
@@ -671,7 +671,7 @@
         </div>
       </div>
       <div class="callout">
-        <strong>固定边界：</strong>CLI 不硬猜业务语义；Skill 不静默改用户文件。所有会写入的 CLI 能力都应保留 dry-run 或明确确认。<code>multiagent init</code> 是协议初始化；“登记当前会话为常用智能体”在 Skill 层应解释为必要时先 init，再 add 和 bind。lane workspace 是过程区，不是项目正式输出目录。
+        <strong>固定边界：</strong>CLI 不硬猜业务语义；Skill 不静默改用户文件。所有会写入的 CLI 能力都应保留 dry-run 或明确确认。<code>multiagent init</code> 是协议初始化；“登记当前会话为常用智能体”在 Skill 层应解释为必要时先 init，再 add 和 bind。
       </div>
     </section>
 
@@ -688,7 +688,7 @@ starwork init --type hub --target ./my-hub --yes</pre>
         </div>
         <div>
           <h3>从 Hub 创建项目</h3>
-          <pre>starwork spawn --hub ./my-hub --name "新项目" --target ./new-project --mode matter --dry-run
+          <pre>starwork spawn --hub ./my-hub --name "新项目" --target ./new-project --mode project --language zh --dry-run
 starwork spawn --hub ./my-hub --target ./new-project --blueprint ./blueprint.json --dry-run</pre>
         </div>
         <div>
@@ -705,7 +705,7 @@ starwork pack install content-creator --target ./my-workspace --dry-run</pre>
           <h3>多 Agent 协作</h3>
           <pre>starwork multiagent init --lanes research,writing,review --target ./my-workspace --yes
 starwork multiagent bind research --session codex:manual-research-1 --target ./my-workspace --yes
-starwork multiagent share research --title "Source notes draft" --path _系统/协作/lanes/research/workspace/source-notes.md --audience writing,review --target ./my-workspace --yes</pre>
+starwork multiagent share research --title "Source notes draft" --path notes/source-notes.md --audience writing,review --target ./my-workspace --yes</pre>
         </div>
       </div>
     </section>

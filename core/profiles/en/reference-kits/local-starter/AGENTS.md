@@ -4,7 +4,6 @@
 
 1. `_system/context/project-status.md`
 2. `_system/tasks/current-work.md`
-3. If Matter Mode is enabled, read `matters/registry.md`
 
 ## Write Boundaries
 
@@ -13,11 +12,10 @@
 - Identity belongs in `_system/identity/` and is read-only by default
 - Lessons belong in `_system/lessons/`
 - Source materials belong in `references/` and are read-only by default
-- AI drafts belong in `outputs/drafts/` or a matter `drafts/` directory
+- AI drafts belong in `outputs/drafts/`
 - User-approved outputs belong in the project-declared formal source of truth
 
 ## Confirmation Required
 
 - Changing identity, lessons, shared knowledge, or synced main-repository content
 - Promoting drafts into the formal source of truth
-- Creating, pausing, or archiving long-running matters

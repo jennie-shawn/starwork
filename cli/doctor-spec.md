@@ -178,7 +178,7 @@ v0.1 判断标准：
 | 推断项 | 规则 |
 |---|---|
 | `language` | 中文路径多则 `zh`，英文路径多则 `en`，不确定时默认为 `zh`。 |
-| `workspace_type` | 存在 `事项/` 或 `matters/` 时推断为 `single-matter`，否则推断为 `single-light`。 |
+| `workspace_type` | Hub 信号充分时推断为 `hub`；其他历史项目候选统一推断为 `project`。`事项/` 或 `matters/` 只作为历史内容信号。 |
 输出内容：
 
 - `upgrade.candidate: true`
@@ -198,7 +198,7 @@ v0.1 判断标准：
 
 - `schema` 是否为 `starwork.workspace.v0.1`
 - `core` 是否兼容 `0.1`
-- `workspace_type` 是否为 `single-light`、`single-matter` 或 `hub`
+- `workspace_type` 是否为 `single-light`、`project` 或 `hub`
 - `kit` 是否存在
 - `language` 是否存在
 - `packs` 是否是数组
@@ -211,8 +211,8 @@ v0.1 判断标准：
 {
   "schema": "starwork.workspace.v0.1",
   "core": "0.1",
-  "workspace_type": "single-matter",
-  "kit": "local-matter",
+  "workspace_type": "project",
+  "kit": "project",
   "packs": [
     {
       "id": "content-creator",
@@ -290,7 +290,7 @@ Core v0.1 必需角色：
 | `workspace_type` | 允许 Kit |
 |---|---|
 | `single-light` | `local-starter` |
-| `single-matter` | `local-matter` |
+| `project` | `project` |
 | `hub` | `hub` |
 
 卫星项目 Kit 目前不是 `init` 的普通入口，但 `doctor` 应能识别：
@@ -298,7 +298,7 @@ Core v0.1 必需角色：
 | Kit | 说明 |
 |---|---|
 | `satellite-starter` | 接入主库的轻量卫星项目。 |
-| `satellite-matter` | 接入主库的事项型卫星项目。 |
+| `project` | 接入主库的项目卫星项目。 |
 
 ### Step 6：Capability 检查
 
@@ -307,7 +307,6 @@ v0.1 先检查确定性 capability。
 | capability | 检查项 |
 |---|---|
 | `starter-outputs` | 参考资料目录、草稿目录、确认成果目录存在。 |
-| `matter-mode` | 事项注册表存在；事项模板存在。 |
 | `decisions` | 决策文件存在时检查位置；不强制所有工作区都有。 |
 | `local-identity` | 本地身份目录存在。 |
 | `local-lessons` | 本地教训目录存在。 |
@@ -342,6 +341,20 @@ v0.1 先检查确定性 capability。
 - 数据复盘 / analytics-review
 - content brief、publish record、weekly review 模板
 
+对新版 `hub` 工作台，v0.1 应至少检查：
+
+- `projects/registry.json`
+- `projects/coordination/`
+- `.incoming/`
+- `identity/`
+- `lessons/`
+- `knowledge/`
+- `skills/registry.json`
+- `workspace/`
+- `.starwork/handoff/`
+
+Hub 不再检查单项目式的项目状态和当前工作入口。
+
 对 `hub-management` Pack，v0.1 应至少检查：
 
 - 项目 / projects
@@ -364,7 +377,7 @@ v0.1 不做复杂语义判断，但可以做轻量启发式 warning。
 - 正式事实源路径指向草稿目录。
 - 业务工作区路径指向只读参考资料目录。
 - 参考资料目录中出现明显生成成果文件名，例如 `final`、`发布稿`、`确认版`。
-- Matter 草稿目录被 workspace state 声明为正式事实源。
+- 历史过程目录被 workspace state 声明为正式事实源。
 
 这些检查只能给 warning，不应作为 fail。
 
@@ -379,8 +392,8 @@ StarWork Doctor
 
 Workspace: /path/to/workspace
 Core: 0.1
-Type: single-matter
-Kit: local-matter
+Type: project
+Kit: project
 Packs: content-creator@0.1.0
 
 Summary:
@@ -420,8 +433,8 @@ Result:
   "workspace_root": "/path/to/workspace",
   "workspace": {
     "core": "0.1",
-    "workspace_type": "single-matter",
-    "kit": "local-matter",
+    "workspace_type": "project",
+    "kit": "project",
     "language": "zh",
     "packs": ["content-creator"]
   },
@@ -458,12 +471,12 @@ Result:
     "confidence": "high",
     "inferred": {
       "language": "zh",
-      "workspace_type": "single-matter",
+      "workspace_type": "project",
       "references": ["参考资料"],
       "outputs": ["输出"],
       "reasons": {
         "language": ["_系统 是中文工作区信号"],
-        "workspace_type": ["事项 表示存在事项或多事务推进结构"],
+        "workspace_type": ["事项 表示存在事项或多线推进推进结构"],
         "references": ["参考资料 命中参考资料候选信号"],
         "outputs": ["输出 命中成果或输出候选信号"]
       }
@@ -504,7 +517,7 @@ legacy.*
 - `core.current_work.exists`
 - `core.formal_source.exists`
 - `kit.files.complete`
-- `capability.matter.registry_exists`
+- `capability.事项.registry_exists`
 - `pack.source.exists`
 - `pack.paths.exist`
 - `pack.templates.installed`
@@ -574,14 +587,14 @@ legacy.*
 `starwork doctor` v0.1 可验收，至少满足：
 
 - 对 `starwork init --type single-light --pack general` 生成的工作台返回成功。
-- 对 `starwork init --type single-matter --pack content-creator` 生成的工作台返回成功。
+- 对 `starwork init --type project --pack content-creator` 生成的工作台返回成功。
 - 对 `starwork init --type hub` 生成的工作台返回成功。
 - 删除 `AGENTS.md` 后返回 fail。
 - 删除正式事实源目录后返回 fail。
 - 删除 Pack seed 文件后返回 fail。
 - 非 StarWork 目录返回 fail，并提示先运行 `starwork init`。
 - 对存在 `references/outputs` 的英文历史模板返回 fail，但输出 `upgrade` 候选信号，不输出 `next_steps` 或 Pack 建议。
-- 对存在 `参考资料/输出/事项` 的中文历史模板返回 fail，但推断为 `single-matter` + `zh`。
+- 对存在 `参考资料/输出/事项` 的中文历史模板返回 fail，但推断为 `project` + `zh`。
 - `--json` 输出稳定结构。
 - 没有 fail 时退出码为 `0`，有 fail 时退出码为 `1`。
 

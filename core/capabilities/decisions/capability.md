@@ -16,8 +16,8 @@
 
 适合写入：
 
-- Core v0.1 支持 Starter Mode 和 Matter Mode。
-- Matter Mode 是可选能力，不是 baseline 必需项。
+- Core v0.1 支持 Project 和 Hub 两类正式工作台。
+- 事项分叉不再是 baseline 必需项。
 
 不适合写入：
 

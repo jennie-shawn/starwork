@@ -1,6 +1,6 @@
 ---
 name: starworkInit
-description: Use this skill when a user wants to initialize a new StarWork workspace, choose between single-light, single-matter, and hub workspace types, choose Chinese or English workspace language, decide whether a multi-matter workspace is truly needed, design friendly init interview flows, draft init blueprints, and explain how `starwork init` should execute and validate the result.
+description: Use this skill when a user wants to initialize a new StarWork workspace, choose between project and hub workspace types, choose Chinese or English workspace language, design friendly init interview flows, draft init blueprints, and explain how `starwork init` should execute and validate the result.
 ---
 
 # starworkInit
@@ -11,7 +11,6 @@ description: Use this skill when a user wants to initialize a new StarWork works
 
 - 应该建单项目工作台，还是多项目中枢
 - 使用中文工作台，还是英文工作台
-- 是否需要事项机制
 - 是否需要定制目录和 Agent 规则
 - 最终应该如何执行和检查
 
@@ -34,23 +33,19 @@ description: Use this skill when a user wants to initialize a new StarWork works
 ```text
 Step 1 判断工作台类型
   ├─ hub：继续判断语言，然后直接给 Hub 初始化建议
-  └─ single：默认按单事务项目判断，再确认是否真的需要多事务
+  └─ project：继续判断语言和是否需要定制目录
 
 Step 2 判断语言
   ├─ 中文：language=zh
   └─ English：language=en
 
-Step 3 判断是否需要多事务
-  ├─ 不需要或不确定：single-light
-  └─ 明确需要多个事项：single-matter
-
-Step 4 判断是否需要定制工作台
+Step 3 判断是否需要定制工作台
   ├─ 不需要：输出标准初始化建议
   └─ 需要：进入友好采访
 
-Step 5 采访正式成果放哪里
-Step 6 采访日常工作在哪里发生
-Step 7 采访额外固定区域和 Agent 规则
+Step 4 采访正式成果放哪里
+Step 5 采访日常工作在哪里发生
+Step 6 采访额外固定区域和 Agent 规则
 ```
 
 ## Step 1：判断工作台类型
@@ -63,15 +58,14 @@ Step 7 采访额外固定区域和 Agent 规则
 
 判断：
 
-- 一个明确事务、一个阶段目标、一次成果交付：`single-light`
-- 同一项目里有多个事项要分别推进、交接、复盘：`single-matter`
+- 一个具体项目、一个阶段目标、一次成果交付：`project`
 - 管理多个项目、统一身份/教训/知识/skills：`hub`
 
-默认优先建议 `single-light`。只有用户明确说“这个项目里会有多个事项 / 多条推进线 / 多个阶段需要分别管理”，才建议 `single-matter`。只有用户明确要建立多项目中枢时，才推荐 `hub`。
+默认优先建议 `project`。只有用户明确要建立多项目中枢时，才推荐 `hub`。
 
 ### Hub 分支
 
-如果判断为 `hub`，不要继续问“是否需要事项”和“选哪个 Pack”。仍然要问语言。
+如果判断为 `hub`，不要继续问“选哪个 Pack”。仍然要问语言。
 
 直接输出 Hub 初始化建议：
 
@@ -79,7 +73,6 @@ Step 7 采访额外固定区域和 Agent 规则
 - 基础 Kit：`hub`
 - 语言：使用 Step 2 的选择
 - Pack：不让用户选择；Hub 使用中枢管理结构
-- 事项：不是 Hub 初始化必选项
 - 后续确认：Hub 名称、项目注册区域、是否预置 `skills/` 和 `.incoming/`
 
 ## Step 2：判断语言
@@ -98,19 +91,19 @@ Step 7 采访额外固定区域和 Agent 规则
 
 不要跳过这一步。语言会影响目录名称、模板文字和 Agent 规则表达方式。
 
-## Step 3：判断是否需要多事务
+## Step 3：判断是否需要定制目录
 
-仅当 Step 1 是单项目时才问：
+仅当 Step 1 是 Project 时才问：
 
 ```text
-这个项目里会不会同时或连续推进多个相对独立的事项？
+这个项目是否需要自定义资料区、推进区、成果区或 Agent 规则？
 ```
 
 判断：
 
-- 不需要、不确定、只有一个明确目标：`single-light`
-- 明确有多个事项、多个阶段、多个交付线需要分别推进：`single-matter`
-- 用户改口说要管理多个项目：回到 Step 1，改为 `hub`
+- 不需要、不确定：使用标准 Project Kit。
+- 明确需要固定目录或规则：进入定制采访。
+- 用户改口说要管理多个项目：回到 Step 1，改为 `hub`。
 
 ## Pack 选择规则
 
@@ -167,7 +160,7 @@ v0.1 不采访用户选择场景 Pack。
 
 - 最终成果、交付物、确认版本：`输出/确认成果/`
 - 已发布内容、发布记录：`发布记录/`
-- 项目清单、项目注册：`项目/`
+- 项目清单、项目注册：Hub 使用 `projects/`；单项目不单独创建项目注册目录
 
 如果用户答不上来，默认用 `输出/确认成果/`。
 
@@ -189,7 +182,7 @@ v0.1 不采访用户选择场景 Pack。
 默认：
 
 - `single-light`：`参考资料/`
-- `single-matter`：`事项/`
+- `project`：`事项/`
 
 ### 额外目录和规则
 
@@ -254,8 +247,8 @@ v0.1 不采访用户选择场景 Pack。
 {
   "schema": "starwork.init_blueprint.v0.1",
   "name": "我的项目工作台",
-  "workspace_type": "single-matter",
-  "kit": "local-matter",
+  "workspace_type": "project",
+  "kit": "project",
   "language": "zh",
   "pack": "general",
   "paths": {

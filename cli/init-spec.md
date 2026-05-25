@@ -33,7 +33,7 @@ Kit 是 AI 工作区的通用模板。
 - Agent 入口文件在哪里
 - 项目状态在哪里
 - 当前工作索引在哪里
-- 是否启用事项机制
+- 是否使用 Project 标准结构
 - 是否启用本地身份和教训
 - 是否是多项目管理中枢
 
@@ -107,8 +107,8 @@ v0.1 不在 `init` 中处理升级。
 1. 单事务项目（推荐）
    适合一个明确目标、一个阶段任务或一次成果交付。
 
-2. 多事务项目（进阶）
-   适合同一项目下有多个事项，需要推进、交接和复盘。
+2. 项目工作台
+   适合一个具体项目的持续执行；可独立使用，也可后续接入 Hub。
 
 3. 多项目管理中枢
    适合你有多个项目，希望统一管理身份、教训、知识、skills 和项目登记。
@@ -118,11 +118,11 @@ v0.1 不在 `init` 中处理升级。
 
 | 用户选择 | Kit / Preset | 说明 |
 |---|---|---|
-| 单事务项目 | `local-starter` | 默认推荐入口。不启用事项机制，使用轻量输入输出结构。 |
-| 多事务项目 | `local-matter` | 进阶入口。启用 Matter Mode 和决策记录。 |
+| 单事务项目 | `project` | 兼容口径，实际生成 Project 标准结构。 |
+| 项目工作台 | `project` | 默认推荐入口。 |
 | 多项目管理中枢 | `hub` | 建立主库 / 中枢，不创建卫星项目。 |
 
-注意：Core 中的 `satellite-matter` 更接近卫星项目 Kit，不应被 `init` 的“多项目管理中枢”入口直接使用。`init` 应使用独立的 Hub Kit / Hub Preset。
+注意：Core 中的 `project` 更接近卫星项目 Kit，不应被 `init` 的“多项目管理中枢”入口直接使用。`init` 应使用独立的 Hub Kit / Hub Preset。
 
 ### Step 2：选择语言
 
@@ -154,12 +154,12 @@ v0.1 交互模式下不主动展示未定稿的场景 Pack。
 | 工作区类型 | Pack | 说明 |
 |---|---|---|
 | 单事务项目 | `general` | 默认 Pack。不是“无 Pack”。 |
-| 多事务项目 | `general` | 默认 Pack。不是“无 Pack”。 |
+| 项目工作台 | `general` | 默认 Pack。不是“无 Pack”。 |
 
 高级参数仍可显式传入兼容 Pack：
 
 ```bash
-starwork init --type single-matter --pack content-creator
+starwork init --type project --pack content-creator
 ```
 
 如果用户选择多项目管理中枢，不展示业务 Pack 列表，也不询问场景 Pack。
@@ -344,7 +344,7 @@ Pack 可以改变业务流向，但不能移除工作区仪表盘。
 ```bash
 starwork init
 starwork init --type single-light --pack general
-starwork init --type single-matter --pack content-creator
+starwork init --type project --pack content-creator
 starwork init --type hub
 starwork init --name "我的内容工作台"
 starwork init --formal-source outputs/final
@@ -358,7 +358,7 @@ starwork init --language en
 
 | 参数 | 说明 |
 |---|---|
-| `--type` | 工作区类型：`single-light`、`single-matter`、`hub`。 |
+| `--type` | 工作区类型：`single-light`、`project`、`hub`。 |
 | `--pack` | Pack ID；单项目交互默认 `general`，高级参数可传入兼容 Pack。 |
 | `--language` | 工作台语言：`zh` 或 `en`；交互模式会询问，非交互默认 `zh`。 |
 | `--name` | 工作台名称。 |
@@ -446,7 +446,7 @@ v0.1 `init` 不处理：
 - 普通用户无需理解 Kit / Pack / preset，也能完成初始化。
 - 用户能在写入前看懂将创建什么。
 - 初始化不会静默覆盖已有内容。
-- 单事务项目、多事务项目、多项目管理中枢三种入口边界清楚；默认推荐单事务项目，多事务项目作为进阶入口。
+- 单事务项目、项目工作台、多项目管理中枢三种入口边界清楚；默认推荐单事务项目，项目工作台作为进阶入口。
 - 通用工作和自媒体内容创作都通过 Pack 表达。
 - 多项目管理中枢不安装业务 Pack。
 - 初始化结果可被 `starwork doctor` 检查。

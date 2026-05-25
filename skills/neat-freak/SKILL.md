@@ -20,7 +20,7 @@ This bundled StarWork edition is intentionally small. It helps an agent close a 
 - Do not delete or rewrite user content during cleanup.
 - Do not move files unless the user explicitly asks.
 - Keep product facts separate from process notes.
-- If the workspace uses Matter Mode, keep matter progress and registry status consistent.
+- If the workspace has project-specific process folders, keep their progress and registry status consistent.
 - If unsure where something belongs, explain the ambiguity instead of guessing.
 
 ## Output

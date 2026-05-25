@@ -154,7 +154,7 @@ starwork doctor --target <path> --json --inventory-depth all
 - 当前工作：下一步正在推进什么？
 - 信息边界：资料、草稿、正式成果是否分开？
 - 长期记忆：身份、教训、决策是否有稳定位置？
-- 事项机制：多事务项目是否有过程记录和交接结构？
+- 过程记录：项目工作台是否有过程记录和交接结构？
 - 写入风险：哪些目录应只读，哪些目录允许 Agent 写？
 
 每项状态使用：
@@ -231,7 +231,7 @@ preserve-names
 默认 base：
 
 - 单事务旧模板：`single-light + local-starter + general`
-- 多事务旧模板：`single-matter + local-matter + general`
+- 多线推进旧模板：`project + project + general`
 - Hub-like 主库：`hub + hub + pack:null`
 
 推荐输出目录：

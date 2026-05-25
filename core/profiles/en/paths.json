@@ -8,6 +8,7 @@
     "system.tasks.current_work": "_system/tasks/current-work.md",
     "identity.local": "_system/identity/",
     "lessons.local": "_system/lessons/",
+    "handoff.local": ".starwork/handoff/",
     "work.starter.references": "references/",
     "work.starter.outputs_drafts": "outputs/drafts/",
     "work.starter.outputs_final": "outputs/final/",

@@ -4,7 +4,7 @@ Use this reference when `doctor --json` shows main-repository or Hub-like signal
 
 ## Diagnosis Policy
 
-Treat the directory as a Hub-like main repository candidate, not as a normal `single-matter` legacy template.
+Treat the directory as a Hub-like main repository candidate, not as a normal `project` legacy template.
 
 Recommended wording:
 
@@ -15,7 +15,7 @@ Recommended wording:
 Avoid:
 
 ```text
-建议按 single-matter 升级。
+建议按 project 升级。
 ```
 
 ## Blueprint Defaults
@@ -38,7 +38,7 @@ For a confirmed Hub-like main repository:
 }
 ```
 
-`pack:null` is intentional. It prevents `starwork upgrade` from installing `hub-management` Pack seed files and creating duplicate standard paths such as `项目/` or `知识/`.
+`pack:null` is intentional. It prevents `starwork upgrade` from installing `hub-management` Pack seed files and creating duplicate standard paths. New Hub workspaces use standard paths such as `projects/` and `knowledge/`, but preserve-name upgrades should keep the user's existing Hub-like structure.
 
 ## Required Role Mapping
 
