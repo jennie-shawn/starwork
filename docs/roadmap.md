@@ -133,7 +133,7 @@ M8 v1.0 稳定产品
 
 当前成果：
 
-- GitHub 仓库已推送到 `jennie-shawn/starwork`。
+- GitHub 仓库已推送到 `jennie-shawn/StarWork`。
 - npm 包名为 `@jennie-shawn/starwork`。
 - `starworkInit`、`starworkDoctor`、`starworkMultiagent`、`starworkAudit` 可通过一条 `npx skills add` 命令安装为系统 Skill；`starworkDoctor` 同时承担历史模板诊断、Hub-like 旧主库诊断和升级蓝图生成；`starworkSpawn` 改为 Hub Kit 自带 Skill。
 - 公开 README 已改为中文首页。

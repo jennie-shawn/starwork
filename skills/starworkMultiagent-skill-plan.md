@@ -56,10 +56,10 @@ description: Use this skill when a user wants AI help designing, initializing, u
 ### 更新索引和文档
 
 - `product/skills/README.md` 增加 `starworkMultiagent`。
-- `product/README.md` 的系统 Skill 列表增加安装命令：
+- `product/README.md` 的系统 Skill 安装命令覆盖该 Skill：
 
 ```bash
-npx skills add jennie-shawn/starwork --skill starworkMultiagent -g -a codex -y
+npx skills add jennie-shawn/StarWork -g -a codex -y
 ```
 
 - `product/docs/cli-skill-registry.html` 增加 `starworkMultiagent` 与 `starwork multiagent` 的配合关系。

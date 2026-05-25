@@ -3,7 +3,7 @@
 ## 发布口径
 
 - GitHub organization：`jennie-shawn`
-- GitHub repository：`jennie-shawn/starwork`
+- GitHub repository：`jennie-shawn/StarWork`
 - npm package：`@jennie-shawn/starwork`
 - CLI command：`starwork`
 - A 测 tag：`latest`
@@ -31,7 +31,7 @@ npx @jennie-shawn/starwork --help
 安装 StarWork 系统 skills：
 
 ```bash
-npx skills add jennie-shawn/starwork -g -a codex -y
+npx skills add jennie-shawn/StarWork -g -a codex -y
 ```
 
 说明：这是一条短命令，会安装 StarWork 仓库公开发布的全部 Skills。`starworkSpawn` 和 `neat-freak` 的主要使用入口仍跟着 Kit 走：前者会在 `starwork init --type hub` 时进入 Hub 工作台，后者会在单项目初始化时进入项目。

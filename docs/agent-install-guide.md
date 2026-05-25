@@ -73,7 +73,7 @@ npx @jennie-shawn/starwork@latest --version
 给 Codex 安装 StarWork Skills：
 
 ```bash
-npx skills add jennie-shawn/starwork -g -a codex -y
+npx skills add jennie-shawn/StarWork -g -a codex -y
 ```
 
 如果用户使用的不是 Codex，把 `-a codex` 换成对应 Agent 名称。不要逐个安装单个 Skill。
@@ -81,7 +81,7 @@ npx skills add jennie-shawn/starwork -g -a codex -y
 验证：
 
 ```bash
-npx skills add jennie-shawn/starwork --list
+npx skills add jennie-shawn/StarWork --list
 npx skills ls -g -a codex --json
 ```
 
@@ -158,5 +158,5 @@ npx @jennie-shawn/starwork@latest --help
 重新运行：
 
 ```bash
-npx skills add jennie-shawn/starwork -g -a codex -y
+npx skills add jennie-shawn/StarWork -g -a codex -y
 ```
