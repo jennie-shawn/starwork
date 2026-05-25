@@ -185,6 +185,26 @@ repair-blueprint.json
 rules/
 ```
 
+repair blueprint 和配套文件是 StarWork 巡检 / 修复过程材料，必须写入 Hub 的机制目录，而不是 Hub 或 Satellite 的业务工作区：
+
+```text
+<hub>/.starwork/audit-runs/<YYYY-MM-DD-or-run-id>/
+├── audit-result.json
+├── repair-blueprint.json
+└── rules/
+```
+
+禁止写入：
+
+- Hub `workspace/`
+- Satellite `workspace/`
+- `输出/`、`outputs/`
+- `知识/`、`knowledge/`
+- `参考资料/`、`references/`
+- 任何项目正式成果目录
+
+默认不要生成 `.mjs`、`.js`、`.sh` 等脚本型中间产物。`starworkAudit` 的标准产物是 JSON blueprint 和 Markdown 规则片段；除非用户明确要求调试 CLI，否则不应创建脚本文件。
+
 生成前最多问 3 个问题，且只问会影响蓝图的问题。
 
 推荐问题：
@@ -332,4 +352,3 @@ product/skills/starworkAudit/
 5. 不建议删除或移动用户内容。
 6. 用户明确要求后，能生成符合 `starwork.repair_blueprint.v0.1` 的 blueprint。
 7. 输出中能解释 `audit`、`starworkAudit`、`repair` 三者边界。
-

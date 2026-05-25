@@ -77,6 +77,30 @@ v0.1 不支持：
 
 ## `repair-blueprint.json`
 
+### 推荐存放位置
+
+`repair-blueprint.json` 是 StarWork 巡检 / 修复过程材料，不是 Hub 或 Satellite 的业务文档。
+
+推荐由 `starworkAudit` 生成到 Hub 机制目录：
+
+```text
+<hub>/.starwork/audit-runs/<YYYY-MM-DD-or-run-id>/
+├── audit-result.json
+├── repair-blueprint.json
+└── rules/
+```
+
+不应放入：
+
+- Hub `workspace/`
+- Satellite `workspace/`
+- `输出/`、`outputs/`
+- `知识/`、`knowledge/`
+- `参考资料/`、`references/`
+- 项目正式成果目录
+
+默认不需要生成 `.mjs`、`.js`、`.sh` 等脚本型中间产物。CLI 的修复入口是 `starwork repair --blueprint`，不是执行临时脚本。
+
 ### 最小示例
 
 ```json
@@ -335,4 +359,3 @@ JSON 输出：
 6. `repair` 拒绝不存在的 project_id。
 7. `repair` 拒绝 unsafe path。
 8. `repair` 不覆盖已有用户文件。
-

@@ -2,6 +2,29 @@
 
 `starworkAudit` 生成的 repair blueprint 必须保守。
 
+## 输出位置
+
+repair blueprint 和配套规则是 StarWork 巡检 / 修复过程材料，只能写入 Hub 的机制目录：
+
+```text
+<hub>/.starwork/audit-runs/<YYYY-MM-DD-or-run-id>/
+├── audit-result.json
+├── repair-blueprint.json
+└── rules/
+```
+
+不要写入 Hub 或 Satellite 的业务工作区，例如：
+
+- `workspace/`
+- `输出/`、`outputs/`
+- `知识/`、`knowledge/`
+- `参考资料/`、`references/`
+- 项目正式成果目录
+
+默认不要生成 `.mjs`、`.js`、`.sh` 等脚本型中间产物。修复应通过 `repair-blueprint.json` 表达，规则片段用 Markdown 放入 `rules/`。
+
+## 允许动作
+
 允许的首版动作：
 
 - `ensure_dir`

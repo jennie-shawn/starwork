@@ -26,3 +26,9 @@
 ```text
 我会先生成 repair blueprint。它只补 StarWork 管理结构和同步元数据，不移动项目内容，不覆盖正式成果。
 ```
+
+如果需要落地中间产物：
+
+```text
+我会把 audit result、repair blueprint 和配套规则放到 Hub 的 `.starwork/audit-runs/<run-id>/`，不写入 `workspace/`、输出区、知识库或项目正式成果目录。
+```

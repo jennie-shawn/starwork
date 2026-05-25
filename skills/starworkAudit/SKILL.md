@@ -54,6 +54,30 @@ starwork audit --hub <hub-path> --json --inventory-depth all
 
 5. 只有用户明确要求“生成修复蓝图 / 执行 dry-run / 帮我修”时，才生成 `repair-blueprint.json`。
 
+## 中间产物路径规则
+
+`starworkAudit` 产生的是巡检和修复过程材料，不是项目业务内容。
+
+当需要落地 `audit-result.json`、`repair-blueprint.json`、规则片段或临时说明时，只能写入 Hub 的 StarWork 机制目录：
+
+```text
+<hub>/.starwork/audit-runs/<YYYY-MM-DD-or-run-id>/
+├── audit-result.json
+├── repair-blueprint.json
+└── rules/
+```
+
+禁止写入：
+
+- Hub `workspace/`
+- Satellite `workspace/`
+- `输出/`、`outputs/`
+- `知识/`、`knowledge/`
+- `参考资料/`、`references/`
+- 任何项目业务目录或正式成果目录
+
+除非用户明确要求调试 CLI，否则不要生成 `.mjs`、`.js`、`.sh` 等脚本型中间产物。修复设计应优先使用 `repair-blueprint.json` 和 `rules/*.md`。如果用户明确要求生成调试脚本，也必须放在同一个 `.starwork/audit-runs/<run-id>/` 下，并在回复中说明它不是项目业务文档。
+
 ## 约束
 
 - 不直接改文件。
