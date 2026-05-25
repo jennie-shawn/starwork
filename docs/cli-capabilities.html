@@ -976,14 +976,14 @@ node cli/bin/starwork.js pack install content-creator \
     <section class="section">
       <div class="section-header">
         <h2>现在怎么测试</h2>
-        <p class="section-note">建议先用临时目录完整跑一遍，不要在真实项目里第一次试。下面的命令都在 <code>/Users/shuxinding/satellite-starwork/product</code> 下执行。</p>
+        <p class="section-note">建议先用临时目录完整跑一遍，不要在真实项目里第一次试。下面的命令都在 StarWork 仓库根目录下执行。</p>
       </div>
 
       <div class="test-grid">
         <div class="test-card">
           <h3>方式一：跑自动测试</h3>
           <p>这是最快确认 CLI 没坏的方法。当前测试覆盖 init、spawn、doctor、adapt、pack install 的核心路径。</p>
-          <pre>cd /Users/shuxinding/satellite-starwork/product
+          <pre>cd /path/to/starwork
 npm test</pre>
           <p>预期结果：25 个测试全部通过。</p>
         </div>
@@ -991,13 +991,13 @@ npm test</pre>
         <div class="test-card">
           <h3>方式二：手动跑完整链路</h3>
           <p>这更接近真实用户体验，会在临时目录生成一个工作台，然后检查、适配、补装 Pack。</p>
-          <pre>cd /Users/shuxinding/satellite-starwork/product
+          <pre>cd /path/to/starwork
 
 TEST_DIR=/tmp/starwork-cli-manual-test
 rm -rf "$TEST_DIR"
 
 node cli/bin/starwork.js init \
-  --type single-light \
+  --type project \
   --pack general \
   --target "$TEST_DIR" \
   --yes
@@ -1016,7 +1016,7 @@ node cli/bin/starwork.js doctor --target "$TEST_DIR"</pre>
         <div class="test-card">
           <h3>方式三：手动测试 spawn</h3>
           <p>这会先生成一个 Hub，再从 Hub 生成一个项目项目工作台，并检查两边是否健康。</p>
-          <pre>cd /Users/shuxinding/satellite-starwork/product
+          <pre>cd /path/to/starwork
 
 HUB_DIR=/tmp/starwork-hub-test
 PROJECT_DIR=/tmp/starwork-spawn-test
@@ -1042,7 +1042,7 @@ node cli/bin/starwork.js doctor --target "$PROJECT_DIR"</pre>
         <div class="test-card">
           <h3>方式四：手动测试 blueprint</h3>
           <p>这会用工作台定制单生成一个带定制目录和规则的卫星项目。</p>
-          <pre>cd /Users/shuxinding/satellite-starwork/product
+          <pre>cd /path/to/starwork
 
 BLUEPRINT_DIR=/tmp/starwork-blueprint-test
 HUB_DIR=/tmp/starwork-blueprint-hub

@@ -461,7 +461,7 @@
     <section class="section">
       <div class="section-header">
         <h2>当前总览</h2>
-        <p class="section-note">截至 alpha.9，StarWork 已有 7 个可用 CLI 命令和 5 个自研 Skill。`update` 和 `starwork skill` 仍是未来命令，不在当前可用列表里。</p>
+        <p class="section-note">截至 alpha.11，StarWork 已有 9 个可用 CLI 命令和 6 个自研 Skill。`update` 和 `starwork skill` 仍是未来命令，不在当前可用列表里。</p>
       </div>
       <div class="grid-3">
         <article class="panel">
@@ -476,8 +476,8 @@
         </article>
         <article class="panel">
           <span class="badge">状态</span>
-          <h3>alpha.9</h3>
-          <p>当前 npm latest 为 <code>@jennie-shawn/starwork@0.1.0-alpha.9</code>，已将历史模板升级蓝图生成能力合并进 <code>starworkDoctor</code>，补齐 Hub-like 主库的无损接入诊断和 <code>hub + preserve-names + pack:null</code> 升级路径。</p>
+          <h3>alpha.11</h3>
+          <p>当前 npm latest 为 <code>@jennie-shawn/starwork@0.1.0-alpha.11</code>，已收敛为 Project Kit 与 Hub Kit 两类结构，补齐 Hub 侧 <code>audit</code> / <code>repair</code> 链路，并将系统级 Skills 安装口径统一为一条命令。</p>
         </article>
       </div>
     </section>
@@ -503,7 +503,7 @@
           <tr>
             <td><strong><code>starwork init</code></strong></td>
             <td>从空目录创建 StarWork 工作台。</td>
-            <td>初始化单事务项目 <code>single-light</code>、项目工作台 <code>project</code>、Hub <code>hub</code>；组装 Kit 与 Pack；写入 workspace state、Skill manifest 和入口规则。</td>
+            <td>初始化项目工作台 <code>project</code>、Hub <code>hub</code>；组装 Kit 与 Pack；写入 workspace state、Skill manifest 和入口规则。</td>
             <td><code>--type</code>、<code>--pack</code>、<code>--language</code>、<code>--target</code>、<code>--dry-run</code>、<code>--yes</code></td>
             <td>标准工作台目录、<code>.starwork/workspace.json</code>、<code>.starwork/skills.json</code>、<code>AGENTS.md</code>、Core 必需文件。</td>
             <td>不负责升级已有旧模板；不处理多项目卫星项目创建。</td>
@@ -683,7 +683,7 @@
       <div class="grid-2">
         <div>
           <h3>初始化</h3>
-          <pre>starwork init --type single-light --pack general --target ./my-workspace --dry-run
+          <pre>starwork init --type project --pack general --target ./my-workspace --dry-run
 starwork init --type hub --target ./my-hub --yes</pre>
         </div>
         <div>

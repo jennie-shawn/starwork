@@ -26,7 +26,7 @@ Course 层继续由 `珍妮丁丁GFM` 承载。本项目承载产品本体：Cor
 
 ## 方向约束
 
-- 不复用 `/Users/shuxinding/Project/StarWork` 作为产品基础，该目录只作为 `legacy runtime spike` 参考。
+- 不复用旧本地 Runtime spike 作为产品基础，它只作为历史参考。
 - 不把自研完整 Agent Runtime 作为 v0.1 主线。
 - 不把 Claude Code SDK、Claude Agent SDK 或海外服务作为默认产品依赖。
 - 第一阶段不做 OpenClaw 式消息平台 gateway。

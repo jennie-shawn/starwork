@@ -35,30 +35,40 @@ StarWork skills 分两类管理：
 - 系统 Skill 通过 GitHub 仓库和 `skills` CLI 安装到 Agent 全局环境。
 - Kit 自带 Skill 跟着工作台走，例如 Hub Kit 自带 `starworkSpawn`，单项目 Kit 自带 `neat-freak`。
 
-给 Codex 安装 StarWork 系统 Skill：
+给 Codex 安装全部 StarWork 系统级 Skills：
 
 ```bash
-npx skills add jennie-shawn/starwork --skill starworkInit -g -a codex -y
-npx skills add jennie-shawn/starwork --skill starworkDoctor -g -a codex -y
-npx skills add jennie-shawn/starwork --skill starworkMultiagent -g -a codex -y
+npx skills add jennie-shawn/starwork -g -a codex -y
 ```
 
-如果你只想先安装初始化助手：
+上面是一条命令，会安装 StarWork 仓库公开发布的全部 Skills。当前默认面向 Codex；如果你使用其他 Agent，把 `-a codex` 换成对应 Agent 名称。
 
-```bash
-npx skills add jennie-shawn/starwork --skill starworkInit -g -a codex -y
-```
-
-当前 skills：
+当前系统级 Skills：
 
 - `starworkInit`：帮助 Agent 判断是创建 Project 还是 Hub，选择语言，并生成友好的 `starwork init` 初始化方案。
 - `starworkDoctor`：帮助 Agent 基于 `starwork doctor --json` 做用户能看懂的目录逻辑诊断；可识别历史模板和 Hub-like 旧主库，用户明确要求升级时，也负责生成 `starwork upgrade --blueprint` 升级蓝图。
 - `starworkMultiagent`：帮助 Agent 把“登记当前会话为常用智能体”“管理多 Agent 分工”“登记共享输出”等请求转换成 `starwork multiagent` 命令组合。
-- `starworkSpawn`：Hub Kit 自带 Skill，帮助已有 Hub 设计 `starwork spawn --blueprint` 工作台定制单。
 - `starworkAudit`：帮助 Agent 解读 `starwork audit --json`，判断 Hub 旗下 Project Satellite 的健康状况，并生成保守的 `starwork repair --blueprint` 修复蓝图。
+
+Kit 随附 Skills 的主要使用入口跟着工作台走；即使短命令把它们也安装到全局，也不影响 Hub / Project 内的 Kit 分发逻辑：
+
+- `starworkSpawn`：Hub Kit 自带 Skill，帮助已有 Hub 设计 `starwork spawn --blueprint` 工作台定制单。
 - `neat-freak`：单项目 Kit 自带 Skill，帮助项目收尾、整理和归档。
 
-如果你希望让 Agent 帮你完成安装，可以把 [Agent 安装指南](docs/agent-install-guide.md) 里的提示词发给你的 Agent。
+## 让 Agent 帮你安装
+
+如果你希望让 Agent 帮你完成安装，可以把下面这段提示词发给 Codex、Claude Code 或其他能操作终端的 Agent：
+
+```text
+请帮我安装并验证 StarWork。
+
+请先阅读 StarWork 的 Agent 安装指南，再按文档执行：
+https://raw.githubusercontent.com/jennie-shawn/starwork/main/docs/agent-install-guide.md
+
+请不要覆盖我的真实项目文件；测试只使用临时目录。完成后告诉我 CLI 版本、Skills 安装结果和临时工作台验证结果。
+```
+
+更完整的 Agent 操作流程见 [Agent 安装指南](docs/agent-install-guide.md)。
 
 ## 快速开始
 
