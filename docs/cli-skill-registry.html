@@ -557,8 +557,8 @@
           <tr>
             <td><strong><code>starwork multiagent</code></strong></td>
             <td>管理同一项目内多个 Agent 会话的职责位协作。</td>
-            <td>初始化 Agent Lanes；新增自定义 lane；维护 lane worklog；绑定或释放 session；查看状态；登记跨 lane 可读输出。</td>
-            <td><code>init</code>、<code>add</code>、<code>bind</code>、<code>release</code>、<code>status</code>、<code>share</code>、<code>--target</code>、<code>--session</code></td>
+            <td>初始化 Agent Lanes；新增自定义 lane；维护 lane worklog；绑定或释放 session；可选同步 Codex 宿主会话名；查看状态；登记跨 lane 可读输出。</td>
+            <td><code>init</code>、<code>add</code>、<code>bind</code>、<code>release</code>、<code>status</code>、<code>share</code>、<code>--target</code>、<code>--session</code>、<code>--session-name</code></td>
             <td><code>_系统/协作/agent-lanes.md</code>、<code>_系统/协作/shared.md</code> 和 lane <code>worklog.md</code>。</td>
             <td>不内置固定职责；不做任务系统、锁或调度。</td>
             <td><span class="status done">已实现</span></td>
@@ -634,7 +634,7 @@
             <td><strong><code>starworkMultiagent</code></strong></td>
             <td>多 Agent 协作命令包装助手。</td>
             <td>用户想把当前会话登记为常用智能体、管理 Agent 职责位、绑定或释放 session、查看分工、登记共享输出。</td>
-            <td>判断用户语义；确认 lane ID、职责、写入范围和 session；把请求翻译成 <code>multiagent init/add/bind/release/status/share</code> 命令组合。</td>
+            <td>判断用户语义；确认 lane ID、职责、写入范围、session 和可选宿主会话显示名称；把请求翻译成 <code>multiagent init/add/bind/release/status/share</code> 命令组合。</td>
             <td>multiagent dry-run 命令、确认后的执行命令、当前分工解释、过程材料放置建议。</td>
             <td><code>starwork multiagent</code></td>
             <td><span class="status done">已实现</span></td>
@@ -704,7 +704,7 @@ starwork pack install content-creator --target ./my-workspace --dry-run</pre>
         <div>
           <h3>多 Agent 协作</h3>
           <pre>starwork multiagent init --lanes research,writing,review --target ./my-workspace --yes
-starwork multiagent bind research --session codex:manual-research-1 --target ./my-workspace --yes
+starwork multiagent bind research --session codex:manual-research-1 --session-name "Research Agent" --target ./my-workspace --yes
 starwork multiagent share research --title "Source notes draft" --path notes/source-notes.md --audience writing,review --target ./my-workspace --yes</pre>
         </div>
       </div>

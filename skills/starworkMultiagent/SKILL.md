@@ -69,16 +69,19 @@ starwork multiagent init --target <path> --dry-run
    - 可主动修改的路径范围。
    - 该 lane 的过程工作区，默认是 `_系统/协作/lanes/<lane-id>/workspace/`。
    - 当前 session ID；无法自动识别时，请用户提供 `agent:session-id`。
+   - 宿主会话显示名称；仅当用户希望在 Codex 等宿主会话列表中同步改名时使用。
 4. 生成 dry-run 命令：
 
 ```bash
 starwork multiagent add <lane> --purpose "<text>" --write "<path-globs>" --target <path> --dry-run
-starwork multiagent bind <lane> --session <agent:session-id> --target <path> --dry-run
+starwork multiagent bind <lane> --session <agent:session-id> --session-name "<display-name>" --target <path> --dry-run
 ```
 
 5. 用户确认后，再把写入类命令改为 `--yes` 执行。
 
 如果 lane 已存在，不重复 `add`；只做 `bind`，并说明是否会替换已有绑定。若已有其他 session 绑定，默认先停下来确认。
+
+`--session-name` 是宿主工具显示增强，不是 StarWork 事实源。用户未要求改名时不要强行添加；如果添加，必须在 dry-run 中说明会尝试修改宿主会话标题，且失败不影响 lane binding。
 
 ## 子命令使用规则
 
@@ -131,6 +134,20 @@ codex:<session-id>
 ```bash
 starwork multiagent bind <lane> --session <agent:session-id> --target <path> --dry-run
 ```
+
+如果用户要把当前会话命名成某个常用智能体，可加入：
+
+```bash
+starwork multiagent bind <lane> --session <agent:session-id> --session-name "<display-name>" --target <path> --dry-run
+```
+
+推荐显示名称格式：
+
+```text
+<项目或产品名> <职责> Agent
+```
+
+例如 `StarWork CLI 维护 Agent`。当前只有 Codex session 支持同步宿主会话名；失败只作为 warning，不影响绑定。
 
 ### release
 

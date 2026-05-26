@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const readline = require("readline");
+const { spawnSync } = require("child_process");
 
 const PRODUCT_ROOT = path.resolve(__dirname, "..", "..");
 const PACKAGE_VERSION = require(path.join(PRODUCT_ROOT, "package.json")).version;
@@ -636,6 +637,8 @@ function parseArgs(argv) {
       options.write = readValue(argv, ++i, arg);
     } else if (arg === "--session") {
       options.session = readValue(argv, ++i, arg);
+    } else if (arg === "--session-name") {
+      options.sessionName = readValue(argv, ++i, arg);
     } else if (arg === "--title") {
       options.title = readValue(argv, ++i, arg);
     } else if (arg === "--path") {
@@ -826,12 +829,48 @@ async function lanesBind(argv) {
   }
   const nextLanes = registry.lanes.map((item) => item.lane === laneId ? { ...item, current_session: session } : item);
   const plan = buildLanesRegistryPlan(workspaceRoot, nextLanes);
-  printGenericPlan(options.dryRun ? "绑定 Lane 预览（dry run）：" : "绑定 Lane 计划：", plan.actions);
+  const sessionName = normalizeMarkdownCell(options.sessionName || "");
+  const dryRunSessionNameSync = createSessionNameSyncResult({
+    requested: Boolean(sessionName),
+    supported: null,
+    status: sessionName ? "dry_run" : "not_requested",
+    name: sessionName,
+    warning: sessionName ? "Dry run only; host session was not renamed." : null
+  });
+  if (options.json && options.dryRun) {
+    console.log(JSON.stringify(renderLanesBindResult({
+      workspaceRoot,
+      laneId,
+      session,
+      dryRun: true,
+      sessionNameSync: dryRunSessionNameSync
+    }), null, 2));
+    return;
+  }
+  if (!options.json) {
+    printGenericPlan(options.dryRun ? "绑定 Lane 预览（dry run）：" : "绑定 Lane 计划：", plan.actions);
+    if (sessionName) {
+      console.log(`将尝试同步宿主会话名：${sessionName}（best effort）`);
+      console.log("");
+    }
+  }
   if (options.dryRun) return;
   await confirmOrThrow(options, `是否将当前会话绑定到 Lane ${laneId}？`);
   applyPlan(plan);
+  const sessionNameSync = renameHostSessionBestEffort({ session, sessionName });
+  if (options.json) {
+    console.log(JSON.stringify(renderLanesBindResult({
+      workspaceRoot,
+      laneId,
+      session,
+      dryRun: false,
+      sessionNameSync
+    }), null, 2));
+    return;
+  }
   console.log("");
   console.log(`Lane ${laneId} 已绑定到 ${session}。`);
+  printSessionNameSyncResult(sessionNameSync);
 }
 
 async function lanesRelease(argv) {
@@ -4286,6 +4325,146 @@ function resolveLaneSession(options) {
   throw new Error("无法自动识别当前会话。请传入 --session <agent:session-id>。");
 }
 
+function renderLanesBindResult({ workspaceRoot, laneId, session, dryRun, sessionNameSync }) {
+  return {
+    schema: "starwork.agent_lanes.bind_result.v0.1",
+    target: workspaceRoot,
+    lane: laneId,
+    session,
+    dry_run: Boolean(dryRun),
+    session_name_sync: sessionNameSync
+  };
+}
+
+function createSessionNameSyncResult({ requested, supported, status, name = "", warning = null }) {
+  return {
+    requested: Boolean(requested),
+    supported,
+    status,
+    name: name || null,
+    warning: warning || null
+  };
+}
+
+function printSessionNameSyncResult(result) {
+  if (!result.requested) return;
+  if (result.status === "ok") {
+    console.log(`宿主会话已重命名为：${result.name}`);
+    return;
+  }
+  if (result.warning) {
+    console.log(`Warning: session name sync failed: ${result.warning}`);
+  }
+}
+
+function renameHostSessionBestEffort({ session, sessionName }) {
+  if (!sessionName) {
+    return createSessionNameSyncResult({
+      requested: false,
+      supported: false,
+      status: "not_requested"
+    });
+  }
+  const threadId = extractCodexThreadId(session);
+  if (!threadId) {
+    return createSessionNameSyncResult({
+      requested: true,
+      supported: false,
+      status: "skipped",
+      name: sessionName,
+      warning: "Current session adapter does not support host session naming"
+    });
+  }
+  return renameCodexThreadBestEffort({ threadId, sessionName });
+}
+
+function extractCodexThreadId(session) {
+  const normalizedSession = normalizeMarkdownCell(session);
+  if (normalizedSession.startsWith("codex:")) {
+    return normalizedSession.slice("codex:".length);
+  }
+  return null;
+}
+
+function renameCodexThreadBestEffort({ threadId, sessionName }) {
+  const request = [
+    {
+      jsonrpc: "2.0",
+      id: 1,
+      method: "initialize",
+      params: {
+        clientInfo: {
+          name: "starwork",
+          version: PACKAGE_VERSION
+        },
+        capabilities: null
+      }
+    },
+    {
+      jsonrpc: "2.0",
+      id: 2,
+      method: "thread/name/set",
+      params: {
+        threadId,
+        name: sessionName
+      }
+    }
+  ].map((message) => JSON.stringify(message)).join("\n") + "\n";
+
+  const result = spawnSync("codex", ["app-server", "--listen", "stdio://"], {
+    input: request,
+    encoding: "utf8",
+    timeout: 5000
+  });
+  if (result.error) {
+    return createSessionNameSyncResult({
+      requested: true,
+      supported: true,
+      status: "warning",
+      name: sessionName,
+      warning: result.error.message
+    });
+  }
+  if (result.status !== 0) {
+    return createSessionNameSyncResult({
+      requested: true,
+      supported: true,
+      status: "warning",
+      name: sessionName,
+      warning: (result.stderr || `codex app-server exited with status ${result.status}`).trim()
+    });
+  }
+  const response = parseJsonRpcResponse(result.stdout, 2);
+  if (!response || response.error) {
+    return createSessionNameSyncResult({
+      requested: true,
+      supported: true,
+      status: "warning",
+      name: sessionName,
+      warning: response?.error?.message || "Codex app-server did not confirm thread/name/set"
+    });
+  }
+  return createSessionNameSyncResult({
+    requested: true,
+    supported: true,
+    status: "ok",
+    name: sessionName
+  });
+}
+
+function parseJsonRpcResponse(stdout, id) {
+  const lines = String(stdout || "").split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  for (const line of lines) {
+    try {
+      const message = JSON.parse(line);
+      if (message.id === id) return message;
+    } catch {
+      // Ignore non-JSON app-server output.
+    }
+  }
+  return null;
+}
+
 function normalizeMarkdownCell(value) {
   return String(value || "").replace(/\r?\n/g, " ").trim();
 }
@@ -4987,7 +5166,7 @@ Subcommands:
 示例：
   starwork multiagent init --lanes research,writing,review --target ./my-workspace --yes
   starwork multiagent add review --purpose "审校和风险检查" --write "reviews/**,product/docs/**" --target ./my-workspace --yes
-  starwork multiagent bind research --session codex:manual-research-1 --target ./my-workspace --yes
+  starwork multiagent bind research --session codex:manual-research-1 --session-name "Research Agent" --target ./my-workspace --yes
 `);
 }
 
@@ -5033,8 +5212,14 @@ Options:
   --target <path>
   --agent <codex|claude|cursor|trae|manual>
   --session <agent:session-id>
+  --session-name <name>
+  --json
   --dry-run
   --yes, -y
+
+说明：
+  --session-name 会在绑定成功后 best-effort 同步宿主工具的会话名称。
+  当前仅 Codex session 支持；失败不会回滚 lane binding。
 `);
 }
 

@@ -43,7 +43,7 @@ product/core/agent-lanes-spec.md
 `starworkMultiagent` 应该做：
 
 - 判断用户是在初始化协作层、登记当前会话、增加 lane、绑定会话、释放会话、查看状态，还是登记共享输出。
-- 采访 lane ID、职责、写入范围、session ID、共享输出受众。
+- 采访 lane ID、职责、写入范围、session ID、可选宿主会话显示名称、共享输出受众。
 - 判断过程材料应进入 lane workspace，还是应晋升到项目正式输出目录。
 - 生成可 dry-run 的 `starwork multiagent` 命令。
 - 在用户确认后执行写入类命令。
@@ -95,7 +95,7 @@ starwork multiagent add <lane> --purpose "<text>" --write "<path-globs>" --targe
 6. 生成绑定命令：
 
 ```bash
-starwork multiagent bind <lane> --session <agent:session-id> --target <path> --dry-run
+starwork multiagent bind <lane> --session <agent:session-id> --session-name "<display-name>" --target <path> --dry-run
 ```
 
 7. 用户确认后用 `--yes` 执行。
@@ -141,6 +141,21 @@ starwork multiagent status --target <path> --json
 `bind` 将具体 session 绑定到 lane。
 
 优先使用真实 session ID；无法识别时要求用户提供 `--session <agent:session-id>`。若目标 lane 已绑定其他 session，默认不覆盖，先确认。
+
+如果用户希望把宿主工具中的会话标题也改成该 Agent 的职责名称，skill 可以加入 `--session-name <name>`。这只是宿主显示增强，不是 StarWork 事实源；必须在 dry-run 中让用户看到，并说明失败不会影响绑定。
+
+推荐命名格式：
+
+```text
+<项目或产品名> <职责> Agent
+```
+
+例如：
+
+```text
+StarWork 新功能预研 Agent
+StarWork CLI 维护 Agent
+```
 
 ### `release`
 
@@ -253,6 +268,7 @@ skill 判断放置位置时遵循：
 - 只读 `status` 可以直接运行。
 - 不创建默认 lane 模板。
 - 不静默覆盖已有绑定。
+- 不在用户未确认时猜测并写入宿主会话名。
 - 不绕过 StarWork 工作区边界。
 - 不修改 `matters/registry.md`。
 - 不把 lane workspace 当成项目正式事实源。
@@ -262,4 +278,5 @@ skill 判断放置位置时遵循：
 - 给定“请把当前会话创建为一个负责资料整理的常用智能体”，skill 能解释为“登记当前会话为常用智能体”，并生成必要的 `init`、`add`、`bind` 命令。
 - 给定“我想让三个 Agent 分别负责资料、写作、审校”，skill 生成项目自定义 lane 建议，不输出固定开发模板。
 - 给定“把当前 Codex 绑定到 review”，skill 要求或使用 session ID，并生成 `starwork multiagent bind review ...`。
+- 给定“把当前会话登记成 StarWork CLI 维护 Agent”，skill 生成包含 `--session-name "StarWork CLI 维护 Agent"` 的 dry-run，并说明这是宿主会话显示增强。
 - 给定“这个输出给 writing 和 review 看”，skill 生成 `starwork multiagent share ...`，不移动原文件。

@@ -27,15 +27,44 @@ function runDoctor(args) {
   });
 }
 
-function runCommand(args) {
+function runCommand(args, options = {}) {
   return spawnSync(process.execPath, [bin, ...args], {
     cwd: root,
+    env: {
+      ...process.env,
+      ...(options.env || {})
+    },
     encoding: "utf8"
   });
 }
 
 function readJson(file) {
   return JSON.parse(fs.readFileSync(file, "utf8"));
+}
+
+function fakeCodexBin({ exitCode = 0, stderr = "", inputPath } = {}) {
+  const dir = tempDir();
+  const binDir = path.join(dir, "bin");
+  fs.mkdirSync(binDir, { recursive: true });
+  const codex = path.join(binDir, "codex");
+  fs.writeFileSync(codex, `#!/usr/bin/env node
+const fs = require("fs");
+const input = fs.readFileSync(0, "utf8");
+if (process.env.STARWORK_FAKE_CODEX_INPUT) {
+  fs.writeFileSync(process.env.STARWORK_FAKE_CODEX_INPUT, input);
+}
+if (${JSON.stringify(stderr)}) process.stderr.write(${JSON.stringify(stderr)});
+console.log(JSON.stringify({ jsonrpc: "2.0", id: 1, result: {} }));
+console.log(JSON.stringify(${exitCode === 0 ? "{ jsonrpc: \"2.0\", id: 2, result: {} }" : "{ jsonrpc: \"2.0\", id: 2, error: { message: \"rename failed\" } }"}));
+process.exit(${exitCode});
+`, "utf8");
+  fs.chmodSync(codex, 0o755);
+  return {
+    env: {
+      PATH: `${binDir}${path.delimiter}${process.env.PATH}`,
+      ...(inputPath ? { STARWORK_FAKE_CODEX_INPUT: inputPath } : {})
+    }
+  };
 }
 
 test("prints version and product-oriented help", () => {
@@ -244,6 +273,71 @@ test("multiagent add bind share and status update markdown state", () => {
   assert.equal(report.lanes[0].current_session, "codex:manual-review-1");
   assert.equal(report.lanes[0].workspace, "lanes/review/workspace");
   assert.equal(report.shared_outputs[0].title, "Review checklist");
+});
+
+test("multiagent bind can sync codex host session name", () => {
+  const dir = tempDir();
+  const inputPath = path.join(tempDir(), "codex-input.jsonl");
+  runInit(["--type", "single-light", "--pack", "general", "--target", dir, "--yes"]);
+  runCommand(["multiagent", "init", "--target", dir, "--yes"]);
+  runCommand([
+    "multiagent", "add", "research",
+    "--purpose", "新功能预研",
+    "--write", "_系统/协作/lanes/research/**",
+    "--target", dir,
+    "--yes"
+  ]);
+
+  const fakeCodex = fakeCodexBin({ inputPath });
+  const bind = runCommand([
+    "multiagent", "bind", "research",
+    "--session", "codex:test-thread-1",
+    "--session-name", "StarWork 新功能预研 Agent",
+    "--target", dir,
+    "--json",
+    "--yes"
+  ], { env: fakeCodex.env });
+  const result = JSON.parse(bind.stdout);
+  const input = fs.readFileSync(inputPath, "utf8");
+  const registry = fs.readFileSync(path.join(dir, "_系统", "协作", "agent-lanes.md"), "utf8");
+
+  assert.equal(bind.status, 0);
+  assert.equal(result.session_name_sync.status, "ok");
+  assert.equal(result.session_name_sync.name, "StarWork 新功能预研 Agent");
+  assert.match(input, /"method":"initialize"/);
+  assert.match(input, /"method":"thread\/name\/set"/);
+  assert.match(input, /"threadId":"test-thread-1"/);
+  assert.match(registry, /codex:test-thread-1/);
+});
+
+test("multiagent bind keeps binding when host session rename fails", () => {
+  const dir = tempDir();
+  runInit(["--type", "single-light", "--pack", "general", "--target", dir, "--yes"]);
+  runCommand(["multiagent", "init", "--target", dir, "--yes"]);
+  runCommand([
+    "multiagent", "add", "maintenance",
+    "--purpose", "CLI 维护",
+    "--write", "product/cli/**",
+    "--target", dir,
+    "--yes"
+  ]);
+
+  const fakeCodex = fakeCodexBin({ exitCode: 1, stderr: "app-server unavailable" });
+  const bind = runCommand([
+    "multiagent", "bind", "maintenance",
+    "--session", "codex:test-thread-2",
+    "--session-name", "StarWork CLI 维护 Agent",
+    "--target", dir,
+    "--json",
+    "--yes"
+  ], { env: fakeCodex.env });
+  const result = JSON.parse(bind.stdout);
+  const registry = fs.readFileSync(path.join(dir, "_系统", "协作", "agent-lanes.md"), "utf8");
+
+  assert.equal(bind.status, 0);
+  assert.equal(result.session_name_sync.status, "warning");
+  assert.match(result.session_name_sync.warning, /app-server unavailable/);
+  assert.match(registry, /codex:test-thread-2/);
 });
 
 test("multiagent status infers workspace for legacy registries", () => {

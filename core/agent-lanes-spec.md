@@ -124,6 +124,31 @@ Lane 的 worklog 和 workspace 属于项目协作内容，不进入 `.starwork/`
 - 读取不到真实 session ID 时，可使用手写 ID，例如 `codex:manual-research-1`。
 - 未绑定 lane 的 Agent 不应默认接管整个项目。
 
+### 2.1 Host Session Display Name
+
+宿主会话显示名称是 Agent Lanes 的体验增强，不是事实源。
+
+定义：
+
+- 宿主工具中展示给用户看的会话标题，例如 Codex Desktop 的 thread name。
+- 可在 `multiagent bind` 成功后 best-effort 同步。
+- 不作为 lane binding 的事实源。
+- 不参与冲突判断、write scope 判断或状态恢复。
+
+当前 v0.1 支持：
+
+```bash
+starwork multiagent bind research \
+  --session codex:manual-research-1 \
+  --session-name "StarWork 资料预研 Agent"
+```
+
+实现边界：
+
+- 改名失败不回滚 lane binding。
+- 当前仅 Codex adapter 支持通过 app-server 协议同步。
+- 不得直接改写宿主工具私有状态文件，例如 `~/.codex/state_5.sqlite` 或 `~/.codex/session_index.jsonl`。
+
 ### 3. Write Scope
 
 每个 lane 必须声明写入范围。
@@ -368,12 +393,14 @@ starwork multiagent add research \
 starwork multiagent bind research
 starwork multiagent bind research --agent codex
 starwork multiagent bind research --session codex:manual-research-1
+starwork multiagent bind research --session codex:manual-research-1 --session-name "Research Agent"
 ```
 
 行为：
 
 - Codex 环境优先读取 `CODEX_THREAD_ID`。
 - 当前 CLI v0.1 更新 `agent-lanes.md` 中对应 lane 的 `current_session`。
+- 如果传入 `--session-name`，绑定成功后 best-effort 同步宿主工具会话名；失败只提示 warning。
 - 后续目标结构改为更新 `.starwork/agent-lanes/state.json`，可见 registry 不再承担机器绑定状态。
 - 如果 lane 已绑定其他 session，必须提示冲突；非交互模式默认拒绝覆盖。
 
