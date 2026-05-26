@@ -1,6 +1,8 @@
 # StarWork Skills
 
-这里存放 StarWork 自研 Agent skill。
+这里存放会通过 `npx skills add jennie-shawn/StarWork` 安装到 Agent 全局环境的 StarWork 系统级 skill。
+
+Kit 自带 skill 不放在这里，避免被全局安装命令误识别；它们存放在 `product/kit-skills/`，由 `starwork init` 按工作区类型写入具体工作台。
 
 Skill 的职责不是替代 CLI，而是帮助 Agent 更可靠地理解用户意图、生成配置、组织规则和调用 StarWork 工具。
 
@@ -11,12 +13,13 @@ Skill 的安装、Hub 管理、Pack 推荐和项目分发规则见 `product/core
 - 与 Core 协议相关的事实源放在 `product/core/`。
 - 与 CLI 命令相关的规格和实现放在 `product/cli/`。
 - 与 Pack 场景相关的正式包放在 `product/packs/`。
-- 与 Agent 工作流相关、可被复用为 skill 的内容放在 `product/skills/`。
+- 系统级 Agent 工作流 skill 放在 `product/skills/`。
+- Kit 自带 skill 放在 `product/kit-skills/`。
 
 ## 当前 Skills
 
-- `starworkSpawn/`：帮助 Agent 设计 `starwork spawn --blueprint` 工作台定制单。
 - `starworkInit/`：帮助 Agent 设计 `starwork init` 初始化方案和 init blueprint。详细 SPEC 见 `starworkInit-spec.md`。
 - `starworkDoctor/`：帮助 Agent 基于 `starwork doctor --json` 的探测结果，对当前工作区或历史模板做理性诊断；用户明确要求升级时，继续确认目录语义并生成 `starwork upgrade --blueprint` 升级施工图。详细 SPEC 见 `starworkDoctor-spec.md`。
 - `starworkMultiagent/`：帮助 Agent 把“常用智能体 / 当前会话职责 / 多 Agent 分工 / 共享输出”翻译成安全的 `starwork multiagent` 命令组合。详细 SPEC 见 `starworkMultiagent-spec.md`。
-- `starworkAudit/`：规划中的 Hub 巡检解读 skill，基于 `starwork audit --json` 判断多个 Satellite 的健康状况，并在用户确认后生成 `starwork repair --blueprint` 修复施工图。详细 SPEC 见 `starworkAudit-spec.md`。
+
+`starworkAudit` 是 Hub Kit 自带 skill，源码在 `product/kit-skills/starworkAudit/`；规格仍保留在 `starworkAudit-spec.md`。

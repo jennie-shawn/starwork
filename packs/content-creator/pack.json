@@ -20,10 +20,10 @@
   },
   "flow": ["account_profile", "ideas", "materials", "drafts", "published", "review"],
   "rules": [
-    { "id": "overview", "slot": "pack.overview" },
-    { "id": "workflow", "slot": "pack.workflow" },
-    { "id": "file-boundaries", "slot": "pack.file_boundaries" },
-    { "id": "review", "slot": "pack.review" }
+    { "id": "overview", "slot": "pack.content-creator.overview" },
+    { "id": "workflow", "slot": "pack.content-creator.workflow" },
+    { "id": "file-boundaries", "slot": "pack.content-creator.file_boundaries" },
+    { "id": "review", "slot": "pack.content-creator.review" }
   ],
   "templates": [
     { "id": "content-brief" },

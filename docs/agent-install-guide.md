@@ -90,9 +90,8 @@ npx skills ls -g -a codex --json
 - `starworkInit`
 - `starworkDoctor`
 - `starworkMultiagent`
-- `starworkAudit`
 
-说明：短命令可能也会安装公开仓库中的 Kit 随附 Skills，例如 `starworkSpawn` 和 `neat-freak`。这不影响它们在 Hub / Project Kit 内的随工作区分发逻辑。
+确认不应该把 Kit 随附 Skills 安装到全局，例如 `starworkSpawn`、`starworkAudit` 和 `neat-freak`。它们应由 `starwork init` 按工作区类型写入具体工作台。
 
 ## Step 5：询问是否继续初始化
 

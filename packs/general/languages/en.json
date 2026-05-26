@@ -11,8 +11,8 @@
     "business_work_area": "outputs/drafts/"
   },
   "rules": [
-    { "slot": "pack.overview", "from": "rules/en/overview.md" },
-    { "slot": "pack.workflow", "from": "rules/en/workflow.md" }
+    { "slot": "pack.general.overview", "from": "rules/en/overview.md" },
+    { "slot": "pack.general.workflow", "from": "rules/en/workflow.md" }
   ],
   "templates": [],
   "seed": []

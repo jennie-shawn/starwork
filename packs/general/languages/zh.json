@@ -11,8 +11,8 @@
     "business_work_area": "输出/草稿/"
   },
   "rules": [
-    { "slot": "pack.overview", "from": "rules/zh/overview.md" },
-    { "slot": "pack.workflow", "from": "rules/zh/workflow.md" }
+    { "slot": "pack.general.overview", "from": "rules/zh/overview.md" },
+    { "slot": "pack.general.workflow", "from": "rules/zh/workflow.md" }
   ],
   "templates": [],
   "seed": []

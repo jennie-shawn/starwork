@@ -1,6 +1,6 @@
 ---
 name: starworkSpawn
-description: Use this skill when a user wants to design or generate a customized StarWork satellite workspace for `starwork spawn --blueprint`, including choosing starter vs project mode, drafting blueprint.json, writing project rules, planning seed files, and explaining how to execute and validate the spawn.
+description: 'Design customized Satellite workspaces for `starwork spawn --blueprint`: choose mode/language, draft blueprint.json, rules, seed files, and validation steps.'
 ---
 
 # starworkSpawn

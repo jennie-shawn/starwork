@@ -16,8 +16,8 @@
   },
   "flow": ["projects", "coordination", "incoming"],
   "rules": [
-    { "id": "overview", "slot": "pack.overview" },
-    { "id": "workflow", "slot": "pack.workflow" }
+    { "id": "overview", "slot": "pack.hub-management.overview" },
+    { "id": "workflow", "slot": "pack.hub-management.workflow" }
   ],
   "templates": [],
   "seed": [

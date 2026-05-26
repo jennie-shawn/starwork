@@ -100,8 +100,8 @@ content-creator/
   },
   "flow": ["account_profile", "ideas", "materials", "drafts", "published", "review"],
   "rules": [
-    { "id": "overview", "slot": "pack.overview" },
-    { "id": "workflow", "slot": "pack.workflow" }
+    { "id": "overview", "slot": "pack.content-creator.overview" },
+    { "id": "workflow", "slot": "pack.content-creator.workflow" }
   ],
   "templates": [
     { "id": "content-brief" },
@@ -146,7 +146,7 @@ content-creator/
     "business_work_area": "草稿与脚本/"
   },
   "rules": [
-    { "slot": "pack.overview", "from": "rules/zh/overview.md" }
+    { "slot": "pack.content-creator.overview", "from": "rules/zh/overview.md" }
   ],
   "templates": [
     { "id": "content-brief", "from": "templates/zh/content-brief.md", "description": "单篇内容大纲模板" }
@@ -186,7 +186,7 @@ CLI 安装 Pack 时，应按以下顺序执行：
 4. 合并得到本次安装用的 Pack 配置。
 5. 校验 Core 版本、工作区类型和 capabilities。
 6. 用语言层 `paths` 创建场景目录。
-7. 用语言层 `rules` 渲染 Markdown 片段，并注入 Agent 入口文件。
+7. 用语言层 `rules` 渲染 Markdown 片段，并注入 Agent 入口文件；规则槽必须使用 `pack.<pack-id>.<rule-id>`，避免不同 Pack 互相覆盖。
 8. 用语言层 `seed` 生成占位文件写入计划。
 9. 用语言层 `templates` 登记或复制业务模板。
 10. 展示预览。

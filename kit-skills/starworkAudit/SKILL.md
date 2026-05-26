@@ -1,6 +1,6 @@
 ---
 name: starworkAudit
-description: Use this skill when a user wants an AI-readable and user-readable diagnosis of a Hub audit result, including interpreting `starwork audit --json`, prioritizing Satellite project issues, asking only necessary repair questions, and generating a conservative `starwork repair --blueprint` plan.
+description: 'Diagnose `starwork audit --json` Hub/Satellite findings, prioritize issues, ask repair questions, and draft conservative `starwork repair --blueprint` plans.'
 ---
 
 # starworkAudit

@@ -1,6 +1,6 @@
 ---
 name: starworkInit
-description: Use this skill when a user wants to initialize a new StarWork workspace, choose between project and hub workspace types, choose Chinese or English workspace language, design friendly init interview flows, draft init blueprints, and explain how `starwork init` should execute and validate the result.
+description: 'Plan friendly StarWork init flows: choose project or hub, zh/en language, customization needs, and how to run and verify `starwork init`.'
 ---
 
 # starworkInit

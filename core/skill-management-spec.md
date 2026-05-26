@@ -55,7 +55,7 @@ StarWork 的 Skill 机制不是一个简单的安装动作，而是一套 Agent 
 | 类型 | 示例 | 主要位置 | 作用 | 是否默认进项目 |
 |---|---|---|---|---|
 | 系统 Skill | `starworkInit`、`starworkDoctor` | 用户全局 Agent Skill 环境 | 让 Agent 会操作 StarWork | 否 |
-| Kit 自带 Skill | `starworkSpawn`、`neat-freak` | Kit 的 `skills/` 声明或随 Kit 写入 | 配合某种工作区形态使用 | 按 Kit 默认规则进入 |
+| Kit 自带 Skill | `starworkSpawn`、`starworkAudit`、`neat-freak` | 产品源码 `kit-skills/`，工作台内写入 `skills/` 或 `.agents/skills/` | 配合某种工作区形态使用 | 按 Kit 默认规则进入 |
 | Pack 自带 Skill | 内容创作者审稿、发布检查等 | Pack 的 `skills/` 声明或随 Pack 写入 | 配合某个场景 Pack 使用 | 用户确认后进入 |
 | Hub 托管 Skill | 用户收藏的写作、复盘、会议、整理 Skill | Hub `skills/` | 用户跨项目复用的能力库 | 按规则或用户选择分发 |
 | 项目本地 Skill | 某项目专用工作流 | Satellite 或单项目 `.agents/skills/` | 只服务当前项目 | 是，本项目拥有 |
@@ -74,17 +74,22 @@ npx skills add ...
 
 StarWork 只把它视为“Agent 已学会 StarWork 操作方式”，不把这些 Skill 复制进工作区。
 
+系统 Skill 的源码位于产品仓库 `skills/`。该目录会被 `npx skills add jennie-shawn/StarWork` 扫描，因此只能放全局系统级 Skill，不能放 Kit 自带 Skill。
+
 ### 2. Kit 自带 Skill 声明
 
 Kit 可以声明某种工作区形态天然应该具备哪些 Skill。
 
+Kit 自带 Skill 的源码位于产品仓库 `kit-skills/`，避免被全局 `skills add` 命令误装。CLI 初始化工作台时，再把它们复制或挂载到目标工作台内。
+
 例如：
 
 - `hub` Kit 可以自带 `starworkSpawn`，因为 Hub 需要创建和管理卫星项目。
+- `hub` Kit 可以自带 `starworkAudit`，因为 Hub 需要巡检和修复旗下卫星项目。
 - 单项目 Kit 可以自带或推荐 `neat-freak`，因为单项目需要阶段性清理、收尾和归档。
 - `project` Kit 可以自带事项协作相关 Skill。
 
-建议在 Kit 中保留声明文件：
+工作台内可以保留声明文件：
 
 ```text
 skills/
@@ -111,7 +116,7 @@ skills/
 }
 ```
 
-Kit 自带 Skill 是工作区形态的一部分，不属于 Hub Skill 库。Hub 只是安装 Hub Kit 后拥有了这些能力。
+Kit 自带 Skill 是工作区形态的一部分，不属于 Hub Skill 库，也不属于全局系统 Skill。Hub 只是安装 Hub Kit 后拥有了这些能力。
 
 ### 3. Hub 托管 Skill 库
 
@@ -563,8 +568,8 @@ CLI 负责执行和校验。
 
 ## 待确认问题
 
-1. Kit 自带 Skill 的声明文件放在 Kit 内 `skills/manifest.json`，还是放在 preset / workspace state 中？
-2. `starworkSpawn` 是否随 Hub Kit 直接复制进 Hub `skills/`，还是以 npm 包中的 Skill 源为只读引用？
+1. Kit 自带 Skill 的声明文件长期放在 Kit 内 `skills/manifest.json`，还是继续由 CLI 内置映射和 workspace state 表达？
+2. `starworkSpawn` 是否随 Hub Kit 直接复制进 Hub `skills/`，还是以 npm 包中的 `kit-skills/` Skill 源为只读引用？
 3. `neat-freak` 作为单项目 Kit 自带 Skill 时，是默认写入所有单项目 Kit，还是只写入 事项 型长期项目 Kit？
 4. Hub registry 是否允许登记全局 Skill 的引用路径，还是必须先复制进 Hub？
 5. Pack 自带 Skill 初期是否随 npm 包发布，还是允许用户从 GitHub / 本地路径导入？

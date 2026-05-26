@@ -327,7 +327,7 @@ starwork audit --hub <hub-path>
 正式实现时建议新增：
 
 ```text
-product/skills/starworkAudit/
+product/kit-skills/starworkAudit/
 ├── SKILL.md
 └── references/
     ├── response-guide.md

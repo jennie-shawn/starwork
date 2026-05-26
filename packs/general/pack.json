@@ -12,8 +12,8 @@
   },
   "flow": ["references", "drafts", "final"],
   "rules": [
-    { "id": "overview", "slot": "pack.overview" },
-    { "id": "workflow", "slot": "pack.workflow" }
+    { "id": "overview", "slot": "pack.general.overview" },
+    { "id": "workflow", "slot": "pack.general.workflow" }
   ],
   "templates": [],
   "seed": []

@@ -99,10 +99,13 @@ test("creates a project workspace with content creator pack", () => {
 
   const state = readJson(path.join(dir, ".starwork", "workspace.json"));
   const agents = fs.readFileSync(path.join(dir, "AGENTS.md"), "utf8");
+  const packRule = fs.readFileSync(path.join(dir, ".starwork", "rules", "pack.content-creator.overview.md"), "utf8");
   assert.equal(state.workspace_type, "project");
   assert.equal(state.packs[0].id, "content-creator");
   assert.equal(state.paths.formal_source, "发布记录/");
-  assert.match(agents, /自媒体内容生产流/);
+  assert.match(agents, /\.starwork\/rules\/index\.md/);
+  assert.doesNotMatch(agents, /StarWork Rule Slot:/);
+  assert.match(packRule, /自媒体内容创作场景/);
   assert.equal(fs.existsSync(path.join(dir, "事项", "注册表.md")), false);
   assert.equal(fs.existsSync(path.join(dir, "发布记录", "README.md")), true);
   assert.equal(fs.existsSync(path.join(dir, ".starwork", "packs", "content-creator", "templates", "content-brief.md")), true);
@@ -392,6 +395,7 @@ test("spawn creates a customized project from a blueprint", () => {
   const spawn = runCommand(["spawn", "--hub", hub, "--target", target, "--blueprint", path.join(blueprintDir, "blueprint.json"), "--yes"]);
   const state = readJson(path.join(target, ".starwork", "workspace.json"));
   const agents = fs.readFileSync(path.join(target, "AGENTS.md"), "utf8");
+  const blueprintRule = fs.readFileSync(path.join(target, ".starwork", "rules", "project.file_boundaries.md"), "utf8");
   const projectStatus = fs.readFileSync(path.join(target, "_系统", "上下文", "当前项目.md"), "utf8");
   const seed = fs.readFileSync(path.join(target, "会议纪要", "README.md"), "utf8");
   const registry = readJson(path.join(hub, "projects", "registry.json"));
@@ -405,8 +409,10 @@ test("spawn creates a customized project from a blueprint", () => {
   assert.equal(state.customization.agent_rules[0].slot, "project.file_boundaries");
   assert.equal(fs.existsSync(path.join(target, "资料库")), true);
   assert.equal(fs.existsSync(path.join(target, "交付物", "确认版本")), true);
-  assert.match(agents, /StarWork Blueprint: project\.file_boundaries/);
-  assert.match(agents, /正式成果放在 交付物\/确认版本\//);
+  assert.match(agents, /\.starwork\/rules\/index\.md/);
+  assert.doesNotMatch(agents, /StarWork Rule Slot:/);
+  assert.doesNotMatch(agents, /StarWork Blueprint:/);
+  assert.match(blueprintRule, /正式成果放在 交付物\/确认版本\//);
   assert.match(projectStatus, /工作区定制/);
   assert.match(seed, /项目：Blueprint Project/);
   assert.equal(registry.projects[0].customized, true);
@@ -766,6 +772,7 @@ test("upgrade applies a blueprint and keeps existing files", () => {
   const result = runCommand(["upgrade", "--target", dir, "--blueprint", path.join(blueprintDir, "upgrade-blueprint.json"), "--yes"]);
   const state = readJson(path.join(dir, ".starwork", "workspace.json"));
   const agents = fs.readFileSync(path.join(dir, "AGENTS.md"), "utf8");
+  const upgradeRule = fs.readFileSync(path.join(dir, ".starwork", "rules", "upgrade.core_boundaries.md"), "utf8");
   const doctor = runDoctor(["--target", dir, "--json"]);
   const report = JSON.parse(doctor.stdout);
 
@@ -776,8 +783,10 @@ test("upgrade applies a blueprint and keeps existing files", () => {
   assert.equal(state.paths.business_work_area, "资料库/");
   assert.equal(state.upgrade.type, "upgrade_blueprint");
   assert.match(agents, /Keep me/);
-  assert.match(agents, /StarWork Upgrade: upgrade\.core_boundaries/);
-  assert.match(agents, /正式成果：成稿\//);
+  assert.match(agents, /\.starwork\/rules\/index\.md/);
+  assert.doesNotMatch(agents, /StarWork Rule Slot:/);
+  assert.doesNotMatch(agents, /StarWork Upgrade:/);
+  assert.match(upgradeRule, /正式成果：成稿\//);
   assert.equal(fs.existsSync(path.join(dir, "_系统", "上下文", "当前项目.md")), true);
   assert.equal(doctor.status, 0);
   assert.equal(report.ok, true);
@@ -915,7 +924,10 @@ test("upgrade applies a hub preserve-names blueprint", () => {
   assert.equal(fs.existsSync(path.join(dir, "项目")), false);
   assert.equal(fs.existsSync(path.join(dir, "知识")), false);
   assert.match(agents, /Keep me/);
-  assert.match(agents, /StarWork Upgrade: upgrade\.hub_boundaries/);
+  assert.match(agents, /\.starwork\/rules\/index\.md/);
+  assert.doesNotMatch(agents, /StarWork Rule Slot:/);
+  assert.doesNotMatch(agents, /StarWork Upgrade:/);
+  assert.equal(fs.existsSync(path.join(dir, ".starwork", "rules", "upgrade.hub_boundaries.md")), true);
   assert.equal(doctor.status, 0);
   assert.equal(report.ok, true);
   assert(report.checks.some((check) => check.id === "upgrade.role_mapping.exists" && check.level === "pass"));
@@ -1028,7 +1040,10 @@ test("pack install adds content creator pack to an existing workspace", () => {
   assert.equal(state.paths.formal_source, "发布记录/");
   assert.equal(fs.existsSync(path.join(dir, "发布记录", "README.md")), true);
   assert.equal(fs.existsSync(path.join(dir, ".starwork", "packs", "content-creator", "templates", "content-brief.md")), true);
-  assert.match(agents, /StarWork Pack: content-creator/);
+  assert.match(agents, /\.starwork\/rules\/index\.md/);
+  assert.doesNotMatch(agents, /StarWork Rule Slot:/);
+  assert.equal(fs.existsSync(path.join(dir, ".starwork", "rules", "pack.general.overview.md")), true);
+  assert.equal(fs.existsSync(path.join(dir, ".starwork", "rules", "pack.content-creator.overview.md")), true);
   assert.equal(doctor.status, 0);
 });
 

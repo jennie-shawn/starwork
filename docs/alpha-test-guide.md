@@ -7,7 +7,7 @@
 - npm package：`@jennie-shawn/starwork`
 - CLI command：`starwork`
 - A 测 tag：`latest`
-- 当前 `latest`：`0.1.0-alpha.11`
+- 当前 `latest`：`0.1.0-alpha.12`
 
 ## A 测用户安装 CLI
 
@@ -34,7 +34,7 @@ npx @jennie-shawn/starwork --help
 npx skills add jennie-shawn/StarWork -g -a codex -y
 ```
 
-说明：这是一条短命令，会安装 StarWork 仓库公开发布的全部 Skills。`starworkSpawn` 和 `neat-freak` 的主要使用入口仍跟着 Kit 走：前者会在 `starwork init --type hub` 时进入 Hub 工作台，后者会在单项目初始化时进入项目。
+说明：这是一条短命令，只安装 StarWork 系统级 Skills。`starworkSpawn`、`starworkAudit` 和 `neat-freak` 不应被全局安装；前两个会在 `starwork init --type hub` 时进入 Hub 工作台，`neat-freak` 会在单项目初始化时进入项目。
 
 说明：历史模板诊断和升级蓝图生成统一由 `starworkDoctor` 负责；`starwork upgrade` CLI 只执行已经确认过的 blueprint。
 
@@ -106,9 +106,9 @@ starwork doctor --target ~/Desktop/starwork-alpha-project
 - `doctor` 的检查结果是否能指导修复问题。
 - `spawn` 从 Hub 创建项目的过程是否清楚。
 - `doctor` / `starworkDoctor` 对历史模板或 Hub-like 旧主库的说明是否能看懂。
-- 系统 skills 是否能被 Codex 识别和调用：`starworkInit`、`starworkDoctor`、`starworkMultiagent`、`starworkAudit`。
+- 系统 skills 是否能被 Codex 识别和调用：`starworkInit`、`starworkDoctor`、`starworkMultiagent`。
 - `starworkMultiagent` 是否能把“登记当前会话为常用智能体”正确转换成 `starwork multiagent init/add/bind` 建议。
-- Hub Kit 自带的 `starworkSpawn` 与单项目 Kit 自带的 `neat-freak` 是否能在对应工作台内被发现。
+- Hub Kit 自带的 `starworkSpawn`、`starworkAudit` 与单项目 Kit 自带的 `neat-freak` 是否能在对应工作台内被发现。
 
 ## 发布前检查
 
@@ -126,8 +126,8 @@ npm pack --dry-run
 - `packs/`
 - `schemas/`
 - `skills/starworkInit/`
-- `skills/starworkSpawn/`
 - `skills/starworkDoctor/`
 - `skills/starworkMultiagent/`
-- `skills/starworkAudit/`
-- `skills/neat-freak/`
+- `kit-skills/starworkSpawn/`
+- `kit-skills/starworkAudit/`
+- `kit-skills/neat-freak/`

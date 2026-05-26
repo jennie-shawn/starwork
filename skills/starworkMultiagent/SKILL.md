@@ -1,6 +1,6 @@
 ---
 name: starworkMultiagent
-description: Use this skill when a user wants AI help designing, initializing, updating, binding, releasing, inspecting, or sharing StarWork multiagent / Agent Lanes collaboration state with `starwork multiagent`.
+description: 'Design and maintain StarWork Agent Lanes with `starwork multiagent`: init, update, bind, release, inspect, and share collaboration state.'
 ---
 
 # starworkMultiagent

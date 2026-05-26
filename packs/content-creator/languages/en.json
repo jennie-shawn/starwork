@@ -19,10 +19,10 @@
     "business_work_area": "drafts-and-scripts/"
   },
   "rules": [
-    { "slot": "pack.overview", "from": "rules/en/overview.md" },
-    { "slot": "pack.workflow", "from": "rules/en/workflow.md" },
-    { "slot": "pack.file_boundaries", "from": "rules/en/file-boundaries.md" },
-    { "slot": "pack.review", "from": "rules/en/review.md" }
+    { "slot": "pack.content-creator.overview", "from": "rules/en/overview.md" },
+    { "slot": "pack.content-creator.workflow", "from": "rules/en/workflow.md" },
+    { "slot": "pack.content-creator.file_boundaries", "from": "rules/en/file-boundaries.md" },
+    { "slot": "pack.content-creator.review", "from": "rules/en/review.md" }
   ],
   "templates": [
     { "id": "content-brief", "from": "templates/en/content-brief.md", "description": "Single content brief template" },

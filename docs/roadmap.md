@@ -135,18 +135,18 @@ M8 v1.0 稳定产品
 
 - GitHub 仓库已推送到 `jennie-shawn/StarWork`。
 - npm 包名为 `@jennie-shawn/starwork`。
-- `starworkInit`、`starworkDoctor`、`starworkMultiagent`、`starworkAudit` 可通过一条 `npx skills add` 命令安装为系统 Skill；`starworkDoctor` 同时承担历史模板诊断、Hub-like 旧主库诊断和升级蓝图生成；`starworkSpawn` 改为 Hub Kit 自带 Skill。
+- `starworkInit`、`starworkDoctor`、`starworkMultiagent` 可通过一条 `npx skills add` 命令安装为系统 Skill；`starworkDoctor` 同时承担历史模板诊断、Hub-like 旧主库诊断和升级蓝图生成；`starworkSpawn`、`starworkAudit` 改为 Hub Kit 自带 Skill。
 - 公开 README 已改为中文首页。
 - 已新增面向 Agent 的安装指南：`product/docs/agent-install-guide.md`。
-- npm `latest` 已发布到 `@jennie-shawn/starwork@0.1.0-alpha.11`，本机 CLI 与系统 Skills 已完成更新验证。
+- npm `latest` 已发布到 `@jennie-shawn/starwork@0.1.0-alpha.12`，本机 CLI 与系统 Skills 已完成更新验证。
 - `starwork --version` 已可直接输出包版本，`starwork --help` 已改为面向 A 测用户的命令入口说明。
 - `starwork upgrade --blueprint`、`starworkDoctor`、Hub-like 旧主库 preserve-names 接入和 Skill 分发第一版已进入公开包。
 
 验收标准：
 
 - A 测用户能安装 CLI 并看到 `starwork --help`。
-- A 测用户能安装系统 Skills，并让 Agent 识别 `starworkInit`、`starworkDoctor`、`starworkMultiagent`、`starworkAudit`。
-- Hub 工作台能带出 Kit 自带的 `starworkSpawn`，单项目工作台能带出 Kit 自带的 `neat-freak`。
+- A 测用户能安装系统 Skills，并让 Agent 识别 `starworkInit`、`starworkDoctor`、`starworkMultiagent`。
+- Hub 工作台能带出 Kit 自带的 `starworkSpawn`、`starworkAudit`，单项目工作台能带出 Kit 自带的 `neat-freak`。
 - `init -> doctor -> hub init -> spawn -> doctor` 的最小流程能被外部用户跑通。
 - 历史模板用户能跑通 `doctor --json -> starworkDoctor -> upgrade --blueprint -> doctor` 的保守升级验证流程。
 - Hub-like 旧主库用户能在确认路径映射后，以保留原目录名的方式接入 StarWork，不创建重复的标准目录壳。

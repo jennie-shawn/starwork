@@ -15,8 +15,8 @@
     "business_work_area": "projects/coordination/"
   },
   "rules": [
-    { "slot": "pack.overview", "from": "rules/zh/overview.md" },
-    { "slot": "pack.workflow", "from": "rules/zh/workflow.md" }
+    { "slot": "pack.hub-management.overview", "from": "rules/zh/overview.md" },
+    { "slot": "pack.hub-management.workflow", "from": "rules/zh/workflow.md" }
   ],
   "templates": [],
   "seed": [

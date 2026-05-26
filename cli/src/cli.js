@@ -4,6 +4,9 @@ const readline = require("readline");
 
 const PRODUCT_ROOT = path.resolve(__dirname, "..", "..");
 const PACKAGE_VERSION = require(path.join(PRODUCT_ROOT, "package.json")).version;
+const STARWORK_RULES_DIR = path.join(".starwork", "rules");
+const STARWORK_RULES_INDEX = path.join(STARWORK_RULES_DIR, "index.md");
+const STARWORK_RULES_MANIFEST = path.join(STARWORK_RULES_DIR, "manifest.json");
 
 const WORKSPACE_TYPES = {
   project: {
@@ -98,7 +101,7 @@ const KIT_BUNDLED_SKILLS = {
     {
       id: "starworkSpawn",
       name: "StarWork Spawn",
-      source: path.join("skills", "starworkSpawn"),
+      source: path.join("kit-skills", "starworkSpawn"),
       sourceKind: "kit",
       type: "kit-bundled",
       distribution: "copy",
@@ -108,13 +111,27 @@ const KIT_BUNDLED_SKILLS = {
         { agent: "codex", path: path.join(".agents", "skills", "starworkSpawn"), mode: "symlink", source: path.join("skills", "starworkSpawn") },
         { agent: "claude", path: path.join(".claude", "skills", "starworkSpawn"), mode: "symlink", source: path.join("skills", "starworkSpawn") }
       ]
+    },
+    {
+      id: "starworkAudit",
+      name: "StarWork Audit",
+      source: path.join("kit-skills", "starworkAudit"),
+      sourceKind: "kit",
+      type: "kit-bundled",
+      distribution: "copy",
+      reason: "Hub Kit 自带：用于巡检和修复卫星项目。",
+      install: [
+        { agent: "hub", path: path.join("skills", "starworkAudit"), mode: "copy" },
+        { agent: "codex", path: path.join(".agents", "skills", "starworkAudit"), mode: "symlink", source: path.join("skills", "starworkAudit") },
+        { agent: "claude", path: path.join(".claude", "skills", "starworkAudit"), mode: "symlink", source: path.join("skills", "starworkAudit") }
+      ]
     }
   ],
   project: [
     {
       id: "neat-freak",
       name: "Neat Freak",
-      source: path.join("skills", "neat-freak"),
+      source: path.join("kit-skills", "neat-freak"),
       sourceKind: "kit",
       type: "kit-bundled",
       distribution: "copy",
@@ -129,7 +146,7 @@ const KIT_BUNDLED_SKILLS = {
     {
       id: "neat-freak",
       name: "Neat Freak",
-      source: path.join("skills", "neat-freak"),
+      source: path.join("kit-skills", "neat-freak"),
       sourceKind: "kit",
       type: "kit-bundled",
       distribution: "copy",
@@ -1206,10 +1223,12 @@ function buildPackInstallPlan({ workspaceRoot, state, pack }) {
     throw new Error("缺少 AGENTS.md，无法安装 Pack 规则。");
   }
   const agents = fs.readFileSync(agentsPath, "utf8");
-  const rulesSection = renderInstalledPackRules(pack, variables);
-  if (rulesSection.trim() && !agents.includes(`Pack: ${pack.id}`)) {
-    actions.push(overwriteFileAction(workspaceRoot, "AGENTS.md", `${agents.trim()}\n\n${rulesSection.trim()}\n`));
+  const packRuleSlots = renderPackRuleSlots(pack, variables, "场景规则");
+  const nextAgents = ensureRulesIndexReference(agents);
+  if (nextAgents !== agents) {
+    actions.push(overwriteFileAction(workspaceRoot, "AGENTS.md", nextAgents));
   }
+  actions.push(...buildRuleSlotActions(workspaceRoot, packRuleSlots));
 
   const nextState = {
     ...state,
@@ -1362,7 +1381,7 @@ function buildUpgradePlan({ targetDir, blueprint }) {
     } else if (action.type === "copy_kit_missing_files") {
       actions.push(...buildUpgradeKitActions(targetDir, kitDir, injectedTargets, blueprint));
     } else if (action.type === "inject_agent_rules") {
-      actions.push(buildUpgradeAgentRuleAction(targetDir, kitDir, blueprint, action, variables));
+      actions.push(...buildUpgradeAgentRuleAction(targetDir, kitDir, blueprint, action, variables));
     } else if (action.type === "write_file") {
       const target = normalizeSafeRelativePath(action.path, "upgrade write_file.path");
       actions.push(strictFileAction(targetDir, target, renderText(action.content, variables)));
@@ -1430,7 +1449,6 @@ function buildUpgradeAgentRuleAction(targetDir, kitDir, blueprint, action, varia
   const target = normalizeSafeRelativePath(action.target || "AGENTS.md", "upgrade inject_agent_rules.target");
   const source = normalizeSafeSourcePath(action.from, blueprint.__dir, "upgrade inject_agent_rules.from");
   const slot = action.slot;
-  const marker = `StarWork Upgrade: ${slot}`;
   const targetPath = path.join(targetDir, target);
   const kitDefaultPath = path.join(kitDir, target);
   const existing = fs.existsSync(targetPath)
@@ -1438,14 +1456,19 @@ function buildUpgradeAgentRuleAction(targetDir, kitDir, blueprint, action, varia
     : fs.existsSync(kitDefaultPath)
       ? fs.readFileSync(kitDefaultPath, "utf8")
       : "";
-  if (existing.includes(marker)) return null;
 
   const ruleContent = renderText(fs.readFileSync(source, "utf8"), variables).trim();
-  if (!ruleContent) return null;
-  const content = `${existing.trim()}\n\n## StarWork 升级规则\n\n<!-- ${marker} -->\n\n${ruleContent}\n`;
-  return fs.existsSync(targetPath)
-    ? overwriteFileAction(targetDir, target, content)
-    : strictFileAction(targetDir, target, content);
+  if (!ruleContent) return [];
+  const content = ensureRulesIndexReference(existing);
+  const agentActions = content === existing
+    ? []
+    : [fs.existsSync(targetPath)
+      ? overwriteFileAction(targetDir, target, content)
+      : strictFileAction(targetDir, target, content)];
+  return [
+    ...agentActions,
+    ...buildRuleSlotActions(targetDir, [{ slot, content: ruleContent, group: "StarWork 升级规则" }])
+  ];
 }
 
 function renderUpgradeWorkspaceState(blueprint, pack, now) {
@@ -1498,9 +1521,122 @@ function buildUpgradeVariables(blueprint, { targetDir, pack }) {
 }
 
 function renderInstalledPackRules(pack, variables) {
-  const rules = renderPackRules(pack, variables);
-  if (!rules.trim()) return "";
-  return `## 场景规则\n\n<!-- StarWork Pack: ${pack.id} -->\n\n${rules.trim()}`;
+  return renderRuleIndex(renderPackRuleSlots(pack, variables, "场景规则")).trim();
+}
+
+function validateRuleSlotId(slot) {
+  if (!slot || typeof slot !== "string") {
+    throw new Error("StarWork rule slot 不能为空。");
+  }
+  if (!/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(slot)) {
+    throw new Error(`StarWork rule slot 不合法：${slot}`);
+  }
+}
+
+function hasRuleSlot(workspaceRoot, slot) {
+  return fs.existsSync(path.join(workspaceRoot, ruleSlotRelativePath(slot)));
+}
+
+function ensureRulesIndexReference(content) {
+  const current = String(content || "");
+  if (current.includes(STARWORK_RULES_INDEX)) return current;
+  const reference = `## StarWork 扩展规则\n\n执行任务前请同时读取 \`${STARWORK_RULES_INDEX}\`。Pack、Blueprint 和升级规则片段由该索引汇总；不要把 \`${STARWORK_RULES_DIR}/\` 中的文件当作业务成果。\n`;
+  return current.trim() ? `${current.trim()}\n\n${reference}` : `${reference}`;
+}
+
+function buildRuleSlotActions(targetDir, slots) {
+  const normalizedSlots = normalizeRuleSlots(slots);
+  if (!normalizedSlots.length) return [];
+  const manifest = mergeRuleManifest(readRuleManifest(targetDir), normalizedSlots);
+  return [
+    directoryAction(targetDir, STARWORK_RULES_DIR),
+    ...normalizedSlots.map((slot) => overwriteFileAction(targetDir, ruleSlotRelativePath(slot.slot), `${slot.content.trim()}\n`)),
+    overwriteFileAction(targetDir, STARWORK_RULES_MANIFEST, `${JSON.stringify(manifest, null, 2)}\n`),
+    overwriteFileAction(targetDir, STARWORK_RULES_INDEX, renderRuleIndex(manifest.slots))
+  ];
+}
+
+function normalizeRuleSlots(slots) {
+  return (slots || [])
+    .map((slot) => ({
+      slot: slot.slot,
+      group: slot.group || "StarWork 规则",
+      title: slot.title || inferRuleTitle(slot.content, slot.slot),
+      content: String(slot.content || "").trim(),
+      file: ruleSlotRelativePath(slot.slot)
+    }))
+    .filter((slot) => {
+      validateRuleSlotId(slot.slot);
+      return Boolean(slot.content);
+    });
+}
+
+function readRuleManifest(targetDir) {
+  const manifestPath = path.join(targetDir, STARWORK_RULES_MANIFEST);
+  if (!fs.existsSync(manifestPath)) {
+    return { schema: "starwork.agent_rules.v0.1", slots: [] };
+  }
+  try {
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+    return {
+      schema: "starwork.agent_rules.v0.1",
+      slots: Array.isArray(manifest.slots) ? manifest.slots : []
+    };
+  } catch {
+    return { schema: "starwork.agent_rules.v0.1", slots: [] };
+  }
+}
+
+function mergeRuleManifest(existing, slots) {
+  const bySlot = new Map();
+  for (const slot of existing.slots || []) {
+    if (slot?.slot) bySlot.set(slot.slot, slot);
+  }
+  for (const slot of slots) {
+    bySlot.set(slot.slot, {
+      slot: slot.slot,
+      title: slot.title,
+      group: slot.group,
+      file: slot.file
+    });
+  }
+  return {
+    schema: "starwork.agent_rules.v0.1",
+    slots: [...bySlot.values()].sort((a, b) => a.slot.localeCompare(b.slot))
+  };
+}
+
+function ruleSlotRelativePath(slot) {
+  validateRuleSlotId(slot);
+  return path.join(STARWORK_RULES_DIR, `${slot}.md`);
+}
+
+function inferRuleTitle(content, fallback) {
+  const match = String(content || "").match(/^#{1,4}\s+(.+?)\s*$/m);
+  return match ? match[1].trim() : fallback;
+}
+
+function renderRuleIndex(slots) {
+  const grouped = new Map();
+  for (const slot of slots || []) {
+    const group = slot.group || "StarWork 规则";
+    if (!grouped.has(group)) grouped.set(group, []);
+    grouped.get(group).push(slot);
+  }
+  const lines = [
+    "# StarWork 扩展规则",
+    "",
+    "这个目录由 StarWork CLI 维护，用来存放 Pack、Blueprint 和升级流程产生的规则片段。",
+    "",
+    "这些规则是工作台运行约定的一部分；执行任务前请按索引读取。"
+  ];
+  for (const [group, groupSlots] of grouped.entries()) {
+    lines.push("", `## ${group}`, "");
+    for (const slot of groupSlots) {
+      lines.push(`- [${slot.title || slot.slot}](${path.basename(slot.file || ruleSlotRelativePath(slot.slot))})`);
+    }
+  }
+  return `${lines.join("\n")}\n`;
 }
 
 function mergeInstalledRecords(existing, ids) {
@@ -1741,14 +1877,12 @@ function checkBlueprintCustomization(result, workspaceRoot, state) {
     checkPathExists(result, workspaceRoot, seed.to, "blueprint.seed.exists", `Blueprint seed exists: ${seed.to}`, `Blueprint 缺少 seed 文件：${seed.to}`);
   }
 
-  const agentsPath = path.join(workspaceRoot, "AGENTS.md");
-  const agents = fs.existsSync(agentsPath) ? fs.readFileSync(agentsPath, "utf8") : "";
   for (const rule of customization.agent_rules || []) {
     if (!rule?.slot) continue;
-    if (agents.includes(`StarWork Blueprint: ${rule.slot}`)) {
-      addCheck(result, "blueprint.rule.injected", "pass", `Blueprint rule injected: ${rule.slot}`, "AGENTS.md");
+    if (hasRuleSlot(workspaceRoot, rule.slot)) {
+      addCheck(result, "blueprint.rule.injected", "pass", `Blueprint rule exists: ${rule.slot}`, ruleSlotRelativePath(rule.slot));
     } else {
-      addCheck(result, "blueprint.rule.injected", "fail", `Blueprint 规则未注入 AGENTS.md：${rule.slot}`, "AGENTS.md");
+      addCheck(result, "blueprint.rule.injected", "fail", `Blueprint 规则文件不存在：${rule.slot}`, ruleSlotRelativePath(rule.slot));
     }
   }
 }
@@ -2680,17 +2814,18 @@ function buildInitPlan({ targetDir, workspaceName, workspaceType, workspaceConfi
       formal_source: formalSource
     }
   };
-  const packRules = renderPackRules(pack, variables);
+  const packRuleSlots = renderPackRuleSlots(pack, variables, "场景规则");
 
   for (const source of walkFiles(kitDir)) {
     const relativePath = path.relative(kitDir, source);
     let content = fs.readFileSync(source, "utf8");
     content = renderText(content, variables);
-    if (relativePath === "AGENTS.md" && packRules.trim()) {
-      content = `${content.trim()}\n\n## 场景规则\n\n${packRules.trim()}\n`;
+    if (relativePath === "AGENTS.md" && packRuleSlots.length) {
+      content = ensureRulesIndexReference(content);
     }
     actions.push(fileAction(targetDir, relativePath, content));
   }
+  actions.push(...buildRuleSlotActions(targetDir, packRuleSlots));
 
   for (const rolePath of Object.values(pack.paths || {})) {
     actions.push(directoryAction(targetDir, rolePath));
@@ -3138,13 +3273,7 @@ function buildSpawnPlan({ hubRoot, hubState, targetDir, projectName, projectId, 
     let content = fs.readFileSync(source, "utf8");
     content = renderSatelliteKitContent(relativePath, content, { language, mode, modeConfig });
     if (normalizeRelativePath(relativePath) === "AGENTS.md") {
-      content = appendBlueprintRulesToAgents(content, blueprint, {
-        projectName,
-        projectId,
-        mode,
-        modeConfig,
-        language
-      });
+      content = ensureBlueprintRulesIndexReference(content, blueprint);
     }
     actions.push(fileAction(targetDir, relativePath, content));
   }
@@ -3156,6 +3285,13 @@ function buildSpawnPlan({ hubRoot, hubState, targetDir, projectName, projectId, 
     actions.push(directoryAction(targetDir, normalizeSafeRelativePath(modeConfig.formalSource, "paths.formal_source")));
     actions.push(directoryAction(targetDir, normalizeSafeRelativePath(modeConfig.businessWorkArea, "paths.business_work_area")));
     actions.push(...buildBlueprintSeedActions(targetDir, blueprint, {
+      projectName,
+      projectId,
+      mode,
+      modeConfig,
+      language
+    }));
+    actions.push(...buildBlueprintRuleSlotActions(targetDir, blueprint, {
       projectName,
       projectId,
       mode,
@@ -3489,17 +3625,21 @@ The Hub is not a parent work folder and should not receive project progress bodi
 `;
 }
 
-function appendBlueprintRulesToAgents(content, blueprint, variables) {
+function ensureBlueprintRulesIndexReference(content, blueprint) {
   if (!blueprint || !blueprint.agent_rules?.length) return content;
-  const parts = [];
+  return ensureRulesIndexReference(content);
+}
+
+function buildBlueprintRuleSlotActions(targetDir, blueprint, variables) {
+  if (!blueprint || !blueprint.agent_rules?.length) return [];
+  const slots = [];
   for (const rule of blueprint.agent_rules) {
     const source = normalizeSafeSourcePath(rule.from, blueprint.__dir, "blueprint.agent_rules.from");
     const ruleContent = renderText(fs.readFileSync(source, "utf8"), buildBlueprintVariables(blueprint, variables)).trim();
     if (!ruleContent) continue;
-    parts.push(`<!-- StarWork Blueprint: ${rule.slot} -->\n\n${ruleContent}`);
+    slots.push({ slot: rule.slot, content: ruleContent, group: "项目定制规则" });
   }
-  if (!parts.length) return content;
-  return `${content.trim()}\n\n## 项目定制规则\n\n${parts.join("\n\n")}\n`;
+  return buildRuleSlotActions(targetDir, slots);
 }
 
 function buildBlueprintSeedActions(targetDir, blueprint, variables) {
@@ -4231,15 +4371,36 @@ function packSupportsWorkspaceType(pack, workspaceType) {
 }
 
 function renderPackRules(pack, variables) {
-  const parts = [];
+  return renderPackRuleSlots(pack, variables)
+    .map((slot) => slot.content)
+    .filter(Boolean)
+    .join("\n\n");
+}
+
+function renderPackRuleSlots(pack, variables, group = "场景规则") {
+  const slots = [];
   for (const rule of pack.rules || []) {
     const source = path.join(pack.__dir, rule.from);
     if (!fs.existsSync(source)) {
       throw new Error(`Pack rule 不存在：${pack.id}/${rule.from}`);
     }
-    parts.push(renderText(fs.readFileSync(source, "utf8"), variables).trim());
+    const content = renderText(fs.readFileSync(source, "utf8"), variables).trim();
+    if (!content) continue;
+    slots.push({
+      slot: normalizePackRuleSlot(pack, rule),
+      group,
+      content
+    });
   }
-  return parts.filter(Boolean).join("\n\n");
+  return slots;
+}
+
+function normalizePackRuleSlot(pack, rule) {
+  const fallback = rule.id || path.basename(rule.from || "rule", path.extname(rule.from || ""));
+  const explicit = rule.slot || `pack.${pack.id}.${fallback}`;
+  if (explicit.startsWith(`pack.${pack.id}.`)) return explicit;
+  if (explicit.startsWith("pack.")) return `pack.${pack.id}.${explicit.slice("pack.".length)}`;
+  return explicit;
 }
 
 function renderText(text, variables) {

@@ -1,6 +1,6 @@
 {
   "name": "@jennie-shawn/starwork",
-  "version": "0.1.0-alpha.11",
+  "version": "0.1.0-alpha.12",
   "description": "StarWork Core、CLI、Packs 和 Agent skills，用于构建 AI 工作台。",
   "type": "commonjs",
   "bin": {
@@ -12,6 +12,7 @@
     "core/",
     "docs/",
     "examples/",
+    "kit-skills/",
     "packs/",
     "schemas/",
     "skills/",

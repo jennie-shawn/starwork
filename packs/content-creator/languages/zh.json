@@ -19,10 +19,10 @@
     "business_work_area": "草稿与脚本/"
   },
   "rules": [
-    { "slot": "pack.overview", "from": "rules/zh/overview.md" },
-    { "slot": "pack.workflow", "from": "rules/zh/workflow.md" },
-    { "slot": "pack.file_boundaries", "from": "rules/zh/file-boundaries.md" },
-    { "slot": "pack.review", "from": "rules/zh/review.md" }
+    { "slot": "pack.content-creator.overview", "from": "rules/zh/overview.md" },
+    { "slot": "pack.content-creator.workflow", "from": "rules/zh/workflow.md" },
+    { "slot": "pack.content-creator.file_boundaries", "from": "rules/zh/file-boundaries.md" },
+    { "slot": "pack.content-creator.review", "from": "rules/zh/review.md" }
   ],
   "templates": [
     { "id": "content-brief", "from": "templates/zh/content-brief.md", "description": "单篇内容大纲模板" },
