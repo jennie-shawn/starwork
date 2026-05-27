@@ -1838,7 +1838,7 @@ function renderRuleIndex(slots) {
   const lines = [
     "# StarWork 扩展规则",
     "",
-    "这个目录由 StarWork CLI 维护，用来存放 Pack、Blueprint 和升级流程产生的规则片段。",
+    "这个目录由 StarWork CLI 维护，用来存放场景能力、定制方案和升级流程产生的稳定规则片段。",
     "",
     "这些规则是工作台运行约定的一部分；执行任务前请按索引读取。"
   ];
@@ -3109,11 +3109,15 @@ function buildInitPlan({ targetDir, workspaceName, workspaceType, workspaceConfi
 
   for (const source of walkFiles(kitDir)) {
     const sourceRelativePath = normalizeRelativePath(path.relative(kitDir, source));
+    if (shouldSkipStandaloneProjectKitFile(sourceRelativePath, workspaceType)) continue;
     const relativePath = workspaceConfig.kit === "project" || workspaceConfig.kit?.startsWith("satellite-")
       ? mapKitRelativePathForLanguage(sourceRelativePath, pack.language || "zh")
       : sourceRelativePath;
     let content = fs.readFileSync(source, "utf8");
     content = renderText(content, variables);
+    if (workspaceConfig.kit === "project") {
+      content = renderProjectKitContent(relativePath, content, { language: pack.language || "zh", pack });
+    }
     if (relativePath === "AGENTS.md" && (packRuleSlots.length || blueprintRuleSlots.length)) {
       content = ensureRulesIndexReference(content);
     }
@@ -3223,6 +3227,14 @@ function buildInitPlan({ targetDir, workspaceName, workspaceType, workspaceConfi
     skills: kitSkillPlan.records,
     actions: dedupeActions(filteredActions)
   };
+}
+
+function shouldSkipStandaloneProjectKitFile(relativePath, workspaceType) {
+  if (workspaceType !== "project") return false;
+  const normalized = normalizeRelativePath(relativePath);
+  return normalized === ".core-sync.json"
+    || normalized.startsWith(".internal/")
+    || normalized.startsWith("_系统/主库同步/");
 }
 
 function buildKitSkillPlan({ targetDir, kit, installedBy }) {
@@ -3599,6 +3611,9 @@ function buildSpawnPlan({ hubRoot, hubState, targetDir, projectName, projectId, 
     }
     actions.push(fileAction(targetDir, relativePath, content));
   }
+  actions.push(fileAction(targetDir, path.join(satellitePaths.mainRepoSync, "README.md"), renderSatelliteMainRepoSyncReadme(language)));
+  actions.push(fileAction(targetDir, path.join(satellitePaths.identity, "README.md"), renderSatelliteIdentityReadme(language)));
+  actions.push(fileAction(targetDir, path.join(satellitePaths.lessons, "README.md"), renderSatelliteLessonsReadme(language)));
 
   if (blueprint) {
     for (const folder of blueprint.folders || []) {
@@ -3842,17 +3857,14 @@ function mapKitRelativePathForLanguage(relativePath, language = "zh") {
 }
 
 function renderSatelliteKitContent(relativePath, content, { language, mode, modeConfig }) {
-  if (language !== "en") return content;
   const normalized = normalizeRelativePath(relativePath);
   if (normalized === "AGENTS.md") {
-    return renderEnglishSatelliteAgents(mode);
+    return language === "en" ? renderEnglishSatelliteAgents(mode) : renderChineseSatelliteAgents();
   }
   if (normalized === "README.md") {
-    return renderEnglishSatelliteReadme(mode, modeConfig);
+    return language === "en" ? renderEnglishSatelliteReadme(mode, modeConfig) : renderChineseSatelliteReadme(modeConfig);
   }
-  if (normalized === "_system/main-repo-sync/README.md") {
-    return renderEnglishMainRepoSyncReadme();
-  }
+  if (language !== "en") return content;
   if (normalized === "knowledge/README.md") {
     return "# Knowledge\n\nThis path should be a read-only link to the Hub `knowledge/` directory.\n\nDo not edit shared knowledge directly inside a satellite project. Submit reusable knowledge candidates through the Hub review flow.\n";
   }
@@ -3866,18 +3878,225 @@ function renderSatelliteKitContent(relativePath, content, { language, mode, mode
     return "# Final Outputs\n\nStore user-approved outputs and confirmed deliverables here, unless this project declares another formal source of truth.\n";
   }
   if (normalized === "_system/tasks/current-work.md") {
-    return "# Current Work\n\n## Now\n\n- Fill in the current focus.\n\n## Next\n\n- Run `starwork doctor` after initialization.\n";
+    return renderEnglishCurrentWorkTemplate();
   }
   if (normalized === "_system/context/decisions.md") {
     return "# Decisions\n\nOnly record high-impact decisions that change project direction, structure, ownership, or irreversible commitments.\n";
   }
+  return content;
+}
+
+function renderProjectKitContent(relativePath, content, { language }) {
+  if (language !== "en") return content;
+  const normalized = normalizeRelativePath(relativePath);
+  if (normalized === "AGENTS.md") {
+    return renderEnglishProjectAgents();
+  }
+  if (normalized === "README.md") {
+    return renderEnglishProjectReadme();
+  }
+  if (normalized === "_system/context/current-project.md") {
+    return renderEnglishCurrentProjectTemplate();
+  }
+  if (normalized === "_system/tasks/current-work.md") {
+    return renderEnglishCurrentWorkTemplate();
+  }
   if (normalized === "_system/identity/README.md") {
-    return "# Identity\n\nThis folder contains Hub identity snapshots or project-local identity candidates. Treat Hub identity as read-only by default.\n";
+    return renderEnglishProjectIdentityReadme();
   }
   if (normalized === "_system/lessons/README.md") {
-    return "# Lessons\n\nThis folder contains Hub lessons snapshots and project-local reusable lesson candidates.\n";
+    return renderEnglishProjectLessonsReadme();
+  }
+  if (normalized === "knowledge/README.md") {
+    return renderEnglishProjectKnowledgeReadme();
+  }
+  if (normalized === "references/README.md") {
+    return "# References\n\nStore source materials and reference files for this project here.\n";
+  }
+  if (normalized === "outputs/drafts/README.md") {
+    return "# Drafts\n\nStore AI drafts and working drafts here.\n";
+  }
+  if (normalized === "outputs/final/README.md") {
+    return "# Final Outputs\n\nStore user-approved outputs and confirmed deliverables here, unless this project declares another formal source of truth.\n";
   }
   return content;
+}
+
+function renderEnglishProjectAgents() {
+  return `# Workspace Rules
+
+## Read First
+
+1. \`_system/context/current-project.md\`
+2. \`_system/tasks/current-work.md\`
+3. \`.starwork/rules/index.md\` when it exists
+
+## Read When Relevant
+
+- Read \`_system/identity/README.md\` when user preferences, communication style, domain background, or long-term context may matter.
+- Read \`_system/lessons/README.md\` before repeated, risky, or pattern-sensitive work.
+- Read \`knowledge/README.md\` when project knowledge or reusable references may matter.
+- Read Hub sync docs only if this workspace is connected to a Hub.
+
+## File Boundaries
+
+- Project status belongs in \`_system/context/current-project.md\`.
+- Current execution notes belong in \`_system/tasks/current-work.md\`.
+- User preferences, communication style, and durable background belong in \`_system/identity/README.md\`.
+- Reusable lessons that should change future behavior belong in \`_system/lessons/README.md\`.
+- Project knowledge or knowledge indexes belong in \`knowledge/\`.
+- Source materials belong in \`references/\`.
+- AI drafts belong in \`outputs/drafts/\`.
+- User-approved outputs belong in the project-declared formal source of truth.
+- StarWork mechanism state belongs in \`.starwork/\`.
+
+## Workflow
+
+- Keep project facts separate from command output and temporary explanations.
+- Do not create overlapping top-level folders unless the user confirms the purpose.
+- If \`.starwork/rules/\` contains extra rules, read the index and follow those rules without treating them as progress notes.
+
+## Confirmation Required
+
+- Changing identity or stable preferences.
+- Promoting candidate lessons into stable lessons.
+- Promoting drafts into the formal source of truth.
+- Changing workspace structure or top-level business folders.
+`;
+}
+
+function renderEnglishProjectReadme() {
+  return `# StarWork Project Kit
+
+This is a project workspace for concrete work. It can be used independently. If a Hub creates it later, \`starwork spawn\` adds Hub sync files separately.
+
+## Main Paths
+
+- \`_system/context/current-project.md\`: project status
+- \`_system/tasks/current-work.md\`: current work
+- \`_system/identity/\`: durable user and project context
+- \`_system/lessons/\`: reusable lessons
+- \`knowledge/\`: local project knowledge entry or index
+- \`references/\`: source materials
+- \`outputs/drafts/\`: drafts
+- \`outputs/final/\`: confirmed outputs
+
+## Not Included By Default
+
+- \`_system/main-repo-sync/\`
+- \`.core-sync.json\`
+- \`.internal/\`
+`;
+}
+
+function renderEnglishCurrentProjectTemplate() {
+  return `# Current Project
+
+## Goal
+
+TBD.
+
+## Current Stage
+
+TBD.
+
+## Focus
+
+- TBD.
+
+## Primary Sources
+
+- TBD.
+
+## Risks
+
+- TBD.
+
+## Next Step
+
+- TBD.
+`;
+}
+
+function renderEnglishCurrentWorkTemplate() {
+  return `# Current Work
+
+## Now
+
+- TBD.
+
+## Next
+
+- TBD.
+
+## Waiting On
+
+- TBD.
+
+## Notes For Next AI
+
+- TBD.
+`;
+}
+
+function renderEnglishProjectIdentityReadme() {
+  return `# Identity
+
+## Durable Context
+
+- Project owner / user:
+- Working style:
+- Domain background:
+- Long-lived preferences:
+
+## Communication Preferences
+
+- Preferred language:
+- Tone:
+- Detail level:
+
+## Stable Constraints
+
+- Do:
+- Avoid:
+
+## Update Rule
+
+Read this file when user preference, domain background, or long-term context matters.
+Ask before changing stable identity or preferences.
+`;
+}
+
+function renderEnglishProjectLessonsReadme() {
+  return `# Lessons
+
+Record reusable lessons that should change future behavior.
+
+## Active Lessons
+
+- TBD.
+
+## Candidate Lessons
+
+- TBD.
+
+## How To Add A Lesson
+
+A good lesson should be specific, reusable, and behavior-changing.
+Do not record ordinary progress summaries here.
+Ask before promoting a candidate lesson into a stable lesson.
+`;
+}
+
+function renderEnglishProjectKnowledgeReadme() {
+  return `# Knowledge
+
+This is the local knowledge entry or index for this project.
+
+- Record reusable project knowledge, source indexes, and reference entry points here.
+- Do not record ordinary progress summaries here.
+- If this workspace is later connected to a Hub, this path may become a shared knowledge entry or read-only link.
+`;
 }
 
 function renderEnglishSatelliteAgents(mode) {
@@ -3887,7 +4106,14 @@ function renderEnglishSatelliteAgents(mode) {
 
 1. \`_system/context/current-project.md\`
 2. \`_system/tasks/current-work.md\`
-3. When shared Hub resources, skills, or cross-project coordination are involved, read \`_system/main-repo-sync/README.md\`
+3. \`.starwork/rules/index.md\` when it exists
+
+## Read When Relevant
+
+- Read \`_system/identity/README.md\` when user preferences, communication style, domain background, or long-term context may matter.
+- Read \`_system/lessons/README.md\` before repeated, risky, or pattern-sensitive work.
+- Read \`knowledge/README.md\` when project knowledge or reusable references may matter.
+- Read \`_system/main-repo-sync/README.md\` only when shared Hub resources, skills, or cross-project coordination are involved.
 
 ## Write Boundaries
 
@@ -3902,10 +4128,57 @@ function renderEnglishSatelliteAgents(mode) {
 - Local cross-project inbox, outbox, sent, and archived records live in \`.starwork/handoff/\`.
 - Hub central routing lives in \`projects/coordination/\`.
 
+## Workflow
+
+- Keep project facts separate from command output and temporary explanations.
+- Use handoff records for Hub communication; do not write project progress into the Hub registry.
+
 ## Confirmation Required
 
 - Changing identity, lessons, shared knowledge, or Hub sync content.
 - Promoting drafts into the formal source of truth.
+`;
+}
+
+function renderChineseSatelliteAgents() {
+  return `# StarWork 工作区规则
+
+## 开始前先读
+
+1. \`_系统/上下文/当前项目.md\`
+2. \`_系统/任务/当前工作.md\`
+3. 如果存在 \`.starwork/rules/index.md\`，再按索引读取扩展规则
+
+## 相关时再读
+
+- 涉及用户偏好、沟通方式、领域背景或长期上下文时，读 \`_系统/身份/README.md\`
+- 做重复性、风险较高或容易踩坑的工作前，读 \`_系统/教训/README.md\`
+- 需要共享知识或可复用参考时，读 \`知识/README.md\`
+- 只有涉及 Hub 资源、共享 skill 或跨项目协同时，才读 \`_系统/主库同步/README.md\`
+
+## 文件边界
+
+- 项目状态写入 \`_系统/上下文/当前项目.md\`
+- 当前执行记录写入 \`_系统/任务/当前工作.md\`
+- 身份和长期偏好默认来自 Hub 快照，放在 \`_系统/身份/\`
+- 可复用教训默认来自 Hub 快照，项目候选教训放在 \`_系统/教训/\`
+- 共享知识挂载在 \`知识/\`，默认只读
+- 原始资料放入 \`参考资料/\`
+- AI 草稿放入 \`输出/草稿/\`
+- 用户确认后的成果放入项目声明的正式事实源
+- 跨项目联络的本地收发记录放入 \`.starwork/handoff/\`
+
+## 工作方式
+
+- 项目进度留在本项目，不写进 Hub 项目注册表
+- 与 Hub 沟通通过联络和回写流程处理，不直接改写 Hub 正式资源
+- 不把命令执行结果、临时解释或初始化记录写入项目事实源
+
+## 需要确认
+
+- 修改身份、教训、共享知识或 Hub 同步内容
+- 将草稿晋升为正式事实源
+- 改变工作台结构或顶层业务目录
 `;
 }
 
@@ -3929,7 +4202,44 @@ When connected to a Hub, shared identity, lessons, knowledge, skills, and projec
 `;
 }
 
-function renderEnglishMainRepoSyncReadme() {
+function renderChineseSatelliteReadme(modeConfig) {
+  return `# StarWork 卫星项目工作台
+
+这是由 Hub 创建和登记的具体项目工作台。Hub 提供共享身份、教训、知识和部分 skills；项目自己的状态、资料、草稿和确认成果仍留在本项目。
+
+## 主要路径
+
+- \`_系统/上下文/当前项目.md\`：项目状态
+- \`_系统/任务/当前工作.md\`：当前工作
+- \`_系统/主库同步/\`：本项目与 Hub 的关系说明
+- \`_系统/身份/\`：来自 Hub 的身份快照和项目候选更新
+- \`_系统/教训/\`：来自 Hub 的教训快照和项目候选教训
+- \`知识/\`：指向 Hub 共享知识的只读入口
+- \`参考资料/\`：本项目资料
+- \`输出/\`：本项目草稿和确认成果
+
+正式成果默认放在 \`${modeConfig.formalSource}\`，当前工作资料默认放在 \`${modeConfig.businessWorkArea}\`。
+`;
+}
+
+function renderSatelliteMainRepoSyncReadme(language) {
+  if (language !== "en") {
+    return `# 主库同步
+
+这里说明本卫星项目与 Hub 的关系。
+
+Hub 不是本项目的上级工作文件夹，也不承载本项目的进度正文。本项目自己的状态、当前工作、资料、草稿和确认成果都留在本项目内。
+
+| 本地路径 | 来源 | 规则 |
+|---|---|---|
+| \`_系统/身份/\` | Hub \`identity/\` | 默认只读；修改稳定身份前需要确认。 |
+| \`_系统/教训/\` | Hub \`lessons/\` | 项目候选教训可先留在本项目，确认后再提交 Hub 审核。 |
+| \`.starwork/internal/\` | Hub 内部协议 | 稳定协议快照。 |
+| \`知识/\` | Hub \`knowledge/\` | 只读链接。 |
+| \`.agents/skills/\` 和 \`.claude/skills/\` | Hub 或 Kit skills | 只挂载本项目需要的部分。 |
+| \`.starwork/handoff/\` | 本项目 | 跨项目联络的本地收发队列。 |
+`;
+  }
   return `# Hub Sync
 
 This folder explains the relationship between this satellite project and its Hub.
@@ -3944,6 +4254,40 @@ The Hub is not a parent work folder and should not receive project progress bodi
 | \`knowledge/\` | Hub \`knowledge/\` | Read-only link. |
 | \`.agents/skills/\` and \`.claude/skills/\` | Hub or kit skills | Selected mounts only. |
 | \`.starwork/handoff/\` | This project | Local cross-project inbox and outbox. |
+`;
+}
+
+function renderSatelliteIdentityReadme(language) {
+  if (language !== "en") {
+    return `# 身份
+
+这里放置来自 Hub 的身份、偏好和长期上下文快照，也可以暂存本项目发现的候选更新。
+
+默认先按只读处理。需要修改稳定身份或偏好时，先确认，再通过 Hub 回写或审核流程处理。
+`;
+  }
+  return `# Identity
+
+This folder contains Hub identity snapshots and project-local identity candidates.
+
+Treat Hub identity as read-only by default. Ask before changing stable identity or preferences, then route confirmed updates through the Hub review flow.
+`;
+}
+
+function renderSatelliteLessonsReadme(language) {
+  if (language !== "en") {
+    return `# 教训
+
+这里放置来自 Hub 的跨项目教训快照，也可以暂存本项目发现的候选教训。
+
+不要记录普通进度摘要。确认具有复用价值后，再通过 Hub 回写或审核流程处理。
+`;
+  }
+  return `# Lessons
+
+This folder contains Hub lesson snapshots and project-local lesson candidates.
+
+Do not record ordinary progress summaries here. Route reusable, behavior-changing lessons through the Hub review flow after confirmation.
 `;
 }
 
@@ -4344,15 +4688,16 @@ function ensureProjectCanBeRegistered(registry, projectId, targetPath) {
 
 function renderSpawnProjectStatus({ projectName, projectId, hubRoot, mode, language, modeConfig, blueprint }) {
   if (language === "en") {
-    const description = blueprint?.description
-      ? `\n## Project Positioning\n\n${blueprint.description}\n`
+    const descriptionText = cleanProjectFactText(blueprint?.description);
+    const description = descriptionText
+      ? `\n## Project Positioning\n\n${descriptionText}\n`
       : "";
-    const customization = blueprint
-      ? `\n## Workspace Customization\n\n- Blueprint: ${path.basename(blueprint.__path)}\n- Formal source: \`${modeConfig.formalSource}\`\n- Business work area: \`${modeConfig.businessWorkArea}\`\n- Custom folders: ${(blueprint.folders || []).map((folder) => `\`${normalizeSafeRelativePath(folder, "blueprint.folders")}\``).join(", ") || "None"}\n`
+    const agreements = blueprint
+      ? `\n## Project Agreements\n\n- Formal source: \`${modeConfig.formalSource}\`\n- Business work area: \`${modeConfig.businessWorkArea}\`\n- Declared folders: ${(blueprint.folders || []).map((folder) => `\`${normalizeSafeRelativePath(folder, "blueprint.folders")}\``).join(", ") || "None"}\n`
       : "";
     return `# Current Project
 
-## Project Goal
+## Goal
 
 ${projectName}
 ${description}
@@ -4360,47 +4705,42 @@ ${description}
 ## Project Info
 
 - Project ID: ${projectId}
-- Workspace type: ${modeConfig.workspaceType}
-- Kit: ${modeConfig.kit}
-- Mode: ${mode}
 - Hub: ${hubRoot}
-${customization}
+${agreements}
 
 ## Current Stage
 
-Created by \`starwork spawn\`; project goal, near-term focus, and execution boundaries still need to be filled in.
+TBD.
 
-## Near-Term Focus
+## Focus
 
-- Fill in the project goal.
-- Confirm formal source: \`${modeConfig.formalSource}\`.
-- Confirm business work area: \`${modeConfig.businessWorkArea}\`.
-- Confirm current work entry: \`_system/tasks/current-work.md\`.
+- TBD.
 
-## Key Risks
+## Primary Sources
+
+- \`${modeConfig.formalSource}\`
+- \`${modeConfig.businessWorkArea}\`
+
+## Risks
 
 - Do not treat the Hub project registry as project progress.
 - Hub sync resources are read-only by default; project updates should use handoff or writeback flows.
 
-## Formal Source
+## Next Step
 
-\`${modeConfig.formalSource}\`
-
-## Next
-
-- Run \`starwork doctor\`.
-- Update this file based on the actual project.
+- TBD.
 `;
   }
-  const description = blueprint?.description
-    ? `\n## 项目定位\n\n${blueprint.description}\n`
+  const descriptionText = cleanProjectFactText(blueprint?.description);
+  const description = descriptionText
+    ? `\n## 项目定位\n\n${descriptionText}\n`
     : "";
-  const customization = blueprint
-    ? `\n## 工作区定制\n\n- Blueprint：${path.basename(blueprint.__path)}\n- 正式事实源：\`${modeConfig.formalSource}\`\n- 当前工作区：\`${modeConfig.businessWorkArea}\`\n- 定制目录：${(blueprint.folders || []).map((folder) => `\`${normalizeSafeRelativePath(folder, "blueprint.folders")}\``).join("、") || "无"}\n`
+  const agreements = blueprint
+    ? `\n## 项目约定\n\n- 正式事实源：\`${modeConfig.formalSource}\`\n- 当前工作区：\`${modeConfig.businessWorkArea}\`\n- 固定目录：${(blueprint.folders || []).map((folder) => `\`${normalizeSafeRelativePath(folder, "blueprint.folders")}\``).join("、") || "无"}\n`
     : "";
-  return `# 当前项目状态
+  return `# 当前项目
 
-## 项目目标
+## 目标
 
 ${projectName}
 ${description}
@@ -4408,41 +4748,39 @@ ${description}
 ## 项目信息
 
 - 项目 ID：${projectId}
-- 工作区类型：${modeConfig.workspaceType}
-- Kit：${modeConfig.kit}
-- 模式：${mode}
 - Hub：${hubRoot}
-${customization}
+${agreements}
 
 ## 当前阶段
 
-刚由 \`starwork spawn\` 创建，等待补充项目目标、近期重点和执行边界。
+待填写。
 
 ## 近期重点
 
-- 补充项目目标。
-- 确认正式事实源：\`${modeConfig.formalSource}\`。
-- 确认当前工作区：\`${modeConfig.businessWorkArea}\`。
-- 确认当前工作入口：\`_系统/任务/当前工作.md\`。
+- 待填写。
 
-## 主要风险
+## 主要事实源
+
+- \`${modeConfig.formalSource}\`
+- \`${modeConfig.businessWorkArea}\`
+
+## 风险
 
 - 不要把 Hub 的项目注册表当成项目进度正文。
 - 主库同步资源默认只读，项目内更新应走跨项目联络或回写流程。
 
-## 正式事实源
-
-\`${modeConfig.formalSource}\`
-
 ## 下一步
 
-- 运行 \`starwork doctor\` 检查工作台。
-- 根据项目实际情况更新本文件。
-
-## 兼容说明
-
-当前 Hub + 项目模式读取 \`_系统/上下文/当前项目.md\`。如果未来迁移到其他命名，只能保留一个状态事实源，另一个应作为别名、指针或生成副本。
+- 待填写。
 `;
+}
+
+function cleanProjectFactText(text) {
+  if (!text || typeof text !== "string") return "";
+  if (/(Initialized as|StarWork project workspace|blueprint|dry-run|doctor|Folders Not Used|generated by starwork|created by starwork)/i.test(text)) {
+    return "";
+  }
+  return text.trim();
 }
 
 function buildLanesInitPlan({ workspaceRoot, lanes }) {

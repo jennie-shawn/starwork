@@ -12,13 +12,13 @@ TBD.
 
 - TBD.
 
-## Risks
+## Primary Sources
 
 - TBD.
 
-## Formal Source of Truth
+## Risks
 
-TBD, such as `product/`, `outputs/final/`, or a project-specific directory.
+- TBD.
 
 ## Next Step
 

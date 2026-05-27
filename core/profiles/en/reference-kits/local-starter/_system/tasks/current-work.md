@@ -1,17 +1,17 @@
 # Current Work
 
-## Current Entry
-
-TBD.
-
-## In Progress
+## Now
 
 - TBD.
 
-## Blocked or Waiting
+## Next
 
 - TBD.
 
-## Recent Notes
+## Waiting On
+
+- TBD.
+
+## Notes For Next AI
 
 - TBD.

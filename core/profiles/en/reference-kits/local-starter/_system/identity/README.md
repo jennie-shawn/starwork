@@ -1,5 +1,24 @@
 # Identity
 
-Put project-local identity, preferences, and durable background here.
+## Durable Context
 
-This directory is read-only by default unless the user explicitly asks to update it.
+- Project owner / user:
+- Working style:
+- Domain background:
+- Long-lived preferences:
+
+## Communication Preferences
+
+- Preferred language:
+- Tone:
+- Detail level:
+
+## Stable Constraints
+
+- Do:
+- Avoid:
+
+## Update Rule
+
+Read this file when user preference, domain background, or long-term context matters.
+Ask before changing stable identity or preferences.

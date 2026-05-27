@@ -110,6 +110,12 @@ test("creates a single-light workspace with general pack", () => {
 
   const state = readJson(path.join(dir, ".starwork", "workspace.json"));
   const skills = readJson(path.join(dir, ".starwork", "skills.json"));
+  const agents = fs.readFileSync(path.join(dir, "AGENTS.md"), "utf8");
+  const identity = fs.readFileSync(path.join(dir, "_系统", "身份", "README.md"), "utf8");
+  const lessons = fs.readFileSync(path.join(dir, "_系统", "教训", "README.md"), "utf8");
+  const knowledge = fs.readFileSync(path.join(dir, "知识", "README.md"), "utf8");
+  const projectStatus = fs.readFileSync(path.join(dir, "_系统", "上下文", "当前项目.md"), "utf8");
+  const currentWork = fs.readFileSync(path.join(dir, "_系统", "任务", "当前工作.md"), "utf8");
   assert.equal(state.workspace_type, "project");
   assert.equal(state.kit, "project");
   assert.equal(state.packs[0].id, "general");
@@ -120,6 +126,71 @@ test("creates a single-light workspace with general pack", () => {
   assert.equal(fs.existsSync(path.join(dir, "输出", "确认成果", "README.md")), true);
   assert.equal(fs.existsSync(path.join(dir, "_系统", "身份", "README.md")), true);
   assert.equal(fs.existsSync(path.join(dir, "_系统", "教训", "README.md")), true);
+  assert.equal(fs.existsSync(path.join(dir, "_系统", "主库同步")), false);
+  assert.equal(fs.existsSync(path.join(dir, ".core-sync.json")), false);
+  assert.equal(fs.existsSync(path.join(dir, ".internal")), false);
+  assert.match(agents, /相关时再读/);
+  assert.match(agents, /_系统\/身份\/README\.md/);
+  assert.match(agents, /_系统\/教训\/README\.md/);
+  assert.doesNotMatch(agents, /Folders Not Used|Initialized as|blueprint|dry-run/);
+  assert.match(identity, /长期背景/);
+  assert.match(identity, /沟通偏好/);
+  assert.match(identity, /稳定约束/);
+  assert.doesNotMatch(identity, /主库分发|初始化快照|Hub identity|satellite/i);
+  assert.match(lessons, /已确认教训/);
+  assert.match(lessons, /候选教训/);
+  assert.match(knowledge, /本项目的知识入口/);
+  assert.doesNotMatch(knowledge, /只读软链接|Hub `knowledge`/);
+  assert.match(projectStatus, /## 目标/);
+  assert.match(projectStatus, /## 当前阶段/);
+  assert.match(projectStatus, /## 近期重点/);
+  assert.match(projectStatus, /## 主要事实源/);
+  assert.match(projectStatus, /## 风险/);
+  assert.doesNotMatch(projectStatus, /Initialized as|StarWork project workspace|blueprint|Folders Not Used|doctor/);
+  assert.match(currentWork, /## 现在/);
+  assert.match(currentWork, /## 给下一个 AI 的备注/);
+});
+
+test("creates an English project workspace with standalone system templates", () => {
+  const dir = tempDir();
+  runInit(["--type", "project", "--pack", "general", "--language", "en", "--target", dir, "--yes"]);
+
+  const agents = fs.readFileSync(path.join(dir, "AGENTS.md"), "utf8");
+  const identity = fs.readFileSync(path.join(dir, "_system", "identity", "README.md"), "utf8");
+  const lessons = fs.readFileSync(path.join(dir, "_system", "lessons", "README.md"), "utf8");
+  const knowledge = fs.readFileSync(path.join(dir, "knowledge", "README.md"), "utf8");
+  const projectStatus = fs.readFileSync(path.join(dir, "_system", "context", "current-project.md"), "utf8");
+  const currentWork = fs.readFileSync(path.join(dir, "_system", "tasks", "current-work.md"), "utf8");
+  const doctor = runDoctor(["--target", dir, "--json"]);
+  const report = JSON.parse(doctor.stdout);
+
+  assert.equal(fs.existsSync(path.join(dir, "_system", "main-repo-sync")), false);
+  assert.equal(fs.existsSync(path.join(dir, ".core-sync.json")), false);
+  assert.equal(fs.existsSync(path.join(dir, ".internal")), false);
+  assert.match(agents, /Read When Relevant/);
+  assert.match(agents, /_system\/identity\/README\.md/);
+  assert.match(agents, /_system\/lessons\/README\.md/);
+  assert.doesNotMatch(agents, /Folders Not Used|Initialized as|blueprint|dry-run/);
+  assert.match(identity, /Durable Context/);
+  assert.match(identity, /Communication Preferences/);
+  assert.match(identity, /Stable Constraints/);
+  assert.doesNotMatch(identity, /Hub identity snapshot|main repo|synced main-repository|satellite/i);
+  assert.match(lessons, /Active Lessons/);
+  assert.match(lessons, /Candidate Lessons/);
+  assert.match(lessons, /How To Add A Lesson/);
+  assert.match(knowledge, /local knowledge entry/);
+  assert.doesNotMatch(knowledge, /read-only link to the Hub/);
+  assert.match(projectStatus, /## Goal/);
+  assert.match(projectStatus, /## Current Stage/);
+  assert.match(projectStatus, /## Focus/);
+  assert.match(projectStatus, /## Primary Sources/);
+  assert.match(projectStatus, /## Risks/);
+  assert.match(projectStatus, /## Next Step/);
+  assert.doesNotMatch(projectStatus, /Initialized as|StarWork project workspace|blueprint|Folders Not Used|doctor/);
+  assert.match(currentWork, /## Now/);
+  assert.match(currentWork, /## Notes For Next AI/);
+  assert.equal(doctor.status, 0);
+  assert.equal(report.ok, true);
 });
 
 test("init creates a customized workspace from a blueprint", () => {
@@ -178,6 +249,8 @@ test("init creates a customized workspace from a blueprint", () => {
   assert.equal(fs.existsSync(path.join(dir, "参考资料")), false);
   assert.equal(fs.existsSync(path.join(dir, "输出")), false);
   assert.match(fs.readFileSync(path.join(dir, ".starwork", "rules", "workspace.file_boundaries.md"), "utf8"), /代码放在 src\//);
+  assert.doesNotMatch(fs.readFileSync(path.join(dir, "AGENTS.md"), "utf8"), /Folders Not Used|Initialized as|blueprint|dry-run/);
+  assert.doesNotMatch(fs.readFileSync(path.join(dir, "_system", "context", "current-project.md"), "utf8"), /Initialized as|StarWork project workspace|blueprint|Folders Not Used|doctor/);
 
   const report = runDoctor(["--target", dir, "--json"]);
   assert.equal(report.status, 0);
@@ -476,6 +549,10 @@ test("spawn creates a project from a hub", () => {
   assert.equal(registry.projects[0].path, path.resolve(target));
   assert.equal(fs.lstatSync(path.join(target, "知识")).isSymbolicLink(), true);
   assert.equal(fs.existsSync(path.join(target, ".starwork", "handoff", "state.json")), true);
+  assert.equal(fs.existsSync(path.join(target, "_系统", "主库同步", "README.md")), true);
+  assert.match(fs.readFileSync(path.join(target, "AGENTS.md"), "utf8"), /_系统\/主库同步\/README\.md/);
+  assert.match(fs.readFileSync(path.join(target, "_系统", "身份", "README.md"), "utf8"), /来自 Hub/);
+  assert.match(fs.readFileSync(path.join(target, "_系统", "教训", "README.md"), "utf8"), /来自 Hub/);
   assert.equal(fs.lstatSync(path.join(target, ".agents", "skills")).isDirectory(), true);
   assert(skills.skills.some((skill) => skill.id === "neat-freak"));
   assert.equal(sync.resources.skills.mode, "selected");
@@ -530,6 +607,9 @@ test("spawn creates an English starter satellite from a hub", () => {
   assert.equal(sync.resources.knowledge.target, "knowledge");
   assert.equal(fs.existsSync(path.join(target, "_system", "context", "current-project.md")), true);
   assert.equal(fs.existsSync(path.join(target, "_system", "tasks", "current-work.md")), true);
+  assert.equal(fs.existsSync(path.join(target, "_system", "main-repo-sync", "README.md")), true);
+  assert.match(fs.readFileSync(path.join(target, "AGENTS.md"), "utf8"), /_system\/main-repo-sync\/README\.md/);
+  assert.match(fs.readFileSync(path.join(target, "_system", "identity", "README.md"), "utf8"), /Hub identity snapshots/);
   assert.equal(fs.existsSync(path.join(target, "references", "README.md")), true);
   assert.equal(fs.existsSync(path.join(target, "outputs", "final", "README.md")), true);
   assert.equal(fs.lstatSync(path.join(target, "knowledge")).isSymbolicLink(), true);
@@ -551,9 +631,9 @@ test("spawn creates a customized project from a blueprint", () => {
   fs.writeFileSync(path.join(blueprintDir, "seed", "会议纪要", "README.md"), "# 会议纪要\n\n项目：{{project.name}}\n", "utf8");
   fs.writeFileSync(path.join(blueprintDir, "blueprint.json"), `${JSON.stringify({
     schema: "starwork.spawn_blueprint.v0.1",
-    name: "Blueprint Project",
-    project_id: "blueprint-project",
-    description: "用 blueprint 生成的定制项目。",
+    name: "Custom Project",
+    project_id: "custom-project",
+    description: "用于整理会议纪要、资料库和交付物的定制项目。",
     base: {
       mode: "project",
       kit: "project",
@@ -600,8 +680,9 @@ test("spawn creates a customized project from a blueprint", () => {
   assert.doesNotMatch(agents, /StarWork Rule Slot:/);
   assert.doesNotMatch(agents, /StarWork Blueprint:/);
   assert.match(blueprintRule, /正式成果放在 交付物\/确认版本\//);
-  assert.match(projectStatus, /工作区定制/);
-  assert.match(seed, /项目：Blueprint Project/);
+  assert.match(projectStatus, /项目约定/);
+  assert.doesNotMatch(projectStatus, /Blueprint|blueprint|starwork spawn|doctor|Initialized as|Folders Not Used/);
+  assert.match(seed, /项目：Custom Project/);
   assert.equal(registry.projects[0].customized, true);
   assert.equal(doctor.status, 0);
   assert(report.checks.some((check) => check.id === "blueprint.folder.exists" && check.level === "pass"));

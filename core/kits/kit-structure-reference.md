@@ -22,7 +22,7 @@ v0.1 只保留两类正式 Kit：
 | 层级 | 放什么 | 不放什么 |
 |---|---|---|
 | `.starwork/` | StarWork 机制运行状态、manifest、队列、安装记录、缓存和报告。 | 项目业务事实、草稿、正式成果、Hub 共享资产正文。 |
-| `_系统/` 或 `_system/` | 项目协作事实，例如项目状态、当前工作、主库同步说明、决策和协作索引。 | StarWork 机制缓存、投递队列、安装 manifest。 |
+| `_系统/` 或 `_system/` | 项目协作事实，例如项目状态、当前工作、身份、教训、决策和协作索引。Satellite 可额外包含 Hub 同步说明。 | StarWork 机制缓存、投递队列、安装 manifest。 |
 | `参考资料/` / `references/` | 当前项目输入资料。 | Pack 安装记录或 CLI 缓存。 |
 | `输出/` / `outputs/` | 当前项目草稿和用户确认成果。 | StarWork 机制报告，除非用户确认晋升为项目成果。 |
 | `identity/`、`lessons/`、`knowledge/`、`skills/` | Hub 共享资产或项目本地上下文资产。 | 机制队列和缓存。 |
@@ -66,7 +66,6 @@ v0.1 只保留两类正式 Kit：
 ├── README.md
 ├── CLAUDE.md
 ├── .starwork/
-├── .internal/
 ├── .obsidian/
 ├── .agents/skills/
 ├── .claude/skills/
@@ -76,8 +75,7 @@ v0.1 只保留两类正式 Kit：
 │   ├── 任务/
 │   │   └── 当前工作.md
 │   ├── 身份/
-│   ├── 教训/
-│   └── 主库同步/
+│   └── 教训/
 ├── 知识/
 ├── 参考资料/
 └── 输出/
@@ -93,7 +91,6 @@ v0.1 只保留两类正式 Kit：
 ├── README.md
 ├── CLAUDE.md
 ├── .starwork/
-├── .internal/
 ├── .obsidian/
 ├── .agents/skills/
 ├── .claude/skills/
@@ -103,8 +100,7 @@ v0.1 只保留两类正式 Kit：
 │   ├── tasks/
 │   │   └── current-work.md
 │   ├── identity/
-│   ├── lessons/
-│   └── main-repo-sync/
+│   └── lessons/
 ├── knowledge/
 ├── references/
 └── outputs/
@@ -113,6 +109,8 @@ v0.1 只保留两类正式 Kit：
 ```
 
 Project 不默认创建事项目录。需要多推进线时，先通过 Pack、Skill 或用户自定义目录表达，不再切 Kit。
+
+独立 Project 也不默认创建 `_系统/主库同步/`、`_system/main-repo-sync/`、`.core-sync.json` 或 `.internal/`。这些只在 Hub 生成 Satellite 或升级接入 Hub 时由 CLI 叠加。
 
 ## `hub`
 
