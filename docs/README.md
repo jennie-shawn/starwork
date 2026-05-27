@@ -5,6 +5,7 @@
 - [product-direction.md](product-direction.md)：StarWork 产品方向、四层结构和关键约束
 - [agent-install-guide.md](agent-install-guide.md)：面向用户 Agent 的 StarWork CLI 与 Skills 安装指导
 - [alpha-test-guide.md](alpha-test-guide.md)：StarWork A 测 CLI 与 Skills 安装、测试和反馈指南
+- [m2.6-alpha-core-flows-optimization-spec.md](m2.6-alpha-core-flows-optimization-spec.md)：M2.6 A 测核心链路优化规格，覆盖安装、init、doctor/upgrade、Hub 管理和 multiagent
 - [index.html](index.html)：StarWork HTML 文档中心，统一挂载所有 HTML 阅读稿
 - [hub-management.html](hub-management.html)：多项目中枢管理机制 HTML 阅读版，解释 Hub + Satellite、项目注册表和回写边界
 - [cli-capabilities.html](cli-capabilities.html)：StarWork CLI v0.1 能力说明 HTML 阅读版

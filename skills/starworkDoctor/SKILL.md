@@ -1,11 +1,11 @@
 ---
 name: starworkDoctor
-description: 'Diagnose StarWork workspaces, legacy templates, or Hub-like repos from `starwork doctor --json`; map folders to Core roles and draft safe `starwork upgrade --blueprint` plans.'
+description: 'Diagnose StarWork workspaces, legacy templates, or Hub-like repos from `starwork doctor --json`; explain structure issues and draft safe `starwork upgrade --blueprint` plans.'
 ---
 
 # starworkDoctor
 
-使用这个 skill，把 `starwork doctor --json` 暴露的探测结果解释成人能理解的诊断报告；当用户明确要升级时，也由本 skill 继续采访用户并生成 `upgrade-blueprint.json`。
+使用这个 skill，把 `starwork doctor --json` 暴露的探测结果整理成清晰诊断；当用户明确要升级时，也由本 skill 继续采访用户并生成 `upgrade-blueprint.json`。
 
 `starworkDoctor` 不是 `starwork doctor` 命令本身，也不是 `starwork upgrade` 执行器。它负责在 CLI 探测之后做 AI 判断：
 

@@ -349,6 +349,7 @@ starwork init --type hub
 starwork init --name "我的内容工作台"
 starwork init --formal-source outputs/final
 starwork init --target ./my-workspace
+starwork init --target ./custom-workspace --blueprint ./init-blueprint.json --dry-run
 starwork init --dry-run
 starwork init --yes
 starwork init --language en
@@ -362,6 +363,7 @@ starwork init --language en
 | `--pack` | Pack ID；单项目交互默认 `general`，高级参数可传入兼容 Pack。 |
 | `--language` | 工作台语言：`zh` 或 `en`；交互模式会询问，非交互默认 `zh`。 |
 | `--name` | 工作台名称。 |
+| `--blueprint` | 读取 `starworkInit` 生成的初始化定制单；支持覆盖正式成果/当前工作路径、额外目录、规则注入、seed 和跳过明确不要的默认目录。 |
 | `--formal-source` | 覆盖默认正式成果位置。 |
 | `--target` | 指定初始化目标目录；默认是当前目录。 |
 | `--dry-run` | 只预览，不写入。 |

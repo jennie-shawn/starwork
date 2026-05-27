@@ -516,7 +516,7 @@
           <p class="kicker">StarWork CLI v0.1</p>
           <h1>CLI 能力说明</h1>
           <p class="subtitle">
-            CLI 是 StarWork 的产品化入口。Core 定义什么是对的，CLI 负责把它生成出来、检查出来、适配出来，组织多 Agent 协作，并把场景 Pack 安全安装进去；定制化生成由 spawn blueprint 和 starworkSpawn skill 共同完成第一版闭环。
+            CLI 是 StarWork 的产品化入口。它负责创建工作台、检查结构、适配不同 AI 工具、组织多 AI 会话协作，并把场景能力安全安装进去；定制化生成由 spawn 定制方案和 starworkSpawn skill 共同完成第一版闭环。
           </p>
         </div>
 
@@ -524,16 +524,16 @@
           <div class="quick"><b>init</b><span>从空文件夹生成一个可工作的 StarWork 工作台。</span></div>
           <div class="quick"><b>spawn</b><span>从多项目中枢生成并登记一个新项目工作台。</span></div>
           <div class="quick"><b>doctor</b><span>检查工作台是否健康，找出缺失、错配和风险。</span></div>
-          <div class="quick"><b>adapt</b><span>为不同 Agent 生成轻量入口，但不复制规则源。</span></div>
-          <div class="quick"><b>multiagent</b><span>按项目自定义职责位组织多个 Agent 会话协作。</span></div>
-          <div class="quick"><b>pack install</b><span>在健康工作台上补装场景 Pack。</span></div>
+          <div class="quick"><b>adapt</b><span>为不同 AI 工具生成轻量入口，但不复制规则源。</span></div>
+          <div class="quick"><b>multiagent</b><span>按项目自定义职责位组织多个 AI 会话协作。</span></div>
+          <div class="quick"><b>pack install</b><span>在健康工作台上补装场景能力。</span></div>
         </div>
       </div>
 
       <div class="hero-board" aria-label="CLI 最小闭环图">
         <svg viewBox="0 0 640 520" role="img" aria-labelledby="cli-flow-title cli-flow-desc">
           <title id="cli-flow-title">CLI 最小闭环</title>
-          <desc id="cli-flow-desc">init 生成工作台，spawn 从中枢生成项目，doctor 检查工作台，adapt 适配 Agent，multiagent 组织多 Agent 协作，pack install 安装场景 Pack。</desc>
+          <desc id="cli-flow-desc">init 生成工作台，spawn 从中枢生成项目，doctor 检查工作台，adapt 适配 AI 工具，multiagent 组织多 AI 协作，pack install 安装场景能力。</desc>
           <defs>
             <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
               <path d="M 0 0 L 10 5 L 0 10 z" fill="#1d211d"></path>
@@ -556,7 +556,7 @@
           <g transform="translate(416 330)">
             <rect width="150" height="82" rx="8" fill="#d7e4ea" stroke="#2f6286" stroke-width="2"></rect>
             <text x="75" y="38" text-anchor="middle" font-size="23" font-weight="900" fill="#2f6286">adapt</text>
-            <text x="75" y="61" text-anchor="middle" font-size="13" fill="#2f6286">适配 Agent</text>
+            <text x="75" y="61" text-anchor="middle" font-size="13" fill="#2f6286">适配 AI 工具</text>
           </g>
           <g transform="translate(74 330)">
             <rect width="150" height="82" rx="8" fill="#edd6cf" stroke="#9b3d2c" stroke-width="2"></rect>
@@ -577,7 +577,7 @@
     <section class="section">
       <div class="section-header">
         <h2>核心命令</h2>
-        <p class="section-note">v0.1 不做大而全的 CLI，而是先完成一条可靠路径：能初始化、能生成中枢项目、能检查、能适配、能组织多 Agent 协作、能补装 Pack。</p>
+        <p class="section-note">v0.1 不做大而全的 CLI，而是先完成一条可靠路径：能初始化、能生成中枢项目、能检查、能适配、能组织多 AI 协作、能补装场景能力。</p>
       </div>
 
       <div class="command-grid">
@@ -586,14 +586,14 @@
             <h3><code>init</code></h3>
             <span class="badge">生成</span>
           </div>
-          <p>把 Core Kit 和场景 Pack 组装成一个可直接使用的 StarWork 工作台。普通用户不需要理解 Kit、Profile、Capability。</p>
+          <p>把基础结构和场景能力组装成一个可直接使用的 StarWork 工作台。普通用户不需要理解内部配置。</p>
           <ul>
-            <li>支持单事务项目、项目工作台、多项目管理中枢。</li>
-            <li>交互默认推荐单事务项目；单项目默认使用通用 Pack。</li>
+            <li>支持普通项目工作台和多项目管理中枢。</li>
+            <li>交互默认推荐普通项目；单项目默认使用通用工作能力。</li>
             <li>写入前预览，不静默覆盖已有内容。</li>
             <li>生成 `.starwork/workspace.json`，供后续命令读取。</li>
           </ul>
-          <pre>node cli/bin/starwork.js init --type single-light --pack general --target ./workspace --yes</pre>
+          <pre>node cli/bin/starwork.js init --type project --pack general --target ./workspace --yes</pre>
         </article>
 
         <article class="command">
@@ -603,7 +603,7 @@
           </div>
           <p>从健康的多项目中枢生成一个被管理的新项目工作台，并把它登记回 Hub 的项目注册表。</p>
           <ul>
-            <li>支持 <code>starter</code> 和 <code>事项</code> 两种项目模式。</li>
+            <li>当前保留项目工作台模式，旧的事项型结构已封存。</li>
             <li>复制 Hub 的身份和教训快照。</li>
             <li>软链接 Hub 的知识和 skills 入口。</li>
             <li>写入 <code>.core-sync.json</code> 和 Hub <code>projects/registry.json</code>。</li>
@@ -616,11 +616,11 @@
             <h3><code>doctor</code></h3>
             <span class="badge">检查</span>
           </div>
-          <p>检查工作台是不是健康。它只报告问题，不默认修复文件，是后续适配和 Pack 安装的守门员。</p>
+          <p>检查工作台是不是完整。它只报告问题，不默认修复文件，是后续适配和场景能力安装的守门员。</p>
           <ul>
-            <li>检查 workspace state、Core 必需角色、Kit 文件。</li>
-            <li>检查正式事实源、业务工作区、Pack seed 和模板。</li>
-            <li>支持人类可读输出和 <code>--json</code>。</li>
+            <li>检查工作台身份证、入口文件和基础结构文件。</li>
+            <li>检查正式成果区、日常工作区、场景初始文件和模板。</li>
+            <li>支持用户可读输出和 <code>--json</code>。</li>
             <li>健康返回退出码 0，有阻塞问题返回 1。</li>
           </ul>
           <pre>node cli/bin/starwork.js doctor --target ./workspace --json</pre>
@@ -631,12 +631,12 @@
             <h3><code>adapt</code></h3>
             <span class="badge">适配</span>
           </div>
-          <p>为具体 Agent 生成轻量适配入口。它不复制一整套规则，只告诉 Agent 去读 StarWork 的统一规则源。</p>
+          <p>为具体 AI 工具生成轻量适配入口。它不复制一整套规则，只告诉 AI 去读 StarWork 的统一规则源。</p>
           <ul>
             <li>支持 <code>codex</code>、<code>claude</code>、<code>cursor</code>、<code>trae</code>、<code>all</code>。</li>
             <li>Claude 生成 <code>CLAUDE.md</code>。</li>
             <li>Cursor 生成 <code>.cursor/rules/starwork.mdc</code>。</li>
-            <li>适配结果记录到 workspace state。</li>
+            <li>适配结果记录到工作台身份证。</li>
           </ul>
           <pre>node cli/bin/starwork.js adapt claude --target ./workspace --yes</pre>
         </article>
@@ -646,7 +646,7 @@
             <h3><code>multiagent</code></h3>
             <span class="badge">协作</span>
           </div>
-          <p>为同一项目建立自定义 Agent 职责位，绑定具体会话，并登记跨 lane 可读输出。</p>
+          <p>为同一项目建立自定义 AI 职责位，绑定具体会话，并登记跨 lane 可读输出。</p>
           <ul>
             <li>不内置固定职责，lane 由项目场景定义。</li>
             <li>使用 <code>_系统/协作/agent-lanes.md</code> 作为分工索引。</li>
@@ -661,12 +661,12 @@
             <h3><code>pack install</code></h3>
             <span class="badge">扩展</span>
           </div>
-          <p>在已有健康工作台上补装场景 Pack。它让用户可以先从通用工作台开始，再逐步加入具体场景能力。</p>
+          <p>在已有健康工作台上补装场景能力。它让用户可以先从通用工作台开始，再逐步加入具体场景能力。</p>
           <ul>
             <li>安装前必须通过阻塞级 <code>doctor</code> 检查。</li>
-            <li>创建 Pack 目录、seed 和 templates。</li>
-            <li>把 Pack 规则追加到 <code>AGENTS.md</code>。</li>
-            <li>更新 workspace state，已安装 Pack 不重复安装。</li>
+            <li>创建场景目录、初始文件和模板。</li>
+            <li>把场景规则写入 <code>.starwork/rules/</code>。</li>
+            <li>更新工作台身份证，已安装场景能力不重复安装。</li>
           </ul>
           <pre>node cli/bin/starwork.js pack install content-creator --target ./workspace --yes</pre>
         </article>
@@ -684,9 +684,9 @@
           <div>
             <span class="mini-label">01 / 生成工作台</span>
             <h3><code>starwork init</code></h3>
-            <p>把 Core Kit 和 Pack 合成一个最终工作台。它是用户第一次接触 StarWork 的入口。</p>
+            <p>把基础结构和场景能力合成一个最终工作台。它是用户第一次接触 StarWork 的入口。</p>
             <pre>node cli/bin/starwork.js init \
-  --type single-light \
+  --type project \
   --pack general \
   --target ./workspace \
   --yes</pre>
@@ -696,10 +696,10 @@
               <h4>具备的能力</h4>
               <ul>
                 <li>识别目标目录是否已经是 StarWork 工作台。</li>
-                <li>根据 <code>--type</code> 选择 Kit：单事务项目、项目工作台、多项目中枢。</li>
-                <li>根据 <code>--pack</code> 安装通用、内容创作者或中枢管理 Pack。</li>
-                <li>生成 <code>AGENTS.md</code>、系统状态文件、工作目录、Pack seed 和 templates。</li>
-                <li>写入 <code>.starwork/workspace.json</code>，作为后续命令读取的机器状态。</li>
+                <li>根据 <code>--type</code> 选择普通项目或多项目中枢。</li>
+                <li>根据 <code>--pack</code> 安装通用、内容创作者或中枢管理场景能力。</li>
+                <li>生成 <code>AGENTS.md</code>、系统状态文件、工作目录、场景初始文件和模板。</li>
+                <li>写入 <code>.starwork/workspace.json</code>，作为后续命令读取的工作台身份证。</li>
                 <li>遇到已有用户文件时生成旁路文件，不静默覆盖。</li>
               </ul>
             </div>
@@ -708,11 +708,11 @@
               <ol>
                 <li>解析参数和目标目录。</li>
                 <li>检查是否已经位于 StarWork 工作台内。</li>
-                <li>确定工作区类型、Kit、语言和 Pack。</li>
-                <li>加载 Kit 文件和 Pack 语言配置。</li>
-                <li>渲染 Pack 规则、seed、templates。</li>
+                <li>确定工作区类型、语言和场景能力。</li>
+                <li>加载基础结构文件和场景语言配置。</li>
+                <li>渲染场景规则、初始文件和模板。</li>
                 <li>生成写入计划并展示预览。</li>
-                <li>确认后写入文件和 workspace state。</li>
+                <li>确认后写入文件和工作台身份证。</li>
                 <li>提示下一步运行 <code>doctor</code> 和 <code>adapt</code>。</li>
               </ol>
             </div>
@@ -723,7 +723,7 @@
           <div>
             <span class="mini-label">02 / 生成中枢项目</span>
             <h3><code>starwork spawn</code></h3>
-            <p>从 Hub 生成一个新项目工作台。用户面对的是“生成一个新项目”，内部使用 <code>satellite-starter</code> 或 <code>project</code> Kit。</p>
+            <p>从 Hub 生成一个新项目工作台。用户面对的是“生成一个新项目”，内部使用项目工作台基础结构。</p>
             <pre>node cli/bin/starwork.js spawn \
   --hub ./hub \
   --name "内容产品官网" \
@@ -739,10 +739,10 @@
               <ul>
                 <li>检查 Hub 是否健康，且必须是 <code>hub</code> 工作区。</li>
                 <li>只允许写入不存在或空目录。</li>
-                <li>按 <code>--mode</code> 选择 <code>satellite-starter</code> 或 <code>project</code>。</li>
-                <li>写入项目自己的 workspace state 和同步说明。</li>
+                <li>按 <code>--mode</code> 选择项目工作台生成方式。</li>
+                <li>写入项目自己的工作台身份证和同步说明。</li>
                 <li>回写 Hub 项目注册表，拒绝重复 ID 或重复路径。</li>
-                <li><code>--blueprint</code> 支持按工作台定制单创建目录、写入路径、注入规则和复制 seed。</li>
+                <li><code>--blueprint</code> 支持按工作台定制单创建目录、写入路径、注入规则和复制初始文件。</li>
               </ul>
             </div>
             <div class="detail-box">
@@ -750,7 +750,7 @@
               <ol>
                 <li>定位并检查 Hub 工作台。</li>
                 <li>检查目标目录是否可写。</li>
-                <li>复制项目 Kit。</li>
+                <li>复制项目基础结构。</li>
                 <li>同步身份、教训、知识和 skills 入口。</li>
                 <li>写入 <code>.starwork/workspace.json</code> 与 <code>.core-sync.json</code>。</li>
                 <li>更新 Hub <code>projects/registry.json</code>。</li>
@@ -764,7 +764,7 @@
           <div>
             <span class="mini-label">03 / 检查健康</span>
             <h3><code>starwork doctor</code></h3>
-            <p>检查当前工作台是否健康。它是守门员，不修复，只报告。</p>
+            <p>检查当前工作台是否完整。它是守门员，不修复，只报告。</p>
             <pre>node cli/bin/starwork.js doctor \
   --target ./workspace
 
@@ -777,23 +777,23 @@ node cli/bin/starwork.js doctor \
               <h4>具备的能力</h4>
               <ul>
                 <li>定位 <code>.starwork/workspace.json</code>。</li>
-                <li>检查 state schema、Core 版本、工作区类型、Kit、语言、Packs。</li>
-                <li>检查 Core 必需角色：入口规则、项目状态、当前工作。</li>
+                <li>检查工作台身份证格式、版本、工作区类型、语言和场景能力。</li>
+                <li>检查必要入口：入口规则、项目状态、当前工作。</li>
                 <li>检查正式事实源和业务工作区。</li>
-                <li>检查 Kit 源文件是否完整落地。</li>
-                <li>检查 Pack paths、seed 和 templates 是否存在。</li>
-                <li>支持人类可读输出和 JSON 输出。</li>
+                <li>检查基础结构源文件是否完整落地。</li>
+                <li>检查场景路径、初始文件和模板是否存在。</li>
+                <li>支持用户可读输出和 JSON 输出。</li>
               </ul>
             </div>
             <div class="detail-box">
               <h4>执行步骤</h4>
               <ol>
                 <li>从目标目录向上查找 StarWork 工作台。</li>
-                <li>读取并解析 workspace state。</li>
-                <li>按 Kit 推导 Core 关键角色路径。</li>
-                <li>检查 Kit 文件完整性。</li>
-                <li>读取已安装 Pack 的语言配置。</li>
-                <li>检查 Pack 的目录、seed、templates。</li>
+                <li>读取并解析工作台身份证。</li>
+                <li>按基础结构推导关键入口路径。</li>
+                <li>检查基础结构文件完整性。</li>
+                <li>读取已安装场景能力的语言配置。</li>
+                <li>检查场景目录、初始文件和模板。</li>
                 <li>汇总 <code>pass</code>、<code>info</code>、<code>warn</code>、<code>fail</code>。</li>
                 <li>没有阻塞问题返回退出码 0，有阻塞问题返回 1。</li>
               </ol>
@@ -803,9 +803,9 @@ node cli/bin/starwork.js doctor \
 
         <article class="detail-card">
           <div>
-            <span class="mini-label">04 / 适配 Agent</span>
+            <span class="mini-label">04 / 适配 AI 工具</span>
             <h3><code>starwork adapt</code></h3>
-            <p>给不同 Agent 生成轻量入口。它不另起一套规则，而是把 Agent 引回 StarWork 统一规则源。</p>
+            <p>给不同 AI 工具生成轻量入口。它不另起一套规则，而是把 AI 引回 StarWork 统一规则源。</p>
             <pre>node cli/bin/starwork.js adapt claude \
   --target ./workspace \
   --yes
@@ -824,20 +824,20 @@ node cli/bin/starwork.js adapt --agent cursor \
                 <li>Cursor 生成 <code>.cursor/rules/starwork.mdc</code>。</li>
                 <li>Trae 生成 <code>.trae/rules/starwork.md</code>。</li>
                 <li>适配前检查工作台是否健康。</li>
-                <li>适配结果写入 workspace state 的 <code>adapters</code> 字段。</li>
+                <li>适配结果写入工作台身份证的 <code>adapters</code> 字段。</li>
               </ul>
             </div>
             <div class="detail-box">
               <h4>执行步骤</h4>
               <ol>
                 <li>定位 StarWork 工作台。</li>
-                <li>读取 workspace state。</li>
+                <li>读取工作台身份证。</li>
                 <li>运行阻塞级 <code>doctor</code> 检查。</li>
-                <li>确定目标 Agent。</li>
+                <li>确定目标 AI 工具。</li>
                 <li>生成对应适配入口内容。</li>
                 <li>生成写入计划。</li>
                 <li>确认后写入适配文件。</li>
-                <li>更新 workspace state。</li>
+                <li>更新工作台身份证。</li>
               </ol>
             </div>
           </div>
@@ -845,9 +845,9 @@ node cli/bin/starwork.js adapt --agent cursor \
 
         <article class="detail-card">
           <div>
-            <span class="mini-label">05 / 多 Agent 协作</span>
+            <span class="mini-label">05 / 多 AI 协作</span>
             <h3><code>starwork multiagent</code></h3>
-            <p>为同一项目建立多个 Agent 会话的职责位协作层。它管理 lane、会话绑定、worklog 和 shared context，不管理事项生命周期。</p>
+            <p>为同一项目建立多个 AI 会话的职责位协作层。它管理 lane、会话绑定、工作记录和共享索引，不管理事项生命周期。</p>
             <pre>node cli/bin/starwork.js multiagent init \
   --lanes research,writing,review \
   --target ./workspace \
@@ -866,7 +866,7 @@ node cli/bin/starwork.js multiagent bind research \
                 <li>按项目实际职责新增 lane，不预设后端、前端或测试。</li>
                 <li>将当前或手动指定的 session 绑定到 lane。</li>
                 <li>释放 lane 绑定，保留历史工作记录。</li>
-                <li>用 <code>status --json</code> 输出可被 Agent 读取的分工状态。</li>
+                <li>用 <code>status --json</code> 输出可被 AI 读取的分工状态。</li>
                 <li>用 <code>share</code> 登记其他 lane 需要读取的输出。</li>
               </ul>
             </div>
@@ -874,7 +874,7 @@ node cli/bin/starwork.js multiagent bind research \
               <h4>执行步骤</h4>
               <ol>
                 <li>定位 StarWork 工作台。</li>
-                <li>读取或创建 Agent Lanes Markdown 文件。</li>
+                <li>读取或创建多 AI 协作 Markdown 文件。</li>
                 <li>校验 lane ID 和安全相对路径。</li>
                 <li>按命令更新 lane 表或 shared outputs 表。</li>
                 <li>确认后写回 Markdown 事实源。</li>
@@ -886,9 +886,9 @@ node cli/bin/starwork.js multiagent bind research \
 
         <article class="detail-card">
           <div>
-            <span class="mini-label">06 / 安装 Pack</span>
+            <span class="mini-label">06 / 安装场景能力</span>
             <h3><code>starwork pack install</code></h3>
-            <p>在已有健康工作台上补装场景 Pack。适合先建通用工作台，再加入内容创作者等场景能力。</p>
+            <p>在已有健康工作台上补装场景能力。适合先建通用工作台，再加入内容创作者等场景能力。</p>
             <pre>node cli/bin/starwork.js pack install content-creator \
   --target ./workspace \
   --yes</pre>
@@ -898,26 +898,26 @@ node cli/bin/starwork.js multiagent bind research \
               <h4>具备的能力</h4>
               <ul>
                 <li>安装前运行阻塞级 <code>doctor</code> 检查。</li>
-                <li>读取 Pack 的 <code>pack.json</code> 和 <code>languages/&lt;language&gt;.json</code>。</li>
-                <li>校验 Pack 是否支持当前工作区类型。</li>
-                <li>创建 Pack 目录。</li>
-                <li>写入 Pack seed 和 templates。</li>
-                <li>把 Pack 规则追加到 <code>AGENTS.md</code>。</li>
-                <li>更新 workspace state 中的 <code>packs</code> 和路径配置。</li>
-                <li>已安装 Pack 不重复安装。</li>
+                <li>读取场景能力的 <code>pack.json</code> 和 <code>languages/&lt;language&gt;.json</code>。</li>
+                <li>校验场景能力是否支持当前工作区类型。</li>
+                <li>创建场景目录。</li>
+                <li>写入场景初始文件和模板。</li>
+                <li>把场景规则写入 <code>.starwork/rules/</code>。</li>
+                <li>更新工作台身份证中的 <code>packs</code> 和路径配置。</li>
+                <li>已安装场景能力不重复安装。</li>
               </ul>
             </div>
             <div class="detail-box">
               <h4>执行步骤</h4>
               <ol>
                 <li>定位 StarWork 工作台。</li>
-                <li>读取 workspace state。</li>
-                <li>确认 Pack 尚未安装。</li>
+                <li>读取工作台身份证。</li>
+                <li>确认场景能力尚未安装。</li>
                 <li>运行阻塞级 <code>doctor</code> 检查。</li>
-                <li>加载 Pack 与语言配置。</li>
+                <li>加载场景能力与语言配置。</li>
                 <li>生成目录、seed、templates、规则追加计划。</li>
                 <li>确认后安全写入。</li>
-                <li>更新 workspace state，并建议重新运行 <code>doctor</code>。</li>
+                <li>更新工作台身份证，并建议重新运行 <code>doctor</code>。</li>
               </ol>
             </div>
           </div>
@@ -935,10 +935,10 @@ node cli/bin/starwork.js multiagent bind research \
         <div class="panel">
           <h3>第一次使用</h3>
           <ul class="flow-list">
-            <li>用户运行 <code>init</code>，选择工作区类型和 Pack。</li>
-            <li>CLI 生成 Kit + Pack 的最终工作台。</li>
+            <li>用户运行 <code>init</code>，选择工作区类型和场景能力。</li>
+            <li>CLI 生成基础结构 + 场景能力的最终工作台。</li>
             <li>用户运行 <code>doctor</code>，确认结构健康。</li>
-            <li>用户运行 <code>adapt</code>，为当前 Agent 生成入口。</li>
+            <li>用户运行 <code>adapt</code>，为当前 AI 工具生成入口。</li>
             <li>用户开始真实工作。</li>
           </ul>
         </div>
@@ -948,7 +948,7 @@ node cli/bin/starwork.js multiagent bind research \
           <ul class="flow-list">
             <li>用户先用 <code>init --type hub</code> 创建多项目中枢。</li>
             <li>用户运行 <code>spawn</code>，从中枢生成一个新项目工作台。</li>
-            <li>CLI 写入项目自己的 state 和同步说明。</li>
+            <li>CLI 写入项目自己的工作台身份证和同步说明。</li>
             <li>CLI 回写 Hub 的项目注册表。</li>
             <li>用户进入新项目运行 <code>doctor</code>。</li>
           </ul>
@@ -957,7 +957,7 @@ node cli/bin/starwork.js multiagent bind research \
         <div class="script">
           <h3>典型脚本</h3>
           <pre>node cli/bin/starwork.js init \
-  --type single-light \
+  --type project \
   --pack general \
   --target ./creator-workspace \
   --yes
@@ -985,12 +985,12 @@ node cli/bin/starwork.js pack install content-creator \
           <p>这是最快确认 CLI 没坏的方法。当前测试覆盖 init、spawn、doctor、adapt、pack install 的核心路径。</p>
           <pre>cd /path/to/starwork
 npm test</pre>
-          <p>预期结果：25 个测试全部通过。</p>
+          <p>预期结果：50 个测试全部通过。</p>
         </div>
 
         <div class="test-card">
           <h3>方式二：手动跑完整链路</h3>
-          <p>这更接近真实用户体验，会在临时目录生成一个工作台，然后检查、适配、补装 Pack。</p>
+          <p>这更接近真实用户体验，会在临时目录生成一个工作台，然后检查、适配、补装场景能力。</p>
           <pre>cd /path/to/starwork
 
 TEST_DIR=/tmp/starwork-cli-manual-test
@@ -1088,9 +1088,9 @@ node cli/bin/starwork.js doctor --target "$PROJECT_DIR"</pre>
         <div class="test-card">
           <h3>应该看到什么</h3>
           <ul class="flow-list">
-            <li><code>doctor</code> 最后输出 <code>Workspace is healthy.</code></li>
+            <li><code>doctor</code> 最后输出 <code>这个工作台结构完整，可以继续使用。</code></li>
             <li>目录里出现 <code>AGENTS.md</code>、<code>CLAUDE.md</code>、<code>.starwork/workspace.json</code>。</li>
-            <li>补装 Pack 后出现 <code>选题池/</code>、<code>素材库/</code>、<code>草稿与脚本/</code>、<code>发布记录/</code> 等目录。</li>
+            <li>补装内容创作者场景能力后出现 <code>选题池/</code>、<code>素材库/</code>、<code>草稿与脚本/</code>、<code>发布记录/</code> 等目录。</li>
             <li><code>.starwork/packs/content-creator/templates/</code> 下有内容模板。</li>
           </ul>
         </div>
@@ -1108,7 +1108,7 @@ node cli/bin/starwork.js doctor --target "$TEST_DIR"</pre>
     <section class="section">
       <div class="section-header">
         <h2>边界</h2>
-        <p class="section-note">v0.1 的 CLI 是最小闭环，不是平台，不是账号系统，也不是 Agent Runtime。</p>
+        <p class="section-note">v0.1 的 CLI 是最小闭环，不是平台，不是账号系统，也不是 AI Runtime。</p>
       </div>
 
       <table class="table">
@@ -1120,19 +1120,19 @@ node cli/bin/starwork.js doctor --target "$TEST_DIR"</pre>
         </thead>
         <tbody>
           <tr>
-            <td>生成工作台结构、写入 workspace state。</td>
+            <td>生成工作台结构、写入工作台身份证。</td>
             <td>不处理账号、登录、授权、云端同步。</td>
           </tr>
           <tr>
-            <td>检查 Core、Kit、Pack 是否一致。</td>
+            <td>检查基础结构和场景能力是否一致。</td>
             <td>不默认自动修复、不静默覆盖用户内容。</td>
           </tr>
           <tr>
-            <td>生成 Agent 适配入口。</td>
-            <td>不为不同 Agent 维护多套规则事实源。</td>
+            <td>生成 AI 工具适配入口。</td>
+            <td>不为不同 AI 工具维护多套规则事实源。</td>
           </tr>
           <tr>
-            <td>补装 Pack 并更新规则、模板和状态。</td>
+            <td>补装场景能力并更新规则、模板和状态。</td>
             <td>不做 Pack 市场、卸载、升级和复杂冲突迁移。</td>
           </tr>
         </tbody>

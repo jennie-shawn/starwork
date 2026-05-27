@@ -83,7 +83,7 @@ test("dry-run does not write files", () => {
   const dir = tempDir();
   const output = runInit(["--type", "single-light", "--pack", "general", "--target", dir, "--dry-run"]);
 
-  assert.match(output, /初始化预览/);
+  assert.match(output, /创建工作台预览/);
   assert.equal(fs.existsSync(path.join(dir, "AGENTS.md")), false);
   assert.equal(fs.existsSync(path.join(dir, ".starwork", "workspace.json")), false);
 });
@@ -92,7 +92,7 @@ test("init dry-run shows selected language", () => {
   const dir = tempDir();
   const output = runInit(["--type", "single-light", "--pack", "general", "--language", "en", "--target", dir, "--dry-run"]);
 
-  assert.match(output, /语言：en/);
+  assert.match(output, /语言：英文/);
   assert.equal(fs.existsSync(path.join(dir, ".starwork", "workspace.json")), false);
 });
 
@@ -120,6 +120,89 @@ test("creates a single-light workspace with general pack", () => {
   assert.equal(fs.existsSync(path.join(dir, "输出", "确认成果", "README.md")), true);
   assert.equal(fs.existsSync(path.join(dir, "_系统", "身份", "README.md")), true);
   assert.equal(fs.existsSync(path.join(dir, "_系统", "教训", "README.md")), true);
+});
+
+test("init creates a customized workspace from a blueprint", () => {
+  const dir = tempDir();
+  const blueprintDir = tempDir();
+  fs.mkdirSync(path.join(blueprintDir, "rules"), { recursive: true });
+  fs.writeFileSync(path.join(blueprintDir, "rules", "file-boundaries.md"), "代码放在 {{paths.drafts}}，产品文档放在 {{paths.final}}。\n", "utf8");
+  fs.writeFileSync(path.join(blueprintDir, "rules", "workflow.md"), "推进时先读 docs/，再改 src/。\n", "utf8");
+  fs.writeFileSync(path.join(blueprintDir, "init-blueprint.json"), `${JSON.stringify({
+    schema: "starwork.init_blueprint.v0.1",
+    name: "AI Discussion",
+    workspace_type: "project",
+    kit: "project",
+    language: "en",
+    pack: "general",
+    paths: {
+      formal_source: "docs/",
+      business_work_area: "src/"
+    },
+    folders: ["src/", "docs/"],
+    removals: ["references/", "outputs/", "参考资料/", "输出/"],
+    agent_rules: [
+      {
+        slot: "workspace.file_boundaries",
+        from: "rules/file-boundaries.md"
+      },
+      {
+        slot: "workspace.workflow",
+        from: "rules/workflow.md"
+      }
+    ]
+  }, null, 2)}\n`, "utf8");
+
+  const preview = runInit(["--target", dir, "--blueprint", path.join(blueprintDir, "init-blueprint.json"), "--dry-run"]);
+  assert.match(preview, /初始化定制单/);
+  assert.match(preview, /日常工作会放在：src\//);
+  assert.equal(fs.existsSync(path.join(dir, "src")), false);
+
+  runInit(["--target", dir, "--blueprint", path.join(blueprintDir, "init-blueprint.json"), "--yes"]);
+
+  const state = readJson(path.join(dir, ".starwork", "workspace.json"));
+  assert.equal(state.created_by, "starwork init --blueprint");
+  assert.equal(state.language, "en");
+  assert.equal(state.paths.formal_source, "docs/");
+  assert.equal(state.paths.business_work_area, "src/");
+  assert.equal(state.customization.type, "init_blueprint");
+  assert.deepEqual(state.packs[0].paths, {
+    references: "src/",
+    drafts: "src/",
+    final: "docs/"
+  });
+  assert.equal(fs.existsSync(path.join(dir, "src")), true);
+  assert.equal(fs.existsSync(path.join(dir, "docs")), true);
+  assert.equal(fs.existsSync(path.join(dir, "references")), false);
+  assert.equal(fs.existsSync(path.join(dir, "outputs")), false);
+  assert.equal(fs.existsSync(path.join(dir, "参考资料")), false);
+  assert.equal(fs.existsSync(path.join(dir, "输出")), false);
+  assert.match(fs.readFileSync(path.join(dir, ".starwork", "rules", "workspace.file_boundaries.md"), "utf8"), /代码放在 src\//);
+
+  const report = runDoctor(["--target", dir, "--json"]);
+  assert.equal(report.status, 0);
+  const parsed = JSON.parse(report.stdout);
+  assert.equal(parsed.ok, true);
+  assert(parsed.checks.some((check) => check.id === "blueprint.schema" && check.level === "pass"));
+});
+
+test("init blueprint cannot remove StarWork mechanism files", () => {
+  const dir = tempDir();
+  const blueprintDir = tempDir();
+  fs.writeFileSync(path.join(blueprintDir, "init-blueprint.json"), `${JSON.stringify({
+    schema: "starwork.init_blueprint.v0.1",
+    name: "Unsafe Init",
+    workspace_type: "project",
+    kit: "project",
+    language: "zh",
+    pack: "general",
+    removals: [".starwork/"]
+  }, null, 2)}\n`, "utf8");
+
+  const result = runCommand(["init", "--target", dir, "--blueprint", path.join(blueprintDir, "init-blueprint.json"), "--dry-run"]);
+
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /不能跳过 StarWork 机制文件/);
 });
 
 test("creates a project workspace with content creator pack", () => {
@@ -150,10 +233,12 @@ test("init rejects removed matter workspace type", () => {
 
 test("creates a hub workspace with hub management pack", () => {
   const dir = tempDir();
-  runInit(["--type", "hub", "--target", dir, "--yes"]);
+  const output = runInit(["--type", "hub", "--target", dir, "--yes"]);
 
   const state = readJson(path.join(dir, ".starwork", "workspace.json"));
   const skills = readJson(path.join(dir, ".starwork", "skills.json"));
+  assert.match(output, /需要创建项目时，先用 starworkSpawn 设计，或直接运行 starwork spawn/);
+  assert.match(output, /运行 starwork audit 巡检 Hub 里的项目登记/);
   assert.equal(state.workspace_type, "hub");
   assert.equal(state.kit, "hub");
   assert.equal(state.packs[0].id, "hub-management");
@@ -185,7 +270,10 @@ test("doctor passes on a single-light workspace with general pack", () => {
   const result = runDoctor(["--target", dir]);
 
   assert.equal(result.status, 0);
-  assert.match(result.stdout, /Workspace is healthy/);
+  assert.match(result.stdout, /这个工作台结构完整，可以继续使用/);
+  assert.doesNotMatch(result.stdout, /^Kit:/m);
+  assert.doesNotMatch(result.stdout, /^Packs:/m);
+  assert.doesNotMatch(result.stdout, /Workspace is healthy/);
 });
 
 test("doctor passes on a project workspace with content creator pack", () => {
@@ -208,7 +296,7 @@ test("doctor passes on a hub workspace", () => {
   const result = runDoctor(["--target", dir]);
 
   assert.equal(result.status, 0);
-  assert.match(result.stdout, /Workspace is healthy/);
+  assert.match(result.stdout, /这个工作台结构完整，可以继续使用/);
 });
 
 test("multiagent init creates custom agent lanes without built-in defaults", () => {
@@ -264,6 +352,7 @@ test("multiagent add bind share and status update markdown state", () => {
   assert.equal(add.status, 0);
   assert.equal(bind.status, 0);
   assert.equal(share.status, 0);
+  assert.match(share.stdout, /其他职责位可以查看：_系统\/协作\/shared\.md/);
   assert.equal(status.status, 0);
   assert.match(registry, /\| review \| 审校和风险检查 \| codex:manual-review-1 \| reviews\/\*\*,product\/docs\/\*\* \| lanes\/review\/worklog\.md \| lanes\/review\/workspace \|/);
   assert.match(shared, /\| review \| Review checklist \| _系统\/协作\/lanes\/review\/workspace\/review-checklist\.md \| writing \| draft \|/);
@@ -273,6 +362,10 @@ test("multiagent add bind share and status update markdown state", () => {
   assert.equal(report.lanes[0].current_session, "codex:manual-review-1");
   assert.equal(report.lanes[0].workspace, "lanes/review/workspace");
   assert.equal(report.shared_outputs[0].title, "Review checklist");
+
+  const humanStatus = runCommand(["multiagent", "status", "--target", dir]);
+  assert.match(humanStatus.stdout, /StarWork 多 AI 协作状态/);
+  assert.match(humanStatus.stdout, /职责位：1 个；已绑定会话：1 个；共享输出：1 项/);
 });
 
 test("multiagent bind can sync codex host session name", () => {
@@ -673,7 +766,8 @@ test("doctor fails when AGENTS.md is missing", () => {
   const result = runDoctor(["--target", dir]);
 
   assert.equal(result.status, 1);
-  assert.match(result.stdout, /core\.entry_rules\.exists/);
+  assert.match(result.stdout, /缺少 AI 入口规则 AGENTS\.md/);
+  assert.doesNotMatch(result.stdout, /core\.entry_rules\.exists/);
 });
 
 test("doctor fails when the formal source is missing", () => {
@@ -768,11 +862,11 @@ test("doctor reports legacy signals for a Chinese legacy template with matter fo
   const result = runDoctor(["--target", dir]);
 
   assert.equal(result.status, 1);
-  assert.match(result.stdout, /历史模板候选/);
-  assert.match(result.stdout, /推测类型：project/);
-  assert.match(result.stdout, /推测语言：zh/);
-  assert.match(result.stdout, /候选信号，不是迁移方案/);
-  assert.match(result.stdout, /starworkDoctor/);
+  assert.match(result.stdout, /旧目录识别/);
+  assert.match(result.stdout, /推测用途：一个项目工作台/);
+  assert.match(result.stdout, /推测语言：中文/);
+  assert.match(result.stdout, /不会自动移动、删除或修改你的文件/);
+  assert.doesNotMatch(result.stdout, /confidence/);
   assert.doesNotMatch(result.stdout, /--dry-run/);
   assert.doesNotMatch(result.stdout, /下一步/);
 });
@@ -1178,6 +1272,12 @@ test("audit checks a healthy hub and project satellite", () => {
   assert.equal(report.projects[0].kit, "project");
   assert.equal(report.projects[0].sync_ok, true);
   assert.equal(Object.hasOwn(report, "next_steps"), false);
+
+  const human = runCommand(["audit", "--hub", hub]);
+  assert.equal(human.status, 0);
+  assert.match(human.stdout, /StarWork Hub 巡检结果/);
+  assert.match(human.stdout, /项目检查结果/);
+  assert.match(human.stdout, /这个 Hub 和已登记项目目前结构完整，可以继续使用/);
 });
 
 test("audit reports a missing satellite path", () => {

@@ -7,7 +7,7 @@
 - Skill 名称：`starworkDoctor`
 - 相关命令：`starwork doctor`、`starwork upgrade`
 - 实现状态：已实现第一版；本版合并原独立升级 skill 的升级蓝图设计能力
-- 目标：帮助 Agent 基于 `doctor` 暴露的探测信息，判断当前目录和 StarWork Core 工作逻辑的贴近程度；对普通旧模板和 Hub-like 主库分别给出人能看懂的诊断，并在用户要求升级时生成可 dry-run、可执行的 `upgrade blueprint`
+- 目标：帮助 Agent 基于 `doctor` 暴露的探测信息，判断当前目录和 StarWork Core 工作逻辑的贴近程度；对普通旧模板和 Hub-like 主库分别给出清晰诊断，并在用户要求升级时生成可 dry-run、可执行的 `upgrade blueprint`
 
 ## 一句话定义
 

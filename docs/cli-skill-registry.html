@@ -404,7 +404,7 @@
         </div>
         <div class="quick-row">
           <div class="quick"><b>CLI</b><span>负责稳定执行：创建、检查、适配、安装、升级。</span></div>
-          <div class="quick"><b>Skills</b><span>负责 AI 判断：采访、诊断、生成 blueprint。</span></div>
+          <div class="quick"><b>Skills</b><span>负责 AI 判断：采访、诊断、生成可执行方案。</span></div>
           <div class="quick"><b>Blueprint</b><span>让 AI 的判断变成 CLI 可校验、可 dry-run 的施工图。</span></div>
           <div class="quick"><b>维护日期</b><span>最后更新：2026-05-22。</span></div>
         </div>
@@ -413,7 +413,7 @@
       <div class="hero-board">
         <svg viewBox="0 0 720 520" role="img" aria-labelledby="map-title map-desc">
           <title id="map-title">StarWork CLI 和 Skill 分工</title>
-          <desc id="map-desc">Skills 位于判断层，生成 blueprint；CLI 位于执行层，按参数和 blueprint 稳定执行。</desc>
+          <desc id="map-desc">Skills 位于判断层，生成方案；CLI 位于执行层，按参数和方案稳定执行。</desc>
           <defs>
             <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
               <path d="M0 0 L10 5 L0 10 z" fill="#3e473e"></path>
@@ -437,7 +437,7 @@
           <text x="186" y="391" text-anchor="middle" font-size="13" fill="#1d211d">neat-freak</text>
 
           <line x1="306" y1="272" x2="410" y2="272" stroke="#3e473e" stroke-width="3" marker-end="url(#arrow)"></line>
-          <text x="358" y="255" text-anchor="middle" font-size="12" fill="#62675f">blueprint / diagnosis</text>
+          <text x="358" y="255" text-anchor="middle" font-size="12" fill="#62675f">plan / diagnosis</text>
 
           <rect x="410" y="146" width="244" height="252" rx="8" fill="#d8eadc" stroke="#286d4a" stroke-width="2"></rect>
           <text x="532" y="180" text-anchor="middle" font-size="18" font-weight="900" fill="#286d4a">CLI</text>
@@ -461,7 +461,7 @@
     <section class="section">
       <div class="section-header">
         <h2>当前总览</h2>
-        <p class="section-note">截至 alpha.11，StarWork 已有 9 个可用 CLI 命令和 6 个自研 Skill。`update` 和 `starwork skill` 仍是未来命令，不在当前可用列表里。</p>
+        <p class="section-note">截至 alpha.13，StarWork 已有 9 个可用 CLI 命令和 6 个自研 Skill。`update` 和 `starwork skill` 仍是未来命令，不在当前可用列表里。新增或调整命令、skill、Kit 分发范围、npm 版本时必须同步维护本页。</p>
       </div>
       <div class="grid-3">
         <article class="panel">
@@ -472,12 +472,12 @@
         <article class="panel">
           <span class="badge">Skills</span>
           <h3>判断器</h3>
-          <p>Skill 负责把用户的模糊需求变成方案、诊断或 blueprint。它们不直接替代 CLI，也不静默改文件。</p>
+          <p>Skill 负责把用户的模糊需求变成方案或诊断。它们不直接替代 CLI，也不静默改文件。</p>
         </article>
         <article class="panel">
           <span class="badge">状态</span>
-          <h3>alpha.11</h3>
-          <p>当前 npm latest 为 <code>@jennie-shawn/starwork@0.1.0-alpha.11</code>，已收敛为 Project Kit 与 Hub Kit 两类结构，补齐 Hub 侧 <code>audit</code> / <code>repair</code> 链路，并将系统级 Skills 安装口径统一为一条命令。</p>
+          <h3>alpha.13</h3>
+          <p>当前 npm latest 为 <code>@jennie-shawn/starwork@0.1.0-alpha.13</code>。已收敛为 Project Kit 与 Hub Kit 两类结构，补齐 Hub 侧 <code>audit</code> / <code>repair</code> 链路，修正系统级 Skill 与 Kit 自带 Skill 的分发边界，并为 <code>multiagent bind</code> 增加 Codex 宿主会话命名增强。</p>
         </article>
       </div>
     </section>
@@ -503,60 +503,60 @@
           <tr>
             <td><strong><code>starwork init</code></strong></td>
             <td>从空目录创建 StarWork 工作台。</td>
-            <td>初始化项目工作台 <code>project</code>、Hub <code>hub</code>；组装 Kit 与 Pack；写入 workspace state、Skill manifest 和入口规则。</td>
+            <td>初始化项目工作台或 Hub；创建基础目录、写入工作台身份证、AI 使用说明和入口规则。</td>
             <td><code>--type</code>、<code>--pack</code>、<code>--language</code>、<code>--target</code>、<code>--dry-run</code>、<code>--yes</code></td>
-            <td>标准工作台目录、<code>.starwork/workspace.json</code>、<code>.starwork/skills.json</code>、<code>AGENTS.md</code>、Core 必需文件。</td>
+            <td>标准工作台目录、<code>.starwork/workspace.json</code>、<code>.starwork/skills.json</code>、<code>AGENTS.md</code> 和必要入口文件。</td>
             <td>不负责升级已有旧模板；不处理多项目卫星项目创建。</td>
             <td><span class="status done">已实现</span></td>
           </tr>
           <tr>
             <td><strong><code>starwork spawn</code></strong></td>
             <td>从 Hub 生成 Satellite 项目。</td>
-            <td>从健康 Hub 创建 <code>satellite-starter</code> 或 <code>project</code>；回写项目注册表；支持 <code>--blueprint</code> 定制目录、seed、规则和 Hub 托管 Skill 分发。</td>
+            <td>从健康 Hub 创建项目工作台；回写项目注册表；支持按定制方案生成目录、初始文件、规则和 Hub 托管的 AI 使用说明。</td>
             <td><code>--hub</code>、<code>--target</code>、<code>--mode</code>、<code>--name</code>、<code>--id</code>、<code>--blueprint</code></td>
-            <td>卫星项目工作台、<code>.core-sync.json</code>、Hub 项目 registry 记录、共享资源挂载、项目 Skill manifest。</td>
-            <td>不安装业务 Pack；不写入非空目标目录；只从 Hub 派生项目。</td>
+            <td>项目工作台、<code>.core-sync.json</code>、Hub 项目登记记录、共享资源挂载、项目 AI 使用说明清单。</td>
+            <td>不安装业务场景能力；不写入非空目标目录；只从 Hub 派生项目。</td>
             <td><span class="status done">已实现</span></td>
           </tr>
           <tr>
             <td><strong><code>starwork doctor</code></strong></td>
             <td>工作台体检和历史模板探测。</td>
-            <td>检查 workspace state、Core roles、Kit、Pack、blueprint 定制和 Skill manifest；输出 <code>inventory</code> 和 <code>signals</code> 给 AI 判断。</td>
+            <td>检查工作台身份证、入口规则、关键目录、场景能力和 AI 使用说明；对旧目录输出完整目录清单和可整理线索。</td>
             <td><code>--target</code>、<code>--json</code>、<code>--strict</code>、<code>--verbose</code>、<code>--inventory-depth</code></td>
-            <td>人类可读体检结果或 <code>starwork.doctor.result.v0.1</code> JSON。</td>
+            <td>用户可读体检结果或 <code>starwork.doctor.result.v0.1</code> JSON。</td>
             <td>不输出升级 next steps；不判断目录真实业务语义；不修复文件。</td>
             <td><span class="status done">已实现</span></td>
           </tr>
           <tr>
             <td><strong><code>starwork upgrade</code></strong></td>
             <td>按升级蓝图执行历史模板升级。</td>
-            <td>读取 <code>starworkDoctor</code> 生成的 <code>upgrade-blueprint.json</code>；支持 dry-run、路径安全校验、workspace state 写入、Kit 缺失文件补齐、规则注入和 Hub-like 旧主库 preserve-names 接入。</td>
+            <td>读取 <code>starworkDoctor</code> 生成的升级方案；支持预览、路径安全校验、工作台身份证写入、缺失入口文件补齐、规则注入和旧主库保留原目录名接入。</td>
             <td><code>--target</code>、<code>--blueprint</code>、<code>--dry-run</code>、<code>--yes</code>、<code>--json</code></td>
-            <td>可被 StarWork 接管的工作台，保留旧目录名和历史文件；Hub-like 旧主库可写入 <code>packs: []</code>，不创建重复标准目录。</td>
+            <td>可被 StarWork 接管的工作台，保留旧目录名和历史文件；Hub-like 旧主库不创建重复标准目录。</td>
             <td>不自动生成升级方案；不处理已是 StarWork 的工作台；不移动、不删除、不覆盖历史文件。</td>
             <td><span class="status done">已实现</span></td>
           </tr>
           <tr>
             <td><strong><code>starwork adapt</code></strong></td>
-            <td>生成 Agent 适配入口。</td>
+            <td>生成 AI 工具适配入口。</td>
             <td>为 Codex、Claude Code、Cursor、Trae 写入轻量适配文件；记录 adapters 安装状态。</td>
             <td><code>codex</code>、<code>claude</code>、<code>cursor</code>、<code>trae</code>、<code>all</code>、<code>--target</code></td>
-            <td><code>CLAUDE.md</code>、Cursor / Trae rules 或 workspace state 适配记录。</td>
-            <td>要求 doctor 无 fail；不改变 Core 协议和 Pack。</td>
+            <td><code>CLAUDE.md</code>、Cursor / Trae rules 或工作台身份证适配记录。</td>
+            <td>要求工作台检查没有阻塞问题；不改变工作台协议和场景能力。</td>
             <td><span class="status done">已实现</span></td>
           </tr>
           <tr>
             <td><strong><code>starwork pack install</code></strong></td>
-            <td>给健康工作台补装场景 Pack。</td>
-            <td>安装 Pack 路径、seed、templates 和规则；更新 workspace state 中的 packs 和路径 override。</td>
+            <td>给健康工作台补装场景能力。</td>
+            <td>安装场景目录、初始文件和规则；更新工作台身份证中的场景记录和路径设置。</td>
             <td><code>pack id</code>、<code>--target</code>、<code>--dry-run</code>、<code>--yes</code></td>
-            <td>Pack 目录、规则注入、模板缓存、workspace state 更新。</td>
-            <td>要求目标已是健康 StarWork 工作台；不支持未兼容当前 workspace type 的 Pack。</td>
+            <td>场景目录、规则注入、模板缓存、工作台身份证更新。</td>
+            <td>要求目标已是健康 StarWork 工作台；不支持未兼容当前工作台类型的场景能力。</td>
             <td><span class="status done">已实现</span></td>
           </tr>
           <tr>
             <td><strong><code>starwork multiagent</code></strong></td>
-            <td>管理同一项目内多个 Agent 会话的职责位协作。</td>
+            <td>管理同一项目内多个 AI 会话的职责位协作。</td>
             <td>初始化 Agent Lanes；新增自定义 lane；维护 lane worklog；绑定或释放 session；可选同步 Codex 宿主会话名；查看状态；登记跨 lane 可读输出。</td>
             <td><code>init</code>、<code>add</code>、<code>bind</code>、<code>release</code>、<code>status</code>、<code>share</code>、<code>--target</code>、<code>--session</code>、<code>--session-name</code></td>
             <td><code>_系统/协作/agent-lanes.md</code>、<code>_系统/协作/shared.md</code> 和 lane <code>worklog.md</code>。</td>
@@ -566,7 +566,7 @@
           <tr>
             <td><strong><code>starwork update</code></strong></td>
             <td>未来版本迁移命令。</td>
-            <td>面向已经是 StarWork 的工作台，处理未来 Core / Kit / Pack 版本迁移。</td>
+            <td>面向已经是 StarWork 的工作台，处理未来基础结构和场景能力版本迁移。</td>
             <td>未定。</td>
             <td>未定。</td>
             <td>与 <code>upgrade</code> 分开：update 不负责历史模板进入 StarWork。</td>
@@ -598,17 +598,17 @@
             <td><strong><code>starworkInit</code></strong></td>
             <td>初始化设计助手。</td>
             <td>用户想从 0 建工作台，但还没确定工作台类型、语言或目录偏好。</td>
-            <td>分支式采访；判断 Hub / Project；判断语言；生成初始化建议或 init blueprint。</td>
-            <td>初始化建议、未来 init blueprint、执行命令建议。</td>
-            <td><code>starwork init</code></td>
+            <td>分支式采访；判断是 Hub 还是普通项目；判断语言；生成初始化建议或 init blueprint；用户确认创建时继续执行 dry-run、写入和 doctor 验证。</td>
+            <td>初始化建议、<code>init-blueprint.json</code>、rules、dry-run / yes / doctor 执行结果。</td>
+            <td><code>starwork init</code> / <code>starwork init --blueprint</code></td>
             <td><span class="status done">已实现</span></td>
           </tr>
           <tr>
             <td><strong><code>starworkSpawn</code></strong></td>
-            <td>Hub Kit 自带的卫星项目定制单设计助手。</td>
-            <td>用户已有 Hub，要创建一个新 Satellite 项目，并希望项目目录、规则或托管 Skill 可定制。</td>
-            <td>采访项目类型和工作方式；生成 spawn blueprint；整理项目规则和 seed。</td>
-            <td><code>blueprint.json</code>、rules、seed、spawn dry-run 命令。</td>
+            <td>Hub Kit 自带的项目定制单设计助手。</td>
+            <td>用户已有 Hub，要创建一个新项目，并希望项目目录、规则或托管的 AI 使用说明可定制。</td>
+            <td>采访项目类型和工作方式；生成项目创建方案；整理项目规则和初始文件。</td>
+            <td><code>blueprint.json</code>、rules、初始文件、spawn dry-run 命令。</td>
             <td><code>starwork spawn --blueprint</code></td>
             <td><span class="status done">已实现</span></td>
           </tr>
@@ -624,16 +624,16 @@
           <tr>
             <td><strong><code>starworkDoctor</code></strong></td>
             <td>工作区诊断助手。</td>
-            <td>用户要理解 doctor 输出、判断旧目录和 StarWork Core 逻辑是否接近、整理升级建议；或想无损生成升级蓝图。</td>
-            <td>读取 doctor JSON；解释 inventory 和 signals；建立 Core 角色映射；识别历史模板或 Hub-like 旧主库；判断 Core 逻辑贴近程度；提出整理建议；用户确认后生成 upgrade blueprint 和规则文件。</td>
+            <td>用户要理解 doctor 输出、判断旧目录如何整理成 StarWork 工作台；或想无损生成升级方案。</td>
+            <td>读取 doctor JSON；解释目录清单和线索；建立目录角色映射；识别历史模板或 Hub-like 旧主库；判断目录分工是否清楚；提出整理建议；用户确认后生成升级方案和规则文件。</td>
             <td>诊断报告、目录角色映射、缺失和风险、确认问题、<code>upgrade-blueprint.json</code>、rules、dry-run 命令。</td>
             <td><code>starwork doctor</code> / <code>starwork upgrade --blueprint</code></td>
             <td><span class="status done">已实现</span></td>
           </tr>
           <tr>
             <td><strong><code>starworkMultiagent</code></strong></td>
-            <td>多 Agent 协作命令包装助手。</td>
-            <td>用户想把当前会话登记为常用智能体、管理 Agent 职责位、绑定或释放 session、查看分工、登记共享输出。</td>
+            <td>多 AI 协作命令包装助手。</td>
+            <td>用户想把当前会话登记为常用智能体、管理 AI 职责位、绑定或释放 session、查看分工、登记共享输出。</td>
             <td>判断用户语义；确认 lane ID、职责、写入范围、session 和可选宿主会话显示名称；把请求翻译成 <code>multiagent init/add/bind/release/status/share</code> 命令组合。</td>
             <td>multiagent dry-run 命令、确认后的执行命令、当前分工解释、过程材料放置建议。</td>
             <td><code>starwork multiagent</code></td>
@@ -652,22 +652,22 @@
         <div class="flow-step">
           <strong>01</strong>
           <span>探测</span>
-          <p><code>starwork doctor --json</code> 只暴露事实、inventory、signals 和 checks。</p>
+          <p><code>starwork doctor --json</code> 只暴露事实、目录清单、线索和检查结果。</p>
         </div>
         <div class="flow-step">
           <strong>02</strong>
           <span>诊断</span>
-          <p><code>starworkDoctor</code> 判断当前目录和 StarWork Core 工作逻辑的贴近程度。</p>
+          <p><code>starworkDoctor</code> 判断当前目录分工是否清楚，以及如何整理成 StarWork 工作台。</p>
         </div>
         <div class="flow-step">
           <strong>03</strong>
           <span>设计</span>
-          <p><code>starworkDoctor</code> 在用户确认后生成可执行的升级蓝图。</p>
+          <p><code>starworkDoctor</code> 在用户确认后生成可执行的升级方案。</p>
         </div>
         <div class="flow-step">
           <strong>04</strong>
           <span>执行</span>
-          <p><code>starwork upgrade --blueprint</code> 只按蓝图执行低风险动作。</p>
+          <p><code>starwork upgrade --blueprint</code> 只按方案执行低风险动作。</p>
         </div>
       </div>
       <div class="callout">
@@ -697,12 +697,12 @@ starwork spawn --hub ./my-hub --target ./new-project --blueprint ./blueprint.jso
 starwork upgrade --target ./old-workspace --blueprint ./upgrade-blueprint.json --dry-run</pre>
         </div>
         <div>
-          <h3>适配与安装 Pack</h3>
+          <h3>适配与安装场景能力</h3>
           <pre>starwork adapt claude --target ./my-workspace --yes
 starwork pack install content-creator --target ./my-workspace --dry-run</pre>
         </div>
         <div>
-          <h3>多 Agent 协作</h3>
+          <h3>多 AI 协作</h3>
           <pre>starwork multiagent init --lanes research,writing,review --target ./my-workspace --yes
 starwork multiagent bind research --session codex:manual-research-1 --session-name "Research Agent" --target ./my-workspace --yes
 starwork multiagent share research --title "Source notes draft" --path notes/source-notes.md --audience writing,review --target ./my-workspace --yes</pre>

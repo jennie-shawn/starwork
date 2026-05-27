@@ -1,15 +1,15 @@
 # StarWork
 
-StarWork 是一套面向 AI Agent 的工作台协议和工具集，用来帮助用户把长期工作、跨会话协作、多项目管理和 Agent 工作流组织清楚。
+StarWork 是一套面向 AI 的工作台协议和工具集，用来帮助用户把长期工作、跨会话协作、多项目管理和 AI 工作流组织清楚。
 
 它包含四个核心部分：
 
 - **Core**：定义工作台应该长什么样，包括目录结构、角色边界、状态文件和健康检查规则。
 - **CLI**：提供 `init`、`doctor`、`spawn`、`upgrade`、`adapt`、`pack install`、`multiagent` 等命令，用来创建、检查、升级、协作和扩展工作台。
-- **Packs**：场景模板包。当前 A 测阶段默认使用通用 Pack。
-- **Skills**：给 Codex 等 Agent 使用的工作流说明，让 Agent 能更可靠地帮用户设计和生成 StarWork 工作台。
+- **Packs**：场景模板包。当前 A 测阶段默认使用通用工作能力。
+- **Skills**：给 Codex 等 AI 工具使用的工作流说明，让 AI 能更可靠地帮用户设计和生成 StarWork 工作台。
 
-当前版本处于 A 测阶段，适合测试安装流程、基础命令、工作台结构和 Agent skill 使用体验。
+当前版本处于 A 测阶段，适合测试安装流程、基础命令、工作台结构和 AI skill 使用体验。
 
 ## 安装 CLI
 
@@ -32,7 +32,7 @@ npx @jennie-shawn/starwork --help
 
 StarWork skills 分两类管理：
 
-- 系统 Skill 通过 GitHub 仓库和 `skills` CLI 安装到 Agent 全局环境。
+- 系统 Skill 通过 GitHub 仓库和 `skills` CLI 安装到 AI 工具的全局环境。
 - Kit 自带 Skill 跟着工作台走，例如 Hub Kit 自带 `starworkSpawn`，单项目 Kit 自带 `neat-freak`。
 
 给 Codex 安装全部 StarWork 系统级 Skills：
@@ -41,13 +41,13 @@ StarWork skills 分两类管理：
 npx skills add jennie-shawn/StarWork -g -a codex -y
 ```
 
-上面这条命令只安装 StarWork 系统级 Skills。当前默认面向 Codex；如果你使用其他 Agent，把 `-a codex` 换成对应 Agent 名称。
+上面这条命令只安装 StarWork 系统级 Skills。当前默认面向 Codex；如果你使用其他 AI 工具，把 `-a codex` 换成对应名称。
 
 当前系统级 Skills：
 
-- `starworkInit`：帮助 Agent 判断是创建 Project 还是 Hub，选择语言，并生成友好的 `starwork init` 初始化方案。
-- `starworkDoctor`：帮助 Agent 基于 `starwork doctor --json` 做用户能看懂的目录逻辑诊断；可识别历史模板和 Hub-like 旧主库，用户明确要求升级时，也负责生成 `starwork upgrade --blueprint` 升级蓝图。
-- `starworkMultiagent`：帮助 Agent 把“登记当前会话为常用智能体”“管理多 Agent 分工”“登记共享输出”等请求转换成 `starwork multiagent` 命令组合。
+- `starworkInit`：帮助 AI 判断是创建 Project 还是 Hub，选择语言；用户确认创建时，会带着 `starwork init` dry-run、执行并用 `doctor` 验证。
+- `starworkDoctor`：帮助 AI 基于 `starwork doctor --json` 解释目录问题、识别旧模板或 Hub-like 旧主库；用户明确要求升级时，生成可预览、可确认的升级方案。
+- `starworkMultiagent`：帮助 AI 把“登记当前会话为常用智能体”“管理多 AI 分工”“登记共享输出”等请求转换成 `starwork multiagent` 命令组合。
 
 Kit 随附 Skills 不走全局安装命令，它们跟着具体工作台走：
 
@@ -57,7 +57,7 @@ Kit 随附 Skills 不走全局安装命令，它们跟着具体工作台走：
 
 ## 让 Agent 帮你安装
 
-如果你希望让 Agent 帮你完成安装，可以把下面这段提示词发给 Codex、Claude Code 或其他能操作终端的 Agent：
+如果你希望让 AI 帮你完成安装，可以把下面这段提示词发给 Codex、Claude Code 或其他能操作终端的 AI：
 
 ```text
 请帮我安装并验证 StarWork。
@@ -138,13 +138,13 @@ starwork multiagent
 
 当前能力：
 
-- `init`：创建单事务项目、项目工作台或多项目 Hub；交互默认推荐单事务项目。
-- `doctor`：检查工作台健康状态、必需文件、Pack 落地结果和 blueprint 定制结果；也会为历史模板和 Hub-like 旧主库暴露 inventory / signals 事实，交给 `starworkDoctor` 判断。
+- `init`：创建普通项目工作台或多项目 Hub；交互默认推荐普通项目工作台。
+- `doctor`：检查工作台是否完整、关键文件是否还在；也会为旧模板和 Hub-like 旧主库列出目录线索，交给 `starworkDoctor` 判断。
 - `spawn`：从已有 Hub 创建并登记卫星项目，支持中文或英文卫星项目目录镜像。
 - `upgrade`：按 `starworkDoctor` skill 生成的升级蓝图，把历史模板或 Hub-like 旧主库安全接入 StarWork 工作台。
-- `adapt`：生成 Claude Code、Cursor 等 Agent 的适配文件。
-- `pack install`：向兼容工作台安装支持的 Pack。
-- `multiagent`：为同一项目建立自定义 Agent 职责位、绑定会话，并登记跨 lane 共享输出。
+- `adapt`：生成 Claude Code、Cursor 等 AI 工具的适配文件。
+- `pack install`：向兼容工作台安装支持的场景能力。
+- `multiagent`：为同一项目建立自定义 AI 职责位、绑定会话，并登记跨 lane 共享输出。
 
 ## 仓库结构
 
@@ -153,10 +153,10 @@ starwork multiagent
 ├── core/       # StarWork Core 协议、Kit、Profile、Preset
 ├── cli/        # CLI 实现和命令规格
 ├── packs/      # 场景 Pack
-├── skills/     # 系统级 Agent skills
-├── kit-skills/ # Kit 自带 Agent skills
+├── skills/     # 系统级 AI skills
+├── kit-skills/ # Kit 自带 AI skills
 ├── schemas/    # 结构化 schema
-├── adapters/   # Agent 适配规则
+├── adapters/   # AI 工具适配规则
 ├── examples/   # 示例
 └── docs/       # 产品文档和 A 测指南
 ```
@@ -169,7 +169,7 @@ starwork multiagent
 - `init` 创建的工作台结构是否容易理解。
 - `doctor` 的检查结果是否能指导修复问题。
 - Hub + Satellite 工作流是否自然。
-- 系统 Skill 是否能被 Agent 正确识别和调用。
+- 系统 Skill 是否能被 AI 正确识别和调用。
 - Hub Kit 自带的 `starworkSpawn`、单项目 Kit 自带的 `neat-freak` 是否能在对应工作台内被正确发现。
 
 更完整的测试脚本见 [A 测安装指南](docs/alpha-test-guide.md)。

@@ -360,20 +360,20 @@
         <div>
           <p class="kicker">CLI / DOCTOR</p>
           <h1 id="title">Doctor 是工作台体检单</h1>
-          <p class="subtitle"><code>starwork doctor</code> 回答两个问题：一个标准 StarWork 工作台是否健康；一个历史模板工作区和 StarWork Core 的工作逻辑有多接近。</p>
+          <p class="subtitle"><code>starwork doctor</code> 回答两个问题：这个 StarWork 工作台是不是完整；如果是旧目录，它有哪些可以整理成 StarWork 的线索。</p>
         </div>
         <div class="quick-row">
-          <div class="quick"><b>健康检查</b><span>检查 state、Core 文件、Kit、Pack、正式事实源和业务工作区。</span></div>
-          <div class="quick"><b>历史信号</b><span>识别历史模板候选，推断语言、工作区类型和已有目录角色。</span></div>
+          <div class="quick"><b>健康检查</b><span>检查工作台身份证、入口文件、场景能力、正式成果区和日常工作区。</span></div>
+          <div class="quick"><b>历史信号</b><span>识别旧目录线索，推断语言、用途和已有目录分工。</span></div>
           <div class="quick"><b>人类报告</b><span>默认输出给普通用户看的体检结果和结构风险。</span></div>
-          <div class="quick"><b>机器输出</b><span><code>--json</code> 输出 <code>inventory</code> 和 <code>signals</code>，给 skill、脚本和后续 repair 使用。</span></div>
+          <div class="quick"><b>机器输出</b><span><code>--json</code> 输出目录清单和整理线索，给 skill、脚本和后续 repair 使用。</span></div>
         </div>
       </div>
 
       <div class="hero-board">
         <svg viewBox="0 0 720 600" role="img" aria-labelledby="hero-svg-title hero-svg-desc">
           <title id="hero-svg-title">Doctor 工作流</title>
-          <desc id="hero-svg-desc">Doctor 先定位 workspace state；存在则做标准健康检查，不存在但像历史模板则输出候选信号。</desc>
+          <desc id="hero-svg-desc">Doctor 先定位工作台身份证；存在则做标准健康检查，不存在但像历史模板则输出候选信号。</desc>
           <defs>
             <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
               <path d="M 0 0 L 10 5 L 0 10 z" fill="#3e473e"></path>
@@ -384,11 +384,11 @@
           <text x="52" y="104" font-size="14" fill="#62675f">不是医生开药，而是先把问题说清楚。</text>
           <rect x="84" y="150" width="210" height="78" rx="8" fill="#d7e4ea" stroke="#2f6286" stroke-width="2"></rect>
           <text x="189" y="184" text-anchor="middle" font-size="17" font-weight="900" fill="#2f6286">定位工作区</text>
-          <text x="189" y="207" text-anchor="middle" font-size="12" fill="#2f6286">查找 .starwork/workspace.json</text>
+          <text x="189" y="207" text-anchor="middle" font-size="12" fill="#2f6286">查找工作台身份证</text>
           <line x1="294" y1="189" x2="390" y2="189" stroke="#3e473e" stroke-width="3" marker-end="url(#arrow)"></line>
           <rect x="390" y="150" width="246" height="78" rx="8" fill="#d8eadc" stroke="#286d4a" stroke-width="2"></rect>
           <text x="513" y="184" text-anchor="middle" font-size="17" font-weight="900" fill="#286d4a">标准健康检查</text>
-          <text x="513" y="207" text-anchor="middle" font-size="12" fill="#286d4a">Core / Kit / Pack / 路径</text>
+          <text x="513" y="207" text-anchor="middle" font-size="12" fill="#286d4a">入口 / 目录 / 场景能力 / 路径</text>
           <line x1="189" y1="228" x2="189" y2="305" stroke="#3e473e" stroke-width="3" marker-end="url(#arrow)"></line>
           <rect x="84" y="305" width="210" height="82" rx="8" fill="#f3dfbd" stroke="#b36b19" stroke-width="2"></rect>
           <text x="189" y="340" text-anchor="middle" font-size="17" font-weight="900" fill="#b36b19">历史模板诊断</text>
@@ -396,12 +396,12 @@
           <line x1="294" y1="346" x2="390" y2="346" stroke="#3e473e" stroke-width="3" marker-end="url(#arrow)"></line>
           <rect x="390" y="305" width="246" height="82" rx="8" fill="#edd6cf" stroke="#9b3d2c" stroke-width="2"></rect>
           <text x="513" y="340" text-anchor="middle" font-size="17" font-weight="900" fill="#9b3d2c">候选信号</text>
-          <text x="513" y="363" text-anchor="middle" font-size="12" fill="#9b3d2c">inventory / signals / inferred</text>
+          <text x="513" y="363" text-anchor="middle" font-size="12" fill="#9b3d2c">目录清单 / 线索 / 推测</text>
           <line x1="513" y1="228" x2="513" y2="462" stroke="#3e473e" stroke-width="3" marker-end="url(#arrow)"></line>
           <line x1="513" y1="387" x2="513" y2="462" stroke="#3e473e" stroke-width="3" marker-end="url(#arrow)"></line>
           <rect x="190" y="462" width="340" height="72" rx="8" fill="#fffdf7" stroke="#1d211d" stroke-width="2"></rect>
           <text x="360" y="494" text-anchor="middle" font-size="17" font-weight="900" fill="#1d211d">输出报告</text>
-          <text x="360" y="517" text-anchor="middle" font-size="12" fill="#62675f">人类可读报告 + JSON 结构</text>
+          <text x="360" y="517" text-anchor="middle" font-size="12" fill="#62675f">用户可读报告 + JSON 结构</text>
         </svg>
       </div>
     </section>
@@ -415,7 +415,7 @@
         <article class="panel">
           <span class="badge">标准工作台</span>
           <h3>检查是否健康</h3>
-          <p>当目录里有 <code>.starwork/workspace.json</code>，doctor 会把它当成标准 StarWork 工作台，检查 state、Core、Kit、Pack、正式事实源和业务工作区。</p>
+          <p>当目录里有 <code>.starwork/workspace.json</code>，doctor 会把它当成标准 StarWork 工作台，检查工作台身份证、入口文件、场景能力、正式成果区和日常工作区。</p>
           <ul>
             <li>初始化后检查。</li>
             <li>安装 Pack 前后检查。</li>
@@ -424,8 +424,8 @@
         </article>
         <article class="panel">
           <span class="badge">历史模板</span>
-          <h3>暴露 Core 诊断素材</h3>
-          <p>当目录没有 workspace state，但有旧模板的痕迹，doctor 会识别它是不是历史模板候选，并把目录结构和候选语义交给 <code>starworkDoctor</code> 判断。</p>
+          <h3>暴露整理线索</h3>
+          <p>当目录没有工作台身份证，但有旧模板的痕迹，doctor 会识别它是不是旧目录候选，并把目录结构和候选语义交给 <code>starworkDoctor</code> 判断。</p>
           <ul>
             <li>适合已经在使用旧模板的学员。</li>
             <li>适合用户不确定自己目录结构属于哪一类。</li>
@@ -442,10 +442,10 @@
       </div>
       <div class="flow">
         <div class="flow-step"><strong>01</strong><span>定位目录</span><p>从 <code>--target</code> 或当前目录开始查找工作台根目录。</p></div>
-        <div class="flow-step"><strong>02</strong><span>识别状态</span><p>优先读取 <code>.starwork/workspace.json</code>；没有 state 时进入历史模板诊断。</p></div>
-        <div class="flow-step"><strong>03</strong><span>检查结构</span><p>检查 Core 角色、Kit 文件、Pack 路径、seed 和 templates。</p></div>
+        <div class="flow-step"><strong>02</strong><span>识别状态</span><p>优先读取 <code>.starwork/workspace.json</code>；没有工作台身份证时进入旧目录诊断。</p></div>
+        <div class="flow-step"><strong>03</strong><span>检查结构</span><p>检查入口文件、关键目录、场景路径、初始文件和模板文件。</p></div>
         <div class="flow-step"><strong>04</strong><span>输出分级</span><p>每个检查项给出 <code>pass</code>、<code>info</code>、<code>warn</code> 或 <code>fail</code>。</p></div>
-        <div class="flow-step"><strong>05</strong><span>暴露信号</span><p>标准工作台给健康结论；历史模板给 inventory、signals 和 inferred。</p></div>
+        <div class="flow-step"><strong>05</strong><span>暴露信号</span><p>标准工作台给健康结论；旧目录给目录清单、线索和推测。</p></div>
       </div>
     </section>
 
@@ -457,12 +457,12 @@
       <table>
         <thead><tr><th>范围</th><th>检查什么</th><th>常见失败原因</th></tr></thead>
         <tbody>
-          <tr><td><code>workspace state</code></td><td>schema、Core 版本、工作区类型、Kit、语言、Pack 列表、正式事实源、业务工作区。</td><td>缺少 <code>.starwork/workspace.json</code>，或 state 里缺少关键字段。</td></tr>
-          <tr><td><code>Core roles</code></td><td><code>AGENTS.md</code>、项目状态、当前工作、正式事实源、业务工作区。</td><td>Agent 入口规则被删，项目状态或当前工作文件缺失。</td></tr>
-          <tr><td><code>Kit</code></td><td>Kit 源目录是否存在，工作区类型和 Kit 是否匹配，Kit 文件是否完整。</td><td>把 <code>project</code> 的 state 配成了 <code>local-starter</code>，或误删 Kit 文件。</td></tr>
-          <tr><td><code>Pack</code></td><td>Pack 是否兼容 Core，是否支持当前工作区类型，paths、seed、templates 是否落地。</td><td>Pack seed 文件被删，或 Pack 不支持当前 workspace type。</td></tr>
-          <tr><td><code>Blueprint</code></td><td>定制工作台的 blueprint schema、定制目录、seed、注入规则是否存在。</td><td>spawn blueprint 生成后，用户手动删除了定制目录或 AGENTS 规则块。</td></tr>
-          <tr><td><code>Legacy</code></td><td>历史模板里的入口规则、系统目录、事项、参考资料、输出、身份、教训。</td><td>目录可识别但缺少 workspace state，需要先升级或补齐。</td></tr>
+          <tr><td>工作台身份证</td><td>工作台版本、类型、语言、场景能力列表、正式成果区、日常工作区。</td><td>缺少 <code>.starwork/workspace.json</code>，或里面缺少关键字段。</td></tr>
+          <tr><td>入口和关键文件</td><td><code>AGENTS.md</code>、项目状态、当前工作、正式成果区、日常工作区。</td><td>AI 入口规则被删，项目状态或当前工作文件缺失。</td></tr>
+          <tr><td>基础结构</td><td>基础结构源目录是否存在，工作区类型和基础结构是否匹配，必要文件是否完整。</td><td>工作台身份证里的类型写错，或误删必要文件。</td></tr>
+          <tr><td>场景能力</td><td>场景能力是否适合当前工作台，相关路径、初始文件和模板是否落地。</td><td>场景初始文件被删，或场景能力不支持当前工作台类型。</td></tr>
+          <tr><td>定制方案</td><td>定制工作台的方案格式、定制目录、初始文件、注入规则是否存在。</td><td>定制项目生成后，用户手动删除了定制目录或 AGENTS 规则块。</td></tr>
+          <tr><td>旧目录</td><td>历史模板里的入口规则、系统目录、事项、参考资料、输出、身份、教训。</td><td>目录可识别但缺少工作台身份证，需要先升级或补齐。</td></tr>
         </tbody>
       </table>
     </section>
@@ -477,8 +477,8 @@
         <tbody>
           <tr><td><span class="level pass">pass</span></td><td>检查通过。</td><td>不影响。</td></tr>
           <tr><td><span class="level info">info</span></td><td>提供上下文信息，例如推断出的语言、工作区类型、参考资料目录。</td><td>不影响。</td></tr>
-          <tr><td><span class="level warn">warn</span></td><td>有风险，但工作台仍可继续使用，例如历史模板缺少 Agent 入口规则。</td><td>默认不影响；<code>--strict</code> 下影响。</td></tr>
-          <tr><td><span class="level fail">fail</span></td><td>缺少关键结构或存在阻塞问题，例如没有 state、缺少正式事实源、Pack seed 丢失。</td><td>影响，退出码为 <code>1</code>。</td></tr>
+          <tr><td><span class="level warn">warn</span></td><td>有风险，但工作台仍可继续使用，例如历史模板缺少 AI 入口规则。</td><td>默认不影响；<code>--strict</code> 下影响。</td></tr>
+          <tr><td><span class="level fail">fail</span></td><td>缺少关键结构或存在阻塞问题，例如没有工作台身份证、缺少正式成果区、场景初始文件丢失。</td><td>影响，退出码为 <code>1</code>。</td></tr>
         </tbody>
       </table>
     </section>
@@ -506,13 +506,13 @@
             <li>中文路径更多，推断为 <code>zh</code>；英文路径更多，推断为 <code>en</code>。</li>
             <li>存在 <code>事项/</code> 或 <code>matters/</code> 时，只记录为历史内容信号。</li>
             <li>非 Hub 候选统一推断为 <code>project</code>。</li>
-            <li>不直接判断 Pack 贴近度；Pack 只在后续执行层作为候选参数。</li>
+            <li>不直接判断场景能力贴近度；场景能力只在后续执行层作为候选参数。</li>
           </ul>
         </div>
       </div>
       <div class="callout">
         <strong>关键边界</strong>
-        Doctor 不会自动改历史模板。它负责把目录结构和候选信号暴露出来；<code>starworkDoctor</code> skill 负责结合上下文做理性判断，并在用户确认后生成升级蓝图。真正写入仍由 <code>starwork upgrade --blueprint</code> 执行。
+        Doctor 不会自动改历史模板。它负责把目录结构和候选信号暴露出来；<code>starworkDoctor</code> skill 负责结合上下文做判断，并在用户确认后生成升级方案。真正写入仍由 <code>starwork upgrade --blueprint</code> 执行。
       </div>
     </section>
 
@@ -522,9 +522,9 @@
         <p class="section-note">平滑升级需要理性判断，所以 CLI 和 AI Skill 必须分层。</p>
       </div>
       <div class="grid-3">
-        <article class="panel soft"><h3>Doctor</h3><p>探测当前目录，输出 workspace state、inventory、signals、checks 和 legacy 候选信号；不输出下一步建议。</p></article>
-        <article class="panel soft"><h3>starworkDoctor</h3><p>基于 doctor 的事实，判断当前目录和 Core 工作逻辑的贴近程度；用户要求升级时，继续确认目录语义并生成 blueprint。</p></article>
-        <article class="panel soft"><h3>Upgrade</h3><p>在用户确认后执行 blueprint 中的低风险写入；这里才真正补齐 workspace state、Kit 缺失文件和入口规则。</p></article>
+        <article class="panel soft"><h3>Doctor</h3><p>探测当前目录，输出工作台身份证、目录清单、线索、检查结果和旧目录候选信号；不输出下一步建议。</p></article>
+        <article class="panel soft"><h3>starworkDoctor</h3><p>基于 doctor 的事实，判断当前目录分工是否清楚；用户要求升级时，继续确认目录语义并生成升级方案。</p></article>
+        <article class="panel soft"><h3>Upgrade</h3><p>在用户确认后执行升级方案中的低风险写入；这里才真正补齐工作台身份证、缺失入口文件和入口规则。</p></article>
       </div>
     </section>
 

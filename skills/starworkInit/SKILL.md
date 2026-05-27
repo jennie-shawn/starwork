@@ -7,24 +7,24 @@ description: 'Plan friendly StarWork init flows: choose project or hub, zh/en la
 
 使用这个 skill，把用户“我想建一个工作台”的模糊需求，整理成 StarWork 初始化方案。
 
-`starworkInit` 不是 `starwork init` 命令本身。它负责在命令执行前帮用户判断：
+`starworkInit` 不是 `starwork init` 命令本身。它负责在命令执行前帮用户判断并带用户完成执行：
 
 - 应该建单项目工作台，还是多项目中枢
 - 使用中文工作台，还是英文工作台
 - 是否需要定制目录和 Agent 规则
-- 最终应该如何执行和检查
+- 最终应该如何 dry-run、确认执行和检查
 
-除非用户明确要求落地文件，否则这个 skill 只负责设计方案，不直接创建工作台。
+除非用户还在讨论阶段，否则不要停在蓝图或建议。用户明确说“创建、初始化、生成、改造成工作台”时，必须继续运行 CLI：先 `starwork init --dry-run`，得到用户确认后再 `starwork init --yes`，最后 `starwork doctor` 验证。
 
 ## 参考
 
-需要完整字段、边界和待确认问题时，读取：
+需要完整字段、边界和待确认问题时，如果当前环境中能访问，可以读取：
 
 ```text
 ../starworkInit-spec.md
 ```
 
-不要在 skill 内重复维护完整 schema，避免和 SPEC 漂移。
+这个 SPEC 是开发仓库里的维护文档，某些全局 skill 安装方式可能只安装 `starworkInit/` 目录而不包含该兄弟文件。找不到时不要向用户汇报“本机路径下没找到 spec”，也不要停止；按本 `SKILL.md` 的流程继续完成初始化采访、dry-run、执行和 doctor 验证。不要把内部参考文件是否存在当成用户问题。
 
 ## 决策流程
 
@@ -61,7 +61,7 @@ Step 6 采访额外固定区域和 Agent 规则
 - 一个具体项目、一个阶段目标、一次成果交付：`project`
 - 管理多个项目、统一身份/教训/知识/skills：`hub`
 
-默认优先建议 `project`。只有用户明确要建立多项目中枢时，才推荐 `hub`。
+默认优先建议 `project`。只有用户明确要建立多项目中枢时，才推荐 `hub`。不要再询问 matter、长期/短期、多线事项这类已封存分类。
 
 ### Hub 分支
 
@@ -70,9 +70,9 @@ Step 6 采访额外固定区域和 Agent 规则
 直接输出 Hub 初始化建议：
 
 - 工作区类型：`hub`
-- 基础 Kit：`hub`
+- 基础结构：Hub
 - 语言：使用 Step 2 的选择
-- Pack：不让用户选择；Hub 使用中枢管理结构
+- 场景能力：不让用户选择；Hub 使用中枢管理结构
 - 后续确认：Hub 名称、项目注册区域、是否预置 `skills/` 和 `.incoming/`
 
 ## Step 2：判断语言
@@ -101,7 +101,7 @@ Step 6 采访额外固定区域和 Agent 规则
 
 判断：
 
-- 不需要、不确定：使用标准 Project Kit。
+- 不需要、不确定：使用标准 Project 工作台。
 - 明确需要固定目录或规则：进入定制采访。
 - 用户改口说要管理多个项目：回到 Step 1，改为 `hub`。
 
@@ -132,7 +132,7 @@ v0.1 不采访用户选择场景 Pack。
 
 判断：
 
-- 标准结构就行：输出标准 Kit + Pack 初始化建议
+- 标准结构就行：输出标准项目结构初始化建议
 - 想改一下：进入 Step 5-7
 - 不确定：给 2-3 个例子帮用户判断
 
@@ -175,14 +175,13 @@ v0.1 不采访用户选择场景 Pack。
 
 常见映射：
 
-- 事项推进：`事项/`
 - 轻量资料整理：`参考资料/`
-- 内容草稿推进：`草稿与脚本/` 或 `事项/`
+- 内容草稿推进：`输出/草稿/` 或用户明确指定的草稿目录
+- 会议、客户沟通、素材等固定资料：按需新增清晰目录
 
 默认：
 
-- `single-light`：`参考资料/`
-- `project`：`事项/`
+- `project`：`参考资料/`
 
 ### 额外目录和规则
 
@@ -193,7 +192,7 @@ v0.1 不采访用户选择场景 Pack。
 比如会议纪要、客户沟通、版本记录、素材库、复盘。
 ```
 
-只新增未来确实会反复使用的目录。避免含义重叠、只为好看、或与 Pack 已有目录重复的目录。
+只新增未来确实会反复使用的目录。避免含义重叠、只为好看、或与通用结构已有目录重复的目录。
 
 至少考虑两类规则：
 
@@ -210,9 +209,9 @@ v0.1 不采访用户选择场景 Pack。
 ## 初始化建议
 
 - 工作区类型：
-- Kit：
+- 基础结构：
 - 语言：
-- Pack：
+- 场景能力：
 - 正式成果：
 - 当前工作区：
 - 额外目录：
@@ -241,6 +240,27 @@ v0.1 不采访用户选择场景 Pack。
 
 不要创建空的可选目录或文件。
 
+创建定制单后不能把它当成最终结果。必须继续执行：
+
+```bash
+starwork init --target <workspace-path> --blueprint <init-blueprint.json> --dry-run
+```
+
+如果 dry-run 符合用户预期，再执行：
+
+```bash
+starwork init --target <workspace-path> --blueprint <init-blueprint.json> --yes
+starwork doctor --target <workspace-path>
+```
+
+如果用户只是想用标准结构，不需要生成 init blueprint，直接执行普通初始化：
+
+```bash
+starwork init --type project --pack general --language <zh|en> --target <workspace-path> --dry-run
+starwork init --type project --pack general --language <zh|en> --target <workspace-path> --yes
+starwork doctor --target <workspace-path>
+```
+
 ## Init Blueprint 最小示例
 
 ```json
@@ -253,12 +273,16 @@ v0.1 不采访用户选择场景 Pack。
   "pack": "general",
   "paths": {
     "formal_source": "输出/确认成果/",
-    "business_work_area": "事项/"
+    "business_work_area": "参考资料/"
   },
   "folders": [
     "会议纪要/",
     "客户沟通/",
     "版本记录/"
+  ],
+  "removals": [
+    "参考资料/",
+    "输出/"
   ],
   "agent_rules": [
     {
@@ -275,9 +299,7 @@ v0.1 不采访用户选择场景 Pack。
 
 ## 执行命令
 
-当前 CLI 尚未实现 `init --blueprint` 时，要诚实说明这是目标命令形态。
-
-未来执行方式：
+当前 CLI 支持 `init --blueprint`。用户要求落地时，不要只输出命令，要实际运行 dry-run / yes / doctor：
 
 ```bash
 starwork init --target <workspace-path> --blueprint <init-blueprint.json> --dry-run
@@ -293,4 +315,5 @@ starwork doctor --target <workspace-path>
 - 不采访场景 Pack；v0.1 单项目默认 `general`。
 - 不把一次性偏好做成 Pack。
 - 不覆盖用户已有文件。
+- 不把 `init-blueprint.json`、`rules/` 当成最终工作台；它们只是 CLI 执行输入。
 - 一次只问一个问题；用户说不清时，用默认值推进并复述判断。

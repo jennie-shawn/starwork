@@ -22,8 +22,10 @@ StarWork 现在不缺想法，缺的是一条清晰的主线。
 - `starwork pack install` 第一版已经可以在健康工作台上补装 Pack。
 - `starwork spawn --blueprint` 第一版已经可以按工作台定制单生成定制化卫星项目；`starworkSpawn` skill 第一版用于生成工作台定制单。
 - `starwork --version` 与产品化 help 文案已补齐，方便 A 测用户确认安装版本和入口命令。
+- `starwork audit` / `starwork repair` 第一版已经可以让 Hub 巡检并保守修复已登记项目。
+- `starwork multiagent` 第一版已经可以维护 Agent Lanes，并支持绑定 lane 后 best-effort 同步 Codex 宿主会话名。
 
-所以，下一步不应该继续扩张 Core。当前应先打磨 CLI 与 Skills 的 A 测体验，完成公开安装反馈收集，再进入第一个场景 Pack 与 Demo 验证。
+所以，下一步不应该继续扩张 Core，也不应该立刻进入新场景 Pack。当前应进入 M2.6：把已经存在的 CLI、Skills、Kit 和文档链路打磨稳定，再进入第一个场景 Pack 与 Demo 验证。
 
 ## 总路线
 
@@ -35,6 +37,8 @@ M1 Core v0.1 封版
 M2 CLI v0.1 最小闭环
   ↓
 M2.5 公开 A 测分发与安装验证
+  ↓
+M2.6 既有功能优化与 A 测稳定化
   ↓
 M3 Content Creator Pack v0.1
   ↓
@@ -127,7 +131,7 @@ M8 v1.0 稳定产品
 
 ## M2.5 公开 A 测分发与安装验证
 
-状态：进行中。
+状态：已形成可公开测试的基线，继续收集反馈。
 
 目标：让外部 A 测用户可以通过公开 GitHub 与 npm 入口安装 StarWork，并验证 CLI 与 Skills 的最小流程。
 
@@ -138,9 +142,11 @@ M8 v1.0 稳定产品
 - `starworkInit`、`starworkDoctor`、`starworkMultiagent` 可通过一条 `npx skills add` 命令安装为系统 Skill；`starworkDoctor` 同时承担历史模板诊断、Hub-like 旧主库诊断和升级蓝图生成；`starworkSpawn`、`starworkAudit` 改为 Hub Kit 自带 Skill。
 - 公开 README 已改为中文首页。
 - 已新增面向 Agent 的安装指南：`product/docs/agent-install-guide.md`。
-- npm `latest` 已发布到 `@jennie-shawn/starwork@0.1.0-alpha.12`，本机 CLI 与系统 Skills 已完成更新验证。
+- npm `latest` 已发布到 `@jennie-shawn/starwork@0.1.0-alpha.13`，本机 CLI 与系统 Skills 已完成更新验证。
 - `starwork --version` 已可直接输出包版本，`starwork --help` 已改为面向 A 测用户的命令入口说明。
 - `starwork upgrade --blueprint`、`starworkDoctor`、Hub-like 旧主库 preserve-names 接入和 Skill 分发第一版已进入公开包。
+- `starwork audit` / `starwork repair` 已进入公开包，Hub 可巡检并按 blueprint 保守修复卫星项目。
+- `starwork multiagent bind --session-name` 已进入公开包，可在绑定 lane 后同步 Codex 宿主会话名。
 
 验收标准：
 
@@ -152,9 +158,32 @@ M8 v1.0 稳定产品
 - Hub-like 旧主库用户能在确认路径映射后，以保留原目录名的方式接入 StarWork，不创建重复的标准目录壳。
 - A 测反馈中暴露的安装和 skill 调用问题被记录到 事项。
 
+## M2.6 既有功能优化与 A 测稳定化
+
+状态：当前阶段。
+
+目标：不急着扩张新能力，先把已经有的 CLI、Skills、Kit 和文档链路打磨到外部用户和 Agent 都不容易走偏。
+
+优化主线：
+
+- 安装链路：README、A 测指南、Agent 安装指南、系统级 Skills 安装命令保持一致。
+- 新建工作台链路：继续打磨 `starworkInit` 与 `starwork init` 的语言选择、Hub / Project 判断、Pack 默认值和定制采访。
+- 历史模板升级链路：继续打磨 `doctor --json -> starworkDoctor -> upgrade --blueprint -> doctor`，重点保证规则文档质量和用户原有规则提炼。
+- Hub 多项目链路：继续打磨 `hub -> spawn -> audit -> repair`，确保 Hub Kit 自带 Skill、Hub Skill registry 和卫星项目结构边界清楚。
+- Skill 范围治理：维护系统级 Skill、Kit 自带 Skill、Hub 托管 Skill、Pack Skill 和项目本地 Skill 的分发边界。
+- 多 Agent 协作：继续优化 `multiagent status`、`bind`、`release`、`share` 的人类可读输出和 worklog 提醒。
+
+验收标准：
+
+- 文档中的当前版本、当前阶段和下一步不互相矛盾。
+- A 测用户能按公开 README 和 A 测指南完成 CLI 与系统 Skills 安装。
+- Agent 读取 `starworkInit`、`starworkDoctor`、`starworkMultiagent` 时不会被旧 Pack、旧事项模式或旧 skill 分发口径误导。
+- 历史模板升级生成的 `AGENTS.md` 简洁、清晰，没有内部占位符泄露。
+- Hub / Project Kit 自带 Skill 不会被系统级安装命令误装。
+
 ## M3 Content Creator Pack v0.1
 
-状态：下一阶段，等待 A 测安装链路稳定后启动。
+状态：后续阶段，等待 A 测稳定化和 GFM 新一期课程内容一起整理。
 
 目标：做出第一个真正能解决场景问题的 Pack，而不是只有目录结构。
 
@@ -293,12 +322,13 @@ v1.0 应具备：
 
 ## 当前下一步
 
-当前最应该做的不是重开 Core 或继续扩张 CLI，而是先完成 M2.5：
+当前最应该做的不是重开 Core、继续扩张 CLI，或立刻进入新 Pack，而是推进 M2.6：
 
-1. 继续优化 CLI 与 `starworkInit` / `starworkSpawn` skills 的体验。
-2. 慢慢收集 A 测用户对 CLI 安装、Skills 安装、`init`、`doctor`、`spawn` 的反馈。
-3. 等 GFM 新一期课程敲定时，再启动 Content Creator Pack v0.1 事项，把首个场景 Pack 的目录、规则、模板和 Demo 定下来。
+1. 校准公开文档和项目记忆中的当前版本、当前阶段和下一步。
+2. 继续优化安装、`init`、`doctor -> starworkDoctor -> upgrade`、`hub -> spawn -> audit -> repair` 和 `multiagent` 这些既有链路。
+3. 持续收集 A 测用户对 CLI 安装、Skills 安装、历史模板升级和规则文档质量的反馈。
+4. 等 GFM 新一期课程敲定时，再启动 Content Creator Pack v0.1 事项，把首个场景 Pack 的目录、规则、模板和 Demo 定下来。
 
-如果只能选一个，先优化 `init` 与对应 skill 的真实用户入口体验。
+如果只能选一个，先优化历史模板升级和规则文档质量，因为这直接决定现有用户能不能平滑迁移。
 
-原因：M2 已经提供了最小 CLI 工具链，A 测版本也已发布；现在最容易产生体验落差的是 CLI 与 Skill 之间的协同、提示和容错。
+原因：M2 已经提供了最小 CLI 工具链，A 测版本也已发布；现在最容易产生体验落差的是 CLI 与 Skill 之间的协同、提示、容错和文档状态漂移。

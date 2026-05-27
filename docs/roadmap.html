@@ -524,7 +524,7 @@
           </div>
           <div class="answer">
             <b>正在推进</b>
-            <span>CLI v0.1 最小闭环已完成，正在打磨公开 A 测安装体验。</span>
+            <span>公开 A 测基线已形成，正在进入 M2.6 既有功能优化与稳定化。</span>
           </div>
           <div class="answer">
             <b>不要跑偏</b>
@@ -536,7 +536,7 @@
       <div class="hero-map" aria-label="StarWork 里程碑总路线图">
         <svg viewBox="0 0 560 720" role="img" aria-labelledby="roadmap-title roadmap-desc">
           <title id="roadmap-title">StarWork 从 M0 到 M8 的路线图</title>
-          <desc id="roadmap-desc">M0 已完成，M1 已封版，M2 已完成，M3 正在进行，M4 到 M8 待推进。</desc>
+          <desc id="roadmap-desc">M0 已完成，M1 已封版，M2 已完成，M2.6 正在进行，M3 到 M8 待推进。</desc>
           <defs>
             <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
               <path d="M 0 0 L 10 5 L 0 10 z" fill="#3e473e"></path>
@@ -571,8 +571,8 @@
           </g>
           <g transform="translate(236 260)">
             <rect width="88" height="48" rx="8" fill="#f3dfbd" stroke="#b36b19" stroke-width="3"></rect>
-            <text x="44" y="21" text-anchor="middle" font-size="14" font-weight="900" fill="#b36b19">M3</text>
-            <text x="44" y="38" text-anchor="middle" font-size="12" fill="#b36b19">进行中</text>
+            <text x="44" y="21" text-anchor="middle" font-size="14" font-weight="900" fill="#b36b19">M2.6</text>
+            <text x="44" y="38" text-anchor="middle" font-size="12" fill="#b36b19">优化中</text>
           </g>
           <g transform="translate(48 308)">
             <rect width="88" height="48" rx="8" fill="#d7e4ea" stroke="#2f6286" stroke-width="2"></rect>
@@ -600,7 +600,7 @@
             <text x="44" y="38" text-anchor="middle" font-size="12" fill="#2f6286">稳定</text>
           </g>
 
-          <text x="36" y="682" font-size="13" fill="#61675f">当前重心：M2.5 公开 A 测分发与安装验证。</text>
+          <text x="36" y="682" font-size="13" fill="#61675f">当前重心：M2.6 既有功能优化与 A 测稳定化。</text>
         </svg>
       </div>
     </section>
@@ -659,15 +659,15 @@
 
         <article class="milestone now">
           <div class="milestone-top">
-            <div class="code">M2.5</div>
+            <div class="code">M2.6</div>
             <span class="status">进行中</span>
           </div>
-          <h3>公开 A 测分发</h3>
-          <p>让外部用户可以通过 GitHub、npm 和 skills 命令安装并验证最小流程。</p>
+          <h3>既有功能优化</h3>
+          <p>让已发布的 CLI、Skills、Kit 和文档链路变得稳定、清楚、不误导用户和 Agent。</p>
           <ul>
-            <li>CLI 公开安装</li>
-            <li>Skills 公开安装</li>
-            <li>init / doctor / spawn 最小流程</li>
+            <li>安装与 A 测文档校准</li>
+            <li>init / doctor / upgrade 链路打磨</li>
+            <li>Hub 管理、Skill 边界和 multiagent 优化</li>
           </ul>
         </article>
 
@@ -765,30 +765,30 @@
 
       <div class="focus-layout">
         <div class="focus-copy">
-          <h3>进入 M2.5：公开 A 测分发</h3>
+          <h3>进入 M2.6：既有功能优化</h3>
           <p>
-            CLI v0.1 最小闭环已经完成，StarWork 现在具备了生成、检查、升级、适配、补装 Pack 和分发 Kit 自带 Skill 的基本工具链。
+            CLI v0.1 最小闭环和公开 A 测基线已经完成，StarWork 现在具备了生成、检查、升级、适配、补装 Pack、Hub 巡检修复和分发 Kit 自带 Skill 的基本工具链。
           </p>
           <p>
-            现在要先确认外部用户能从公开入口安装 CLI 与 Skills，能用 <code>starwork --version</code> 确认版本，并跑通 <code>init</code>、<code>doctor</code>、<code>spawn</code>、<code>upgrade</code> 的最小流程。
+            现在要先把既有链路打磨稳定：安装、<code>init</code>、<code>doctor</code> 到 <code>upgrade</code>、Hub 下 <code>spawn</code> / <code>audit</code> / <code>repair</code>，以及 <code>multiagent</code> 的职责绑定体验。
           </p>
           <p>
-            内容创作者 Pack 仍是下一阶段的场景验证方向，但它应该等安装链路稳定后再启动。
+            内容创作者 Pack 仍是下一阶段的场景验证方向，但它应该等 A 测稳定化和 GFM 新一期课程内容一起整理后再启动。
           </p>
 
           <div class="priority" aria-label="下一步优先级">
             <div class="priority-item">
               <div class="priority-number">1</div>
               <div>
-                <b>优化 CLI 与 Skills</b>
-                <span>先打磨 <code>init</code>、<code>spawn</code> 与对应 skill 的真实用户入口体验。</span>
+                <b>校准文档与记忆</b>
+                <span>先让版本、阶段、下一步和能力注册表保持一致。</span>
               </div>
             </div>
             <div class="priority-item">
               <div class="priority-number">2</div>
               <div>
-                <b>慢慢收集 A 测反馈</b>
-                <span>观察 CLI 安装、Skills 安装、<code>init</code>、<code>doctor</code>、<code>spawn</code> 是否真的顺。</span>
+                <b>优化既有链路</b>
+                <span>重点看历史模板升级、规则文档质量、Hub 管理和 Skill 分发边界。</span>
               </div>
             </div>
           </div>
@@ -797,7 +797,7 @@
         <div class="focus-svg" aria-label="当前优先级依赖图">
           <svg viewBox="0 0 640 440" role="img" aria-labelledby="focus-svg-title focus-svg-desc">
             <title id="focus-svg-title">当前工作依赖图</title>
-            <desc id="focus-svg-desc">Core 和 CLI 最小闭环已经形成，下一步先完成公开 A 测安装验证，再进入内容创作者 Pack。</desc>
+            <desc id="focus-svg-desc">Core、CLI 和公开 A 测基线已经形成，下一步先优化既有链路和文档状态，再进入内容创作者 Pack。</desc>
             <defs>
               <marker id="arrow2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
                 <path d="M 0 0 L 10 5 L 0 10 z" fill="#3e473e"></path>

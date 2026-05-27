@@ -17,7 +17,7 @@ const WORKSPACE_TYPES = {
     description: "适合具体项目执行；可独立使用，也可由 Hub 管理。"
   },
   "single-light": {
-    label: "单事务项目",
+    label: "项目工作台",
     kit: "project",
     defaultPack: "general",
     description: "兼容别名：等同于 project。"
@@ -229,6 +229,7 @@ async function init(argv) {
     return;
   }
   const targetDir = path.resolve(options.target || process.cwd());
+  const blueprint = options.blueprint ? loadInitBlueprint(options.blueprint) : null;
 
   if (findWorkspaceRoot(targetDir)) {
     console.log("当前目录看起来已经位于 StarWork 工作台内。");
@@ -237,22 +238,24 @@ async function init(argv) {
   }
 
   printInitIntro(options, targetDir);
-  const requestedWorkspaceType = options.type || await chooseWorkspaceType(options);
+  const requestedWorkspaceType = options.type || blueprint?.workspace_type || await chooseWorkspaceType(options);
   const workspaceType = normalizeWorkspaceType(requestedWorkspaceType);
   warnDeprecatedWorkspaceType(requestedWorkspaceType, workspaceType);
   const workspaceConfig = WORKSPACE_TYPES[workspaceType];
   if (!workspaceConfig) {
     throw new Error(`不支持的工作区类型：${requestedWorkspaceType}`);
   }
+  validateInitBlueprintForWorkspace(blueprint, workspaceType, workspaceConfig);
 
-  const language = options.language || await chooseLanguage(options);
+  const language = options.language || blueprint?.language || await chooseLanguage(options);
   validateLanguage(language);
-  const packId = options.pack || await choosePack(workspaceType, workspaceConfig, options);
+  const packId = options.pack || blueprint?.pack || await choosePack(workspaceType, workspaceConfig, options);
   const pack = loadPack(packId, language);
   validatePack(pack, workspaceType);
 
-  const workspaceName = options.name || path.basename(targetDir);
-  const formalSource = options.formalSource || pack.overrides?.formal_source || getKitDefaultFormalSource(workspaceConfig.kit);
+  const workspaceName = options.name || blueprint?.name || path.basename(targetDir);
+  const formalSource = options.formalSource || blueprint?.paths?.formal_source || pack.overrides?.formal_source || getKitDefaultFormalSource(workspaceConfig.kit);
+  const businessWorkArea = blueprint?.paths?.business_work_area || pack.overrides?.business_work_area || formalSource;
 
   const plan = buildInitPlan({
     targetDir,
@@ -261,6 +264,8 @@ async function init(argv) {
     workspaceConfig,
     pack,
     formalSource,
+    businessWorkArea,
+    blueprint,
     includeSkills: !options.noSkills
   });
 
@@ -286,8 +291,14 @@ async function init(argv) {
   console.log("");
   console.log("下一步建议：");
   console.log(`1. 运行 starwork doctor --target ${plan.targetDir}`);
-  console.log("2. 打开 AGENTS.md，确认 Agent 入口规则。");
-  console.log("3. 如需生成特定 Agent 适配文件，运行 starwork adapt。");
+  if (workspaceType === "hub") {
+    console.log("2. 打开 README.md 和 AGENTS.md，确认这个 Hub 的管理边界。");
+    console.log("3. 需要创建项目时，先用 starworkSpawn 设计，或直接运行 starwork spawn。");
+    console.log("4. 创建项目后，运行 starwork audit 巡检 Hub 里的项目登记。");
+  } else {
+    console.log("2. 打开 AGENTS.md，确认 AI 入口规则。");
+    console.log("3. 如需生成特定 AI 工具适配文件，运行 starwork adapt。");
+  }
 }
 
 async function spawnWorkspace(argv) {
@@ -585,13 +596,13 @@ function repairWorkspace(argv) {
   if (options.json) {
     console.log(JSON.stringify(repairPlanResult(plan, options.dryRun), null, 2));
   } else {
-    printGenericPlan(options.dryRun ? "Repair dry run：" : "Repair 计划：", plan.actions);
+    printGenericPlan(options.dryRun ? "修复预览（dry run）：" : "修复计划：", plan.actions);
   }
   if (options.dryRun) return;
-  return confirmOrThrow(options, "是否按 repair blueprint 执行修复？").then(() => {
+  return confirmOrThrow(options, "是否按修复方案执行？").then(() => {
     applyPlan(plan);
     console.log("");
-    console.log("StarWork repair 已执行。建议重新运行 starwork audit。");
+    console.log("StarWork 修复已执行。建议重新运行 starwork audit。");
   });
 }
 
@@ -882,7 +893,7 @@ async function lanesRelease(argv) {
   const laneId = normalizeLaneId(options._?.[0], "lane");
   const workspaceRoot = requireWorkspaceRoot(path.resolve(options.target || process.cwd()));
   const registry = readLanesRegistry(workspaceRoot);
-  findLaneOrThrow(registry.lanes, laneId);
+  const lane = findLaneOrThrow(registry.lanes, laneId);
   const nextLanes = registry.lanes.map((item) => item.lane === laneId ? { ...item, current_session: "unbound" } : item);
   const plan = buildLanesRegistryPlan(workspaceRoot, nextLanes);
   printGenericPlan(options.dryRun ? "释放 Lane 预览（dry run）：" : "释放 Lane 计划：", plan.actions);
@@ -890,7 +901,8 @@ async function lanesRelease(argv) {
   await confirmOrThrow(options, `是否释放 Lane ${laneId}？`);
   applyPlan(plan);
   console.log("");
-  console.log(`Lane ${laneId} 已释放。请更新对应 worklog。`);
+  console.log(`Lane ${laneId} 已释放。`);
+  console.log(`请在交棒前更新工作记录：${lane.worklog}`);
 }
 
 function lanesStatus(argv) {
@@ -913,23 +925,26 @@ function lanesStatus(argv) {
     return;
   }
   console.log("");
-  console.log("Agent Lanes");
+  console.log("StarWork 多 AI 协作状态");
+  console.log("");
+  const bound = registry.lanes.filter((lane) => lane.current_session && lane.current_session !== "unbound").length;
+  const openRequests = shared.requests.filter((request) => request.status !== "done");
+  console.log(`职责位：${registry.lanes.length} 个；已绑定会话：${bound} 个；共享输出：${shared.outputs.length} 项；待处理请求：${openRequests.length} 项`);
   console.log("");
   if (!registry.lanes.length) {
-    console.log("未登记任何 lane。");
+    console.log("还没有登记任何职责位。可以先运行 starwork multiagent init，或让 starworkMultiagent 帮你设计。");
   } else {
     for (const lane of registry.lanes) {
       console.log(`- ${lane.lane}: ${lane.purpose}`);
-      console.log(`  session: ${lane.current_session || "unbound"}`);
-      console.log(`  write: ${lane.write_scope}`);
-      console.log(`  worklog: ${lane.worklog}`);
-      console.log(`  workspace: ${lane.workspace}`);
+      console.log(`  当前会话：${lane.current_session || "unbound"}`);
+      console.log(`  可写范围：${lane.write_scope}`);
+      console.log(`  工作记录：${lane.worklog}`);
+      console.log(`  临时工作区：${lane.workspace}`);
     }
   }
-  const openRequests = shared.requests.filter((request) => request.status !== "done");
   if (openRequests.length) {
     console.log("");
-    console.log("Cross-Lane Requests:");
+    console.log("待处理协作请求：");
     openRequests.forEach((request) => console.log(`- ${request.from} -> ${request.to}: ${request.request} (${request.status})`));
   }
 }
@@ -974,6 +989,7 @@ async function lanesShare(argv) {
   applyPlan(plan);
   console.log("");
   console.log(`已登记共享输出：${row.title}`);
+  console.log(`其他职责位可以查看：_系统/协作/shared.md，并按受众范围读取 ${row.path}`);
 }
 
 async function packInstall(argv) {
@@ -1291,6 +1307,163 @@ function buildPackInstallPlan({ workspaceRoot, state, pack }) {
     targetDir: workspaceRoot,
     actions: dedupeActions(actions)
   };
+}
+
+function loadInitBlueprint(blueprintPath) {
+  const filePath = path.resolve(blueprintPath);
+  let blueprint;
+  try {
+    blueprint = JSON.parse(fs.readFileSync(filePath, "utf8"));
+  } catch (error) {
+    throw new Error(`无法读取 init blueprint：${error.message}`);
+  }
+  if (blueprint.schema !== "starwork.init_blueprint.v0.1") {
+    throw new Error("init blueprint schema 必须是 starwork.init_blueprint.v0.1。");
+  }
+  if (!blueprint.name || typeof blueprint.name !== "string") {
+    throw new Error("init blueprint 缺少工作台名称 name。");
+  }
+  if (!["project", "hub", "single-light"].includes(blueprint.workspace_type)) {
+    throw new Error("init blueprint workspace_type 只支持 project、hub 或 single-light 兼容别名。");
+  }
+  if (blueprint.kit && normalizeKitId(blueprint.kit) !== normalizeKitId(WORKSPACE_TYPES[normalizeWorkspaceType(blueprint.workspace_type)]?.kit)) {
+    throw new Error(`init blueprint kit (${blueprint.kit}) 与 workspace_type (${blueprint.workspace_type}) 不匹配。`);
+  }
+  if (!["zh", "en"].includes(blueprint.language)) {
+    throw new Error("init blueprint language 只支持 zh 或 en。");
+  }
+  if (blueprint.pack && typeof blueprint.pack !== "string") {
+    throw new Error("init blueprint pack 必须是字符串。");
+  }
+  for (const relativePath of Object.values(blueprint.paths || {})) {
+    normalizeSafeRelativePath(relativePath, "init blueprint paths");
+  }
+  for (const folder of blueprint.folders || []) {
+    normalizeSafeRelativePath(folder, "init blueprint folders");
+  }
+  for (const removal of blueprint.removals || []) {
+    validateInitBlueprintRemoval(removal);
+  }
+  for (const rule of blueprint.agent_rules || []) {
+    if (!rule?.slot || typeof rule.slot !== "string") {
+      throw new Error("init blueprint agent_rules 每一项都必须包含 slot。");
+    }
+    normalizeSafeSourcePath(rule.from, path.dirname(filePath), "init blueprint agent_rules.from");
+  }
+  for (const seed of blueprint.seed || []) {
+    normalizeSafeSourcePath(seed.from, path.dirname(filePath), "init blueprint seed.from");
+    normalizeSafeRelativePath(seed.to, "init blueprint seed.to");
+    const conflict = seed.on_conflict || "error";
+    if (!["error", "skip", "create_new"].includes(conflict)) {
+      throw new Error("init blueprint seed.on_conflict 只支持 error、skip 或 create_new。");
+    }
+  }
+  return {
+    ...blueprint,
+    pack: blueprint.pack || WORKSPACE_TYPES[normalizeWorkspaceType(blueprint.workspace_type)].defaultPack,
+    __path: filePath,
+    __dir: path.dirname(filePath)
+  };
+}
+
+function validateInitBlueprintForWorkspace(blueprint, workspaceType, workspaceConfig) {
+  if (!blueprint) return;
+  const blueprintType = normalizeWorkspaceType(blueprint.workspace_type);
+  if (blueprintType !== workspaceType) {
+    throw new Error(`init blueprint workspace_type (${blueprint.workspace_type}) 与本次 init 类型 (${workspaceType}) 不一致。`);
+  }
+  if (normalizeKitId(blueprint.kit || workspaceConfig.kit) !== normalizeKitId(workspaceConfig.kit)) {
+    throw new Error(`init blueprint kit (${blueprint.kit}) 与工作区类型 ${workspaceType} 的 Kit (${workspaceConfig.kit}) 不匹配。`);
+  }
+  if (workspaceType === "hub" && (
+    Object.keys(blueprint.paths || {}).length
+    || (blueprint.folders || []).length
+    || (blueprint.removals || []).length
+    || (blueprint.agent_rules || []).length
+    || (blueprint.seed || []).length
+  )) {
+    throw new Error("init blueprint v0.1 暂不支持定制 Hub 目录。Hub 请使用标准 init。");
+  }
+}
+
+function resolveInitPackPaths(pack, blueprint, { formalSource, businessWorkArea }) {
+  const paths = { ...(pack.paths || {}) };
+  if (!blueprint) return paths;
+  for (const [key, value] of Object.entries(blueprint.paths || {})) {
+    if (key === "formal_source" || key === "business_work_area") continue;
+    paths[key] = normalizeSafeRelativePath(value, `init blueprint paths.${key}`);
+  }
+  if (paths.final && formalSource) {
+    paths.final = normalizeSafeRelativePath(formalSource, "paths.formal_source");
+  }
+  if (paths.drafts && businessWorkArea) {
+    paths.drafts = normalizeSafeRelativePath(businessWorkArea, "paths.business_work_area");
+  }
+  if (paths.references && !blueprint.paths?.references && matchesAnyRemovedPath(paths.references, blueprint.removals || [])) {
+    paths.references = normalizeSafeRelativePath(businessWorkArea, "paths.business_work_area");
+  }
+  return paths;
+}
+
+function renderInitBlueprintRuleSlots(blueprint, variables) {
+  if (!blueprint) return [];
+  const slots = [];
+  for (const rule of blueprint.agent_rules || []) {
+    const source = normalizeSafeSourcePath(rule.from, blueprint.__dir, "init blueprint agent_rules.from");
+    const content = renderText(fs.readFileSync(source, "utf8"), variables).trim();
+    if (!content) continue;
+    slots.push({
+      slot: rule.slot,
+      group: "初始化定制规则",
+      content
+    });
+  }
+  return slots;
+}
+
+function buildInitBlueprintSeedActions(targetDir, blueprint, variables) {
+  if (!blueprint) return [];
+  const actions = [];
+  for (const seed of blueprint.seed || []) {
+    const source = normalizeSafeSourcePath(seed.from, blueprint.__dir, "init blueprint seed.from");
+    const target = normalizeSafeRelativePath(seed.to, "init blueprint seed.to");
+    const targetPath = path.join(targetDir, target);
+    if (fs.existsSync(targetPath) && (seed.on_conflict || "error") === "skip") continue;
+    if (fs.existsSync(targetPath) && (seed.on_conflict || "error") === "error") {
+      throw new Error(`init blueprint seed 目标已存在：${target}`);
+    }
+    const content = renderText(fs.readFileSync(source, "utf8"), variables);
+    actions.push((seed.on_conflict || "error") === "create_new"
+      ? fileAction(targetDir, target, content)
+      : strictFileAction(targetDir, target, content));
+  }
+  return actions;
+}
+
+function matchesAnyRemovedPath(relativePath, removals = []) {
+  const normalizedPath = normalizeRelativePath(relativePath);
+  return (removals || []).some((removal) => {
+    const normalizedRemoval = normalizeSafeRelativePath(removal, "init blueprint removals");
+    const prefix = normalizedRemoval.endsWith("/") ? normalizedRemoval : `${normalizedRemoval}/`;
+    return normalizedPath === normalizedRemoval.replace(/\/$/, "") || normalizedPath.startsWith(prefix);
+  });
+}
+
+function validateInitBlueprintRemoval(removal) {
+  const normalized = normalizeSafeRelativePath(removal, "init blueprint removals").replace(/\/$/, "");
+  const protectedPaths = [
+    ".starwork",
+    ".agents",
+    ".claude",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "README.md",
+    "_系统",
+    "_system"
+  ];
+  if (protectedPaths.some((protectedPath) => normalized === protectedPath || normalized.startsWith(`${protectedPath}/`))) {
+    throw new Error(`init blueprint removals 不能跳过 StarWork 机制文件：${removal}`);
+  }
 }
 
 function loadUpgradeBlueprint(blueprintPath) {
@@ -1769,12 +1942,16 @@ function checkKit(result, workspaceRoot, state) {
   const files = isHubPreserveNamesUpgradeState(state)
     ? walkFiles(kitDir).filter(isHubPreserveNamesKitFile)
     : walkFiles(kitDir);
+  const removedByInitBlueprint = state.customization?.type === "init_blueprint"
+    ? state.customization.removals || []
+    : [];
   const missing = [];
   for (const source of files) {
     const sourceRelativePath = normalizeRelativePath(path.relative(kitDir, source));
     const relativePath = state.kit === "project" || state.kit?.startsWith("satellite-")
       ? mapKitRelativePathForLanguage(sourceRelativePath, state.language || "zh")
       : sourceRelativePath;
+    if (matchesAnyRemovedPath(relativePath, removedByInitBlueprint)) continue;
     if (!fs.existsSync(path.join(workspaceRoot, relativePath))) {
       missing.push(relativePath);
     }
@@ -1881,7 +2058,10 @@ function checkPackInstallations(result, workspaceRoot, state) {
       addCheck(result, "pack.workspace_type.supported", "fail", `Pack ${installedPack.id} 不支持工作区类型 ${state.workspace_type || "(missing)"}。`);
     }
 
-    for (const rolePath of Object.values(pack.paths || {})) {
+    const installedPaths = installedPack.paths && typeof installedPack.paths === "object"
+      ? installedPack.paths
+      : pack.paths || {};
+    for (const rolePath of Object.values(installedPaths)) {
       checkPathExists(result, workspaceRoot, rolePath, "pack.paths.exist", `Pack path exists: ${rolePath}`, `Pack ${installedPack.id} 缺少目录：${rolePath}`);
     }
 
@@ -1899,10 +2079,13 @@ function checkPackInstallations(result, workspaceRoot, state) {
 function checkBlueprintCustomization(result, workspaceRoot, state) {
   const customization = state.customization;
   if (!customization) return;
-  if (customization.type !== "spawn_blueprint") return;
+  if (customization.type !== "spawn_blueprint" && customization.type !== "init_blueprint") return;
 
-  if (customization.schema === "starwork.spawn_blueprint.v0.1") {
-    addCheck(result, "blueprint.schema", "pass", "Blueprint schema is starwork.spawn_blueprint.v0.1", ".starwork/workspace.json");
+  const expectedSchema = customization.type === "init_blueprint"
+    ? "starwork.init_blueprint.v0.1"
+    : "starwork.spawn_blueprint.v0.1";
+  if (customization.schema === expectedSchema) {
+    addCheck(result, "blueprint.schema", "pass", `Blueprint schema is ${expectedSchema}`, ".starwork/workspace.json");
   } else {
     addCheck(result, "blueprint.schema", "fail", "Blueprint customization schema 不正确。", ".starwork/workspace.json");
   }
@@ -2659,56 +2842,118 @@ function doctorPublicResult(result) {
 }
 
 function printDoctorResult(result, options) {
-  console.log("StarWork Doctor");
+  console.log("StarWork 检查结果");
   console.log("");
-  console.log(`Workspace: ${result.workspace_root || result.target}`);
+  console.log(`检查目录：${result.workspace_root || result.target}`);
   if (result.workspace) {
-    console.log(`Core: ${result.workspace.core || "(unknown)"}`);
-    console.log(`Type: ${result.workspace.workspace_type || "(unknown)"}`);
-    console.log(`Kit: ${result.workspace.kit || "(unknown)"}`);
-    console.log(`Packs: ${result.workspace.packs.length ? result.workspace.packs.join(", ") : "(none)"}`);
+    console.log(`判断：这是${friendlyWorkspaceType(result.workspace.workspace_type)}。`);
+    if (result.workspace.language) {
+      console.log(`语言：${friendlyLanguage(result.workspace.language)}`);
+    }
+    if (result.workspace.packs.length) {
+      console.log(`已加入的场景能力：${result.workspace.packs.map(friendlyPackName).join("、")}`);
+    }
   }
   console.log("");
-  console.log("Summary:");
-  console.log(`  pass: ${result.summary.pass}`);
-  console.log(`  info: ${result.summary.info}`);
-  console.log(`  warn: ${result.summary.warn}`);
-  console.log(`  fail: ${result.summary.fail}`);
+  console.log("检查概览：");
+  console.log(`- 通过：${result.summary.pass} 项`);
+  console.log(`- 提醒：${result.summary.info + result.summary.warn} 项`);
+  console.log(`- 需要处理：${result.summary.fail} 项`);
   console.log("");
 
   const visibleChecks = options.verbose
     ? result.checks
     : result.checks.filter((check) => check.level !== "pass");
   if (visibleChecks.length) {
-    console.log("Checks:");
+    console.log("需要关注的地方：");
     for (const check of visibleChecks) {
-      console.log(`  [${check.level}] ${check.id}`);
-      console.log(`         ${check.message}`);
+      console.log(`- ${friendlyCheckLevel(check.level)}：${friendlyDoctorMessage(check.message)}`);
       if (check.path) {
-        console.log(`         ${check.path}`);
+        console.log(`  位置：${check.path}`);
       }
-      console.log("");
     }
-  }
-
-  if (result.upgrade?.candidate) {
-    console.log("Legacy signals:");
-    const legacyLabel = result.upgrade.source === "hub-like-main-repository" ? "主库 / Hub 候选" : "历史模板候选";
-    console.log(`  检测为：${legacyLabel}（${result.upgrade.confidence} confidence）`);
-    console.log(`  推测类型：${result.upgrade.inferred.workspace_type}`);
-    console.log(`  推测语言：${result.upgrade.inferred.language}`);
-    console.log("  这些只是候选信号，不是迁移方案；请交给 starworkDoctor 做诊断和 blueprint 设计。");
     console.log("");
   }
 
-  console.log("Result:");
-  if (result.summary.fail > 0) {
-    console.log("  Workspace has blocking issues.");
-  } else if (result.summary.warn > 0) {
-    console.log("  Workspace is usable, with warnings.");
-  } else {
-    console.log("  Workspace is healthy.");
+  if (result.upgrade?.candidate) {
+    const legacyLabel = result.upgrade.source === "hub-like-main-repository" ? "多项目主库" : "旧工作区";
+    console.log("旧目录识别：");
+    console.log(`- 这个目录看起来像一个${legacyLabel}，可以进一步让 AI 帮你判断如何无损整理。`);
+    console.log(`- 推测语言：${friendlyLanguage(result.upgrade.inferred.language)}`);
+    console.log(`- 推测用途：${friendlyWorkspaceType(result.upgrade.inferred.workspace_type)}`);
+    console.log("- 这只是识别结果，不会自动移动、删除或修改你的文件。");
+    console.log("");
   }
+
+  console.log("结论：");
+  if (result.summary.fail > 0) {
+    console.log("这个目录还缺少关键文件，需要先处理上面列出的项目。");
+  } else if (result.summary.warn > 0) {
+    console.log("这个工作台可以继续使用，但建议留意上面的提醒。");
+  } else {
+    console.log("这个工作台结构完整，可以继续使用。");
+  }
+}
+
+function friendlyWorkspaceType(type) {
+  const labels = {
+    project: "一个项目工作台",
+    hub: "一个多项目中枢",
+    "single-light": "一个项目工作台",
+    "satellite-starter": "一个项目工作台"
+  };
+  return labels[type] || "StarWork 工作台";
+}
+
+function friendlyLanguage(language) {
+  const labels = {
+    zh: "中文",
+    en: "英文"
+  };
+  return labels[language] || language || "未声明";
+}
+
+function friendlyPackName(packId) {
+  return PACK_LABELS[packId] || packId;
+}
+
+function friendlyCheckLevel(level) {
+  const labels = {
+    info: "提示",
+    warn: "提醒",
+    fail: "需要处理",
+    pass: "已通过"
+  };
+  return labels[level] || level;
+}
+
+function friendlyDoctorMessage(message) {
+  return String(message || "")
+    .replace(/这是一个可升级的历史模板工作区，但缺少 \.starwork\/workspace\.json。/g, "这个目录像旧版工作区，但还缺少 StarWork 工作台身份证（.starwork/workspace.json）。")
+    .replace(/检测到历史模板升级候选，置信度：(?:high|medium|low)。/g, "这个目录像旧版工作区，可以进一步判断如何整理。")
+    .replace(/检测到主库 \/ Hub 候选，置信度：(?:high|medium|low)。/g, "这个目录像多项目主库，可以进一步判断如何接入 StarWork。")
+    .replace(/推测语言：zh。/g, "推测语言：中文。")
+    .replace(/推测语言：en。/g, "推测语言：英文。")
+    .replace(/推测工作区类型：project。/g, "推测用途：项目工作台。")
+    .replace(/推测工作区类型：hub。/g, "推测用途：多项目中枢。")
+    .replace(/workspace state/g, "工作台身份证")
+    .replace(/workspace schema/g, "工作台身份证格式")
+    .replace(/workspace core/g, "工作台版本")
+    .replace(/workspace_type/g, "工作台类型")
+    .replace(/paths\.formal_source/g, "正式成果位置")
+    .replace(/paths\.business_work_area/g, "当前资料或工作区位置")
+    .replace(/formal source/g, "正式成果位置")
+    .replace(/business work area/g, "当前资料或工作区位置")
+    .replace(/Kit/g, "基础结构")
+    .replace(/kit/g, "基础结构")
+    .replace(/Pack/g, "场景能力")
+    .replace(/pack/g, "场景能力")
+    .replace(/Core/g, "StarWork")
+    .replace(/Agent/g, "AI")
+    .replace(/Skill/g, "AI 使用说明")
+    .replace(/schema/g, "格式")
+    .replace(/Blueprint/g, "升级方案")
+    .replace(/blueprint/g, "升级方案");
 }
 
 function readValue(argv, index, flag) {
@@ -2834,40 +3079,54 @@ function ask(question) {
   });
 }
 
-function buildInitPlan({ targetDir, workspaceName, workspaceType, workspaceConfig, pack, formalSource, includeSkills = true }) {
+function buildInitPlan({ targetDir, workspaceName, workspaceType, workspaceConfig, pack, formalSource, businessWorkArea, blueprint = null, includeSkills = true }) {
   const kitDir = path.join(PRODUCT_ROOT, "core", "kits", workspaceConfig.kit);
   if (!fs.existsSync(kitDir)) {
     throw new Error(`找不到 Kit：${workspaceConfig.kit}`);
   }
 
+  const resolvedPackPaths = resolveInitPackPaths(pack, blueprint, {
+    formalSource,
+    businessWorkArea
+  });
   const actions = [];
   const variables = {
+    blueprint,
     workspace: {
       name: workspaceName,
       type: workspaceType
     },
     pack,
-    paths: pack.paths || {},
+    paths: resolvedPackPaths,
     overrides: {
       ...(pack.overrides || {}),
-      formal_source: formalSource
+      formal_source: formalSource,
+      business_work_area: businessWorkArea
     }
   };
   const packRuleSlots = renderPackRuleSlots(pack, variables, "场景规则");
+  const blueprintRuleSlots = renderInitBlueprintRuleSlots(blueprint, variables);
 
   for (const source of walkFiles(kitDir)) {
-    const relativePath = path.relative(kitDir, source);
+    const sourceRelativePath = normalizeRelativePath(path.relative(kitDir, source));
+    const relativePath = workspaceConfig.kit === "project" || workspaceConfig.kit?.startsWith("satellite-")
+      ? mapKitRelativePathForLanguage(sourceRelativePath, pack.language || "zh")
+      : sourceRelativePath;
     let content = fs.readFileSync(source, "utf8");
     content = renderText(content, variables);
-    if (relativePath === "AGENTS.md" && packRuleSlots.length) {
+    if (relativePath === "AGENTS.md" && (packRuleSlots.length || blueprintRuleSlots.length)) {
       content = ensureRulesIndexReference(content);
     }
     actions.push(fileAction(targetDir, relativePath, content));
   }
   actions.push(...buildRuleSlotActions(targetDir, packRuleSlots));
+  actions.push(...buildRuleSlotActions(targetDir, blueprintRuleSlots));
 
-  for (const rolePath of Object.values(pack.paths || {})) {
+  for (const rolePath of Object.values(resolvedPackPaths || {})) {
     actions.push(directoryAction(targetDir, rolePath));
+  }
+  for (const folder of blueprint?.folders || []) {
+    actions.push(directoryAction(targetDir, normalizeSafeRelativePath(folder, "init blueprint folders")));
   }
 
   for (const seed of pack.seed || []) {
@@ -2878,6 +3137,7 @@ function buildInitPlan({ targetDir, workspaceName, workspaceType, workspaceConfi
     const content = renderText(fs.readFileSync(source, "utf8"), variables);
     actions.push(fileAction(targetDir, seed.to, content));
   }
+  actions.push(...buildInitBlueprintSeedActions(targetDir, blueprint, variables));
 
   for (const template of pack.templates || []) {
     const source = path.join(pack.__dir, template.from);
@@ -2906,13 +3166,14 @@ function buildInitPlan({ targetDir, workspaceName, workspaceType, workspaceConfi
       {
         id: pack.id,
         version: pack.version || "0.1.0",
+        paths: resolvedPackPaths,
         installed_at: new Date().toISOString()
       }
     ],
     language: pack.language || "zh",
     paths: {
       formal_source: formalSource,
-      business_work_area: pack.overrides?.business_work_area || formalSource,
+      business_work_area: businessWorkArea,
       ...(workspaceType === "hub" ? {
         project_registry: HUB_STANDARD_PATHS.projectRegistry,
         coordination: HUB_STANDARD_PATHS.coordination,
@@ -2923,10 +3184,31 @@ function buildInitPlan({ targetDir, workspaceName, workspaceType, workspaceConfi
         knowledge: HUB_STANDARD_PATHS.knowledge
       } : {})
     },
-    created_by: "starwork init"
+    ...(blueprint ? {
+      customization: {
+        type: "init_blueprint",
+        schema: blueprint.schema,
+        source: path.basename(blueprint.__path),
+        folders: (blueprint.folders || []).map((folder) => normalizeSafeRelativePath(folder, "init blueprint folders")),
+        removals: (blueprint.removals || []).map((item) => normalizeSafeRelativePath(item, "init blueprint removals")),
+        agent_rules: (blueprint.agent_rules || []).map((rule) => ({
+          slot: rule.slot,
+          from: normalizeSafeRelativePath(rule.from, "init blueprint agent_rules.from")
+        })),
+        seed: (blueprint.seed || []).map((seed) => ({
+          from: normalizeSafeRelativePath(seed.from, "init blueprint seed.from"),
+          to: normalizeSafeRelativePath(seed.to, "init blueprint seed.to")
+        }))
+      }
+    } : {}),
+    created_by: blueprint ? "starwork init --blueprint" : "starwork init"
   };
   actions.push(fileAction(targetDir, path.join(".starwork", "workspace.json"), `${JSON.stringify(workspaceState, null, 2)}\n`));
   actions.push(fileAction(targetDir, path.join(".starwork", "skills.json"), renderProjectSkillsManifest(kitSkillPlan.records)));
+
+  const filteredActions = blueprint?.removals?.length
+    ? actions.filter((action) => !matchesAnyRemovedPath(action.relativePath, blueprint.removals))
+    : actions;
 
   return {
     targetDir,
@@ -2936,9 +3218,10 @@ function buildInitPlan({ targetDir, workspaceName, workspaceType, workspaceConfi
     kit: workspaceConfig.kit,
     language: pack.language || "zh",
     pack,
+    blueprint,
     formalSource,
     skills: kitSkillPlan.records,
-    actions: dedupeActions(actions)
+    actions: dedupeActions(filteredActions)
   };
 }
 
@@ -3801,18 +4084,69 @@ function auditPublicResult(result) {
 
 function printAuditResult(result) {
   console.log("");
-  console.log("StarWork Audit");
+  console.log("StarWork Hub 巡检结果");
   console.log("");
-  console.log(`Hub: ${result.hub.path}`);
-  console.log(`Projects: ${result.summary.projects_checked}/${result.summary.projects_total}`);
-  for (const project of result.projects) {
-    const fails = project.checks.filter((check) => check.level === "fail").length;
-    const warns = project.checks.filter((check) => check.level === "warn").length;
-    const label = fails ? "fail" : warns ? "warn" : "pass";
-    console.log(`- [${label}] ${project.project_id || "(missing id)"} ${project.path || ""}`);
+  console.log(`Hub 目录：${result.hub.path}`);
+  console.log("");
+  console.log("巡检概览：");
+  console.log(`- Hub 自身：${result.hub.ok ? "通过" : "需要处理"}`);
+  console.log(`- 项目登记表：${result.registry.ok ? "可读取" : "需要处理"}${result.registry.path ? `（${result.registry.path}）` : ""}`);
+  console.log(`- 已登记项目：${result.summary.projects_total} 个`);
+  console.log(`- 本次检查项目：${result.summary.projects_checked} 个`);
+  console.log(`- 可访问项目：${result.summary.projects_reachable} 个`);
+  console.log(`- 提醒：${result.summary.info + result.summary.warn} 项`);
+  console.log(`- 需要处理：${result.summary.fail} 项`);
+  console.log("");
+
+  const hubProblems = result.checks.filter((check) => check.level !== "pass" && check.id.startsWith("hub."));
+  const registryProblems = result.checks.filter((check) => check.level !== "pass" && check.id.startsWith("registry."));
+  if (hubProblems.length) {
+    console.log("Hub 自身问题：");
+    hubProblems.forEach((check) => console.log(`- ${friendlyCheckLevel(check.level)}：${friendlyAuditMessage(check.message)}${check.trace ? `（${check.trace}）` : ""}`));
+    console.log("");
   }
+  if (registryProblems.length) {
+    console.log("项目登记表问题：");
+    registryProblems.forEach((check) => console.log(`- ${friendlyCheckLevel(check.level)}：${friendlyAuditMessage(check.message)}${check.trace ? `（${check.trace}）` : ""}`));
+    console.log("");
+  }
+
+  if (result.projects.length) {
+    console.log("项目检查结果：");
+    for (const project of result.projects) {
+      const fails = project.checks.filter((check) => check.level === "fail").length;
+      const warns = project.checks.filter((check) => check.level === "warn").length;
+      const label = fails ? "需要处理" : warns ? "有提醒" : "通过";
+      console.log(`- ${label}：${project.project_id || "(缺少项目 ID)"}${project.path ? `（${project.path}）` : ""}`);
+      const visible = project.checks.filter((check) => check.level !== "pass");
+      visible.slice(0, 5).forEach((check) => console.log(`  - ${friendlyCheckLevel(check.level)}：${friendlyAuditMessage(check.message)}${check.trace ? `（${check.trace}）` : ""}`));
+      if (visible.length > 5) console.log(`  - 另有 ${visible.length - 5} 项提醒或问题`);
+    }
+    console.log("");
+  }
+
   console.log("");
-  console.log(result.ok ? "Audit passed." : "Audit found blocking issues.");
+  console.log("结论：");
+  console.log(result.ok ? "这个 Hub 和已登记项目目前结构完整，可以继续使用。" : "这个 Hub 或部分项目存在需要处理的问题。可把 JSON 结果交给 starworkAudit 生成保守修复方案。");
+}
+
+function friendlyAuditMessage(message) {
+  return String(message || "")
+    .replace(/Hub workspace state is valid/g, "Hub 工作台身份证有效")
+    .replace(/Hub doctor passed/g, "Hub 结构检查通过")
+    .replace(/Hub doctor has blocking issues/g, "Hub 结构检查有阻塞问题")
+    .replace(/No duplicate project ids/g, "项目 ID 没有重复")
+    .replace(/Satellite path exists/g, "项目目录存在")
+    .replace(/Project has Hub binding/g, "项目已经绑定到 Hub")
+    .replace(/Hub project id matches registry/g, "项目 ID 和登记表一致")
+    .replace(/Hub path matches/g, "Hub 路径一致")
+    .replace(/Satellite doctor passed/g, "项目结构检查通过")
+    .replace(/Satellite doctor has blocking issues/g, "项目结构检查有阻塞问题")
+    .replace(/workspace state/g, "工作台身份证")
+    .replace(/workspace/g, "工作台")
+    .replace(/Satellite/g, "项目")
+    .replace(/registry/g, "登记表")
+    .replace(/sync metadata/g, "同步信息");
 }
 
 function checkAuditProjectPath(result, projectRoot, relativePath, id, passMessage) {
@@ -4712,32 +5046,35 @@ function printPlan(plan, dryRun) {
   const createNew = plan.actions.filter((action) => action.mode === "create-new");
 
   console.log("");
-  console.log(dryRun ? "初始化预览（dry run）：" : "初始化计划：");
+  console.log(dryRun ? "创建工作台预览：" : "创建工作台计划：");
   console.log("");
-  console.log(`工作区类型：${plan.workspaceLabel} (${plan.workspaceType})`);
-  console.log(`Kit：${plan.kit}`);
-  console.log(`语言：${plan.language}`);
-  console.log(`Pack：${plan.pack.name || PACK_LABELS[plan.pack.id] || plan.pack.id} (${plan.pack.id})`);
   console.log(`工作台名称：${plan.workspaceName}`);
-  console.log(`正式成果位置：${plan.formalSource}`);
+  console.log(`工作台类型：${plan.workspaceLabel}`);
+  console.log(`语言：${friendlyLanguage(plan.language)}`);
+  console.log(`会加入的场景能力：${friendlyPackName(plan.pack.id || plan.pack.name)}`);
+  console.log(`确认后的成果会放在：${plan.formalSource}`);
+  if (plan.blueprint) {
+    console.log(`初始化定制单：${plan.blueprint.__path}`);
+    console.log(`日常工作会放在：${plan.blueprint.paths?.business_work_area || plan.formalSource}`);
+  }
   if (plan.skills?.length) {
-    console.log(`Kit 自带 Skill：${plan.skills.map((skill) => skill.id).join(", ")}`);
+    console.log(`会带上的 AI 使用说明：${plan.skills.map((skill) => skill.id).join("、")}`);
   }
   console.log("");
 
   if (creates.length) {
-    console.log("将创建：");
+    console.log("会创建这些文件或文件夹：");
     creates.slice(0, 40).forEach((action) => console.log(`- ${action.relativePath}`));
     if (creates.length > 40) console.log(`- ... 另有 ${creates.length - 40} 项`);
     console.log("");
   }
   if (emptyUpdates.length) {
-    console.log("将写入空文件：");
+    console.log("会补充这些空文件：");
     emptyUpdates.forEach((action) => console.log(`- ${action.relativePath}`));
     console.log("");
   }
   if (createNew.length) {
-    console.log("不会覆盖已有内容，将生成旁路文件：");
+    console.log("发现已有同名文件，不会覆盖，会另存为：");
     createNew.forEach((action) => console.log(`- ${path.relative(plan.targetDir, action.originalTarget)} -> ${action.relativePath}`));
     console.log("");
   }
@@ -4756,16 +5093,16 @@ function printSpawnPlan(plan, dryRun) {
   console.log(`项目名称：${plan.projectName}`);
   console.log(`项目 ID：${plan.projectId}`);
   console.log(`目标目录：${plan.targetDir}`);
-  console.log(`模式：${plan.modeLabel} (${plan.mode})`);
-  console.log(`语言：${plan.language}`);
-  console.log(`Kit：${plan.kit}`);
+  console.log(`项目类型：${plan.modeLabel}`);
+  console.log(`语言：${friendlyLanguage(plan.language)}`);
+  console.log(`基础结构：项目工作台`);
   if (plan.skills?.length) {
-    console.log(`分发 Skill：${plan.skills.map((skill) => skill.id).join(", ")}`);
+    console.log(`会带上的 AI 使用说明：${plan.skills.map((skill) => skill.id).join("、")}`);
   }
   if (plan.blueprint) {
-    console.log(`Blueprint：${plan.blueprint.__path}`);
-    console.log(`正式事实源：${plan.blueprint.paths?.formal_source || "(默认)"}`);
-    console.log(`当前工作区：${plan.blueprint.paths?.business_work_area || "(默认)"}`);
+    console.log(`定制方案：${plan.blueprint.__path}`);
+    console.log(`正式成果会放在：${plan.blueprint.paths?.formal_source || "(默认)"}`);
+    console.log(`日常工作会放在：${plan.blueprint.paths?.business_work_area || "(默认)"}`);
   }
   console.log("");
 
@@ -4802,14 +5139,14 @@ function printUpgradePlan(plan, dryRun) {
   console.log(dryRun ? "升级预览（dry run）：" : "升级计划：");
   console.log("");
   console.log(`目标目录：${plan.targetDir}`);
-  console.log(`Blueprint：${plan.blueprint.__path}`);
+  console.log(`升级方案：${plan.blueprint.__path}`);
   console.log(`策略：${plan.strategy}`);
-  console.log(`工作区类型：${plan.workspaceType}`);
-  console.log(`Kit：${plan.kit}`);
-  console.log(`语言：${plan.language}`);
-  console.log(`Pack：${plan.pack ? `${plan.pack.name || plan.pack.id} (${plan.pack.id})` : "(none)"}`);
-  console.log(`正式事实源：${plan.blueprint.paths.formal_source}`);
-  console.log(`当前工作区：${plan.blueprint.paths.business_work_area}`);
+  console.log(`工作台类型：${friendlyWorkspaceType(plan.workspaceType)}`);
+  console.log(`基础结构：${plan.kit === "hub" ? "多项目中枢" : "项目工作台"}`);
+  console.log(`语言：${friendlyLanguage(plan.language)}`);
+  console.log(`场景能力：${plan.pack ? friendlyPackName(plan.pack.id || plan.pack.name) : "不额外安装"}`);
+  console.log(`正式成果会放在：${plan.blueprint.paths.formal_source}`);
+  console.log(`日常工作会放在：${plan.blueprint.paths.business_work_area}`);
   console.log("");
 
   if (dirs.length) {
@@ -4930,14 +5267,14 @@ Usage:
 
 Commands:
   init             创建项目工作台或多项目 Hub。
-  doctor           检查工作台或历史模板目录，并输出事实。
+  doctor           检查工作台是否完整，也能识别旧目录的整理线索。
   spawn            从健康 Hub 生成新的项目工作台。
   audit            从 Hub 巡检已登记项目。
-  repair           执行由 starworkAudit 生成的修复 blueprint。
-  upgrade          执行由 skill 生成的升级 blueprint。
-  adapt            生成轻量 Agent 适配入口。
-  pack install     向健康工作台安装兼容 Pack。
-  multiagent       管理多 Agent 职责位、会话绑定和共享索引。
+  repair           按确认过的修复方案处理项目问题。
+  upgrade          按确认过的升级方案整理旧工作区。
+  adapt            生成不同 AI 工具需要的入口文件。
+  pack install     给健康工作台加入新的场景能力。
+  multiagent       管理多个 AI 会话的分工、绑定和共享索引。
 
 常用开始：
   starwork init --type project --pack general --language zh --target ./my-workspace --yes
@@ -4973,14 +5310,15 @@ function printInitHelp() {
 Usage:
   starwork init [options]
 
-用 Kit + Pack 创建 StarWork 工作台。v0.1 中，单项目默认使用 general Pack，
-Hub 工作台使用 hub-management Pack。
+创建一个 StarWork 工作台。v0.1 中，普通项目默认加入通用工作能力；
+多项目 Hub 会自动加入多项目管理能力。
 
 Options:
   --type <project|hub>
   --pack <general|content-creator|hub-management|path>
   --language <zh|en>
   --name <name>
+  --blueprint <init-blueprint.json>
   --formal-source <path>
   --target <path>
   --dry-run
@@ -4989,8 +5327,9 @@ Options:
 
 示例：
   starwork init --type project --pack general --language zh --target ./my-workspace --yes
+  starwork init --target ./custom-workspace --blueprint ./init-blueprint.json --dry-run
   starwork init --type hub --language zh --target ./my-hub --yes
-  starwork init --type single-light --pack general --target ./legacy-alias --dry-run
+  starwork init --type project --pack general --target ./preview-workspace --dry-run
 `);
 }
 
@@ -5065,6 +5404,9 @@ function printDoctorHelp() {
 
 Usage:
   starwork doctor [options]
+
+检查一个目录是不是完整的 StarWork 工作台；如果是旧版目录，
+会把可整理的线索列出来，方便后续交给 AI 进一步判断。
 
 Options:
   --target <path>

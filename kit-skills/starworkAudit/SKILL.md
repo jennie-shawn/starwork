@@ -5,7 +5,7 @@ description: 'Diagnose `starwork audit --json` Hub/Satellite findings, prioritiz
 
 # starworkAudit
 
-使用这个 skill，把 `starwork audit --json` 暴露的 Hub 与 Project Satellite 巡检事实解释成人能理解的报告；当用户明确要求修复时，生成 `repair-blueprint.json`，交给 `starwork repair --blueprint` 执行。
+使用这个 skill，把 `starwork audit --json` 暴露的 Hub 与项目巡检事实整理成清晰报告；当用户明确要求修复时，生成 `repair-blueprint.json`，交给 `starwork repair --blueprint` 执行。
 
 `starworkAudit` 不是 `starwork audit` 命令本身，也不是 `starwork repair` 执行器。
 
