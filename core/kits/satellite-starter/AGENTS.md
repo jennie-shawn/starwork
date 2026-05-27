@@ -22,7 +22,7 @@
 ## 跨项目联络
 
 - 本项目的本地 inbox / outbox / sent / archived 在 `.starwork/handoff/`。
-- Hub 的中央路由在 `.starwork/coordination/`。
+- Hub 的中央路由在 `projects/coordination/`。
 - 跨项目联络不会直接改写目标项目的业务事实源；目标项目收到后自行判断、处理和回执。
 
 ## 需要确认

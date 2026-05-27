@@ -372,6 +372,18 @@ test("doctor passes on a hub workspace", () => {
   assert.match(result.stdout, /这个工作台结构完整，可以继续使用/);
 });
 
+test("doctor warns when hub rules mention old hub paths", () => {
+  const dir = tempDir();
+  runInit(["--type", "hub", "--target", dir, "--yes"]);
+  fs.appendFileSync(path.join(dir, "AGENTS.md"), "\n旧路径：.starwork/projects/registry.json .starwork/coordination/ .starwork/incoming/\n", "utf8");
+
+  const result = runDoctor(["--target", dir, "--json"]);
+  const report = JSON.parse(result.stdout);
+
+  assert.equal(result.status, 0);
+  assert(report.checks.some((check) => check.id === "hub.rules.agents_md.paths" && check.level === "warn"));
+});
+
 test("multiagent init creates custom agent lanes without built-in defaults", () => {
   const dir = tempDir();
   runInit(["--type", "single-light", "--pack", "general", "--target", dir, "--yes"]);

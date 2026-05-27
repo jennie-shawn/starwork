@@ -1,5 +1,5 @@
 # Agents Skills
 
-这里按需放指向主库正式 skill 的软链接。
+这里放当前项目可用的 Agent skill。
 
-不要把主库 skill 复制成项目内独立副本。
+独立项目可以使用 Kit 自带 skill；接入 Hub 后，也可以由 CLI 挂载 Hub 分发的共享 skill。

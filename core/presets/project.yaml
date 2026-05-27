@@ -1,12 +1,12 @@
 id: project
-name: Project Kit
+name: 项目工作台
 profile: zh
 capabilities:
   - starter-outputs
 default_pack: general
 paths:
   formal_source: 输出/确认成果/
-  business_work_area: 参考资料/
+  business_work_area: 输出/草稿/
 description: >
   面向具体项目执行层。既可独立使用，也可由 Hub 生成并绑定为 Satellite。
   v0.1 使用 Project 标准结构，不再提供事项分叉。

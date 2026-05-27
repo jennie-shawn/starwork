@@ -276,7 +276,7 @@ workspace/
 
 - Hub 的 `identity/`、`lessons/`、`knowledge/`、`skills/` 是正式共享资产，不是机制状态。
 - Hub 的项目登记、跨项目路由和回写审核队列在 v0.1 仍使用可见目录 `projects/` 与 `.incoming/`；未来如迁入 `.starwork/`，需要单独迁移 SPEC。
-- 如果未来需要用户可读的项目组合管理页面，可以在可见目录提供摘要、看板或说明，但机器 registry 仍应以 `.starwork/projects/registry.json` 为准。
+- 如果未来需要用户可读的项目组合管理页面，可以在可见目录提供摘要、看板或说明，但机器 registry 仍应以 `projects/registry.json` 为准。
 
 ## Agent Lanes 边界
 

@@ -1,4 +1,4 @@
-# Project Status
+# Current Project
 
 ## Goal
 

@@ -1,6 +1,6 @@
-# StarWork Project Kit
+# StarWork 项目工作台
 
-Preset: `project`
+类型：项目工作台
 
 适合具体项目执行层。默认形态是独立项目工作台；如果由 Hub 通过 `spawn` 创建，CLI 会额外叠加 Hub 同步说明。
 
@@ -14,7 +14,7 @@ Preset: `project`
 
 ## 规则
 
-Project 是具体项目执行层。独立项目本地维护身份、教训和知识。Satellite Project 的 Hub 关系由 `starwork spawn` 额外生成，不是 Project Kit 的默认可见结构。
+项目工作台是具体项目执行层。独立项目本地维护身份、教训和知识。由 Hub 创建的卫星项目关系由 `starwork spawn` 额外生成，不是项目工作台的默认可见结构。
 
 本 kit 预期包含：
 

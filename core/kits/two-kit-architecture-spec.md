@@ -5,23 +5,23 @@
 - 版本：v0.1 draft
 - 所属模块：StarWork Core / CLI / Skills
 - 主题：封存 事项 Kit，收敛为两类 Kit
-- 实现状态：待实现
+- 实现状态：已落地主要结构；`satellite-starter` 是否作为独立结构继续维护待讨论
 - 相关对象：`init`、`spawn`、`doctor`、`upgrade`、`audit`、`starworkInit`、`starworkSpawn`、`starworkDoctor`
 
 ## 背景
 
-当前 Core 里同时存在：
+历史上 Core 里同时存在过这些结构或讨论方向：
 
 - `local-starter`
-- `project`
 - `satellite-starter`
 - `project`
 - `hub`
+- matter / 事项型工作台
 
 这个模型的初衷是把“是否接入 Hub”和“是否使用 Project 标准结构”都提前固化为 Kit 类型。但实际推进后出现了两个问题：
 
-1. `project` 的真实使用场景还没有被验证清楚。
-2. `project` 作为 Kit 类型，会让 CLI、Doctor、Spawn、Upgrade、Skill、Pack 支持矩阵成倍复杂。
+1. 事项型工作台的真实使用场景还没有被验证清楚。
+2. 事项机制作为 Kit 类型，会让 CLI、Doctor、Spawn、Upgrade、Skill、Pack 支持矩阵成倍复杂。
 
 因此本 SPEC 建议：**暂时封存 事项 Kit，把 StarWork Kit 收敛为两类：Project Kit 和 Hub Kit。**
 
@@ -34,7 +34,7 @@ project kit = 具体项目工作台
 hub kit     = 多项目中枢工作台
 ```
 
-`project` 不再是 Kit 类型，而是未来的可选能力，形态更接近 Agent Lanes：在一个已存在的 Project Kit 上增加“多事项 / 多推进线 / 多阶段交接”的协作层。
+事项机制不再是 Kit 类型，而是未来的可选能力，形态更接近 Agent Lanes：在一个已存在的 Project Kit 上增加“多事项 / 多推进线 / 多阶段交接”的协作层。
 
 ## 核心判断
 
@@ -404,7 +404,7 @@ workspace state：
 Doctor 目标：
 
 - 新标准只认可 `project` 和 `hub`。
-- 旧 `single-light`、`project`、`satellite-starter`、`project` 作为 legacy workspace type 兼容。
+- 旧 `single-light`、`satellite-starter` 作为 legacy workspace type 兼容。
 - 对旧 事项 路径输出 legacy signal。
 - 不再要求 事项索引 或 decisions 文件。
 
@@ -434,9 +434,7 @@ Upgrade blueprint 目标类型收敛：
 | 旧值 | 新处理 |
 |---|---|
 | `single-light` + `local-starter` | 映射为 `project` + `project`。 |
-| `project` + `project` | 映射为 `project` + `project`，保留 detected 事项 paths 作为 legacy role mapping。 |
 | `satellite-starter` | 映射为 `project` + Hub binding。 |
-| `project` | 映射为 `project` + Hub binding + legacy 事项 signal。 |
 
 ### `audit`
 
@@ -451,7 +449,7 @@ Upgrade blueprint 目标类型收敛：
 Repair 可用于把旧 StarWork 工作台从：
 
 ```text
-single-light / project / satellite-starter / project
+single-light / satellite-starter
 ```
 
 修复为：
@@ -570,27 +568,14 @@ product/core/presets/hub.yaml
 
 ```text
 product/core/kits/project/
-product/core/kits/project/
-product/core/presets/project.yaml
 product/core/presets/project.yaml
 ```
 
-`local-starter` 和 `satellite-starter` 合并为：
+`local-starter` 已移出 Core 正式材料。`satellite-starter` 是否作为独立结构继续维护，需要单独讨论；在现有 CLI 主路径中，Satellite 由 `project` 加 Hub 绑定生成。
 
 ```text
 product/core/kits/project/
 product/core/presets/project.yaml
-```
-
-### 建议保留 legacy 目录
-
-为避免立刻破坏测试和用户已有数据，第一阶段可以保留 legacy 文件，但从正式索引中移除：
-
-```text
-product/core/legacy/kits/project/
-product/core/legacy/kits/project/
-product/core/legacy/presets/project.yaml
-product/core/legacy/presets/project.yaml
 ```
 
 ## 实施阶段

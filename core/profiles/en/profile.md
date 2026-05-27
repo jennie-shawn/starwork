@@ -11,7 +11,7 @@ The profile includes English paths, English templates, English CLI prompts, and 
 | Canonical role | Path |
 |---|---|
 | `agent.entry_rules` | `AGENTS.md` |
-| `system.context.project_status` | `_system/context/project-status.md` |
+| `system.context.project_status` | `_system/context/current-project.md` |
 | `system.context.decisions` | `_system/context/decisions.md` |
 | `system.tasks.current_work` | `_system/tasks/current-work.md` |
 | `identity.local` | `_system/identity/` |

@@ -136,22 +136,7 @@ const KIT_BUNDLED_SKILLS = {
       sourceKind: "kit",
       type: "kit-bundled",
       distribution: "copy",
-      reason: "Project Kit 自带：用于阶段性清理、收尾和归档。",
-      install: [
-        { agent: "codex", path: path.join(".agents", "skills", "neat-freak"), mode: "copy" },
-        { agent: "claude", path: path.join(".claude", "skills", "neat-freak"), mode: "copy" }
-      ]
-    }
-  ],
-  "local-starter": [
-    {
-      id: "neat-freak",
-      name: "Neat Freak",
-      source: path.join("kit-skills", "neat-freak"),
-      sourceKind: "kit",
-      type: "kit-bundled",
-      distribution: "copy",
-      reason: "单项目 Kit 自带：用于阶段性清理、收尾和归档。",
+      reason: "项目工作台自带：用于阶段性清理、收尾和归档。",
       install: [
         { agent: "codex", path: path.join(".agents", "skills", "neat-freak"), mode: "copy" },
         { agent: "claude", path: path.join(".claude", "skills", "neat-freak"), mode: "copy" }
@@ -1565,9 +1550,10 @@ function validateUpgradeBlueprintActions(blueprint, blueprintDir) {
 }
 
 function buildUpgradePlan({ targetDir, blueprint }) {
-  const kitDir = path.join(PRODUCT_ROOT, "core", "kits", blueprint.base.kit);
+  const effectiveKit = normalizeKitId(blueprint.base.kit);
+  const kitDir = path.join(PRODUCT_ROOT, "core", "kits", effectiveKit);
   if (!fs.existsSync(kitDir)) {
-    throw new Error(`找不到 Kit：${blueprint.base.kit}`);
+    throw new Error(`找不到 Kit：${effectiveKit}`);
   }
 
   const packId = Object.hasOwn(blueprint.base, "pack")
@@ -1622,7 +1608,7 @@ function buildUpgradePlan({ targetDir, blueprint }) {
     blueprint,
     strategy: blueprint.strategy,
     workspaceType: blueprint.base.workspace_type,
-    kit: blueprint.base.kit,
+    kit: effectiveKit,
     language: blueprint.base.language,
     pack,
     actions: dedupeActions(actions.filter(Boolean))
@@ -1752,7 +1738,7 @@ function hasRuleSlot(workspaceRoot, slot) {
 function ensureRulesIndexReference(content) {
   const current = String(content || "");
   if (current.includes(STARWORK_RULES_INDEX)) return current;
-  const reference = `## StarWork 扩展规则\n\n执行任务前请同时读取 \`${STARWORK_RULES_INDEX}\`。Pack、Blueprint 和升级规则片段由该索引汇总；不要把 \`${STARWORK_RULES_DIR}/\` 中的文件当作业务成果。\n`;
+  const reference = `## StarWork 扩展规则\n\n执行任务前请同时读取 \`${STARWORK_RULES_INDEX}\`。这里汇总了当前工作台需要额外遵守的规则；不要把 \`${STARWORK_RULES_DIR}/\` 中的文件当作业务成果。\n`;
   return current.trim() ? `${current.trim()}\n\n${reference}` : `${reference}`;
 }
 
@@ -1838,7 +1824,7 @@ function renderRuleIndex(slots) {
   const lines = [
     "# StarWork 扩展规则",
     "",
-    "这个目录由 StarWork CLI 维护，用来存放场景能力、定制方案和升级流程产生的稳定规则片段。",
+    "这个目录由 StarWork CLI 维护，用来存放当前工作台需要额外遵守的稳定规则。",
     "",
     "这些规则是工作台运行约定的一部分；执行任务前请按索引读取。"
   ];
@@ -1919,22 +1905,23 @@ function checkWorkspaceState(result, state) {
 function checkKit(result, workspaceRoot, state) {
   if (!state.kit) return;
 
-  const kitDir = path.join(PRODUCT_ROOT, "core", "kits", state.kit);
+  const effectiveKit = normalizeKitId(state.kit);
+  const kitDir = path.join(PRODUCT_ROOT, "core", "kits", effectiveKit);
   if (!fs.existsSync(kitDir)) {
-    addCheck(result, "kit.source.exists", "fail", `找不到 Kit 源目录：${state.kit}`);
+    addCheck(result, "kit.source.exists", "fail", `找不到 Kit 源目录：${effectiveKit}`);
     return;
   }
-  addCheck(result, "kit.source.exists", "pass", `Kit source exists: ${state.kit}`);
+  addCheck(result, "kit.source.exists", "pass", `Kit source exists: ${effectiveKit}`);
 
   const allowedKits = {
     project: ["project"],
-    "single-light": ["local-starter"],
+    "single-light": ["project"],
     hub: ["hub"],
-    "satellite-starter": ["satellite-starter"]
+    "satellite-starter": ["project"]
   };
   const allowed = allowedKits[state.workspace_type];
-  if (allowed && allowed.includes(state.kit)) {
-    addCheck(result, "kit.workspace_type.match", "pass", `${state.kit} matches ${state.workspace_type}`);
+  if (allowed && allowed.includes(effectiveKit)) {
+    addCheck(result, "kit.workspace_type.match", "pass", `${state.kit} maps to ${effectiveKit} for ${state.workspace_type}`);
   } else {
     addCheck(result, "kit.workspace_type.match", "fail", `Kit ${state.kit} 与工作区类型 ${state.workspace_type || "(missing)"} 不匹配。`);
   }
@@ -1948,7 +1935,7 @@ function checkKit(result, workspaceRoot, state) {
   const missing = [];
   for (const source of files) {
     const sourceRelativePath = normalizeRelativePath(path.relative(kitDir, source));
-    const relativePath = state.kit === "project" || state.kit?.startsWith("satellite-")
+    const relativePath = effectiveKit === "project"
       ? mapKitRelativePathForLanguage(sourceRelativePath, state.language || "zh")
       : sourceRelativePath;
     if (matchesAnyRemovedPath(relativePath, removedByInitBlueprint)) continue;
@@ -2004,6 +1991,32 @@ function checkHubCoreRoles(result, workspaceRoot, state) {
   checkPathExists(result, workspaceRoot, hubPaths.knowledge, "hub.knowledge.exists", "Hub knowledge source exists", "缺少 Hub knowledge/。");
   checkPathExists(result, workspaceRoot, path.join(hubPaths.formalSkills, "registry.json"), "hub.skills_registry.exists", "Hub skill registry exists", "缺少 Hub skills/registry.json。");
   checkPathExists(result, workspaceRoot, hubPaths.draftsAndExperiments, "hub.workspace.exists", "Hub workspace exists", "缺少 Hub workspace/。");
+  checkHubRuleDocumentPaths(result, workspaceRoot);
+}
+
+function checkHubRuleDocumentPaths(result, workspaceRoot) {
+  const legacyPathPatterns = [
+    ".starwork/projects",
+    ".starwork/coordination",
+    ".starwork/incoming"
+  ];
+  for (const relativePath of ["AGENTS.md", "README.md"]) {
+    const filePath = path.join(workspaceRoot, relativePath);
+    if (!fs.existsSync(filePath)) continue;
+    const content = fs.readFileSync(filePath, "utf8");
+    const matched = legacyPathPatterns.filter((pattern) => content.includes(pattern));
+    if (matched.length) {
+      addCheck(
+        result,
+        `hub.rules.${relativePath.toLowerCase().replace(/[^a-z0-9]+/g, "_")}.paths`,
+        "warn",
+        `${relativePath} 里还写着旧 Hub 路径：${matched.join(", ")}。新版 Hub 使用 projects/、.incoming/ 和 .starwork/handoff/。`,
+        relativePath
+      );
+    } else {
+      addCheck(result, `hub.rules.${relativePath.toLowerCase().replace(/[^a-z0-9]+/g, "_")}.paths`, "pass", `${relativePath} uses current Hub paths`, relativePath);
+    }
+  }
 }
 
 function getCoreRolePaths(state) {
@@ -3966,7 +3979,7 @@ function renderEnglishProjectAgents() {
 }
 
 function renderEnglishProjectReadme() {
-  return `# StarWork Project Kit
+  return `# StarWork Project Workspace
 
 This is a project workspace for concrete work. It can be used independently. If a Hub creates it later, \`starwork spawn\` adds Hub sync files separately.
 
@@ -4183,11 +4196,9 @@ function renderChineseSatelliteAgents() {
 }
 
 function renderEnglishSatelliteReadme(mode, modeConfig) {
-  return `# StarWork Project Kit
+  return `# StarWork Satellite Workspace
 
-Preset: \`${modeConfig.kit}\`
-
-This is a project workspace. It can be used independently or connected to a Hub as a Satellite Project.
+This is a project workspace created and registered by a Hub.
 
 ## Includes
 

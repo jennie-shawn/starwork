@@ -2,7 +2,7 @@
 
 ## Read First
 
-1. `_system/context/project-status.md`
+1. `_system/context/current-project.md`
 2. `_system/tasks/current-work.md`
 
 ## Read When Relevant
@@ -12,7 +12,7 @@
 
 ## Write Boundaries
 
-- Project status belongs in `_system/context/project-status.md`
+- Project status belongs in `_system/context/current-project.md`
 - Current work belongs in `_system/tasks/current-work.md`
 - Identity belongs in `_system/identity/README.md`
 - Lessons belong in `_system/lessons/`

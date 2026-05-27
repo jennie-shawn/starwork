@@ -10,18 +10,17 @@ Preset: `hub`
 - `.starwork/workspace.json`
 - `.starwork/skills.json`
 - `.starwork/handoff/`
-- `.starwork/sync.json`
-- `.starwork/internal/`
-- `.starwork/projects/registry.json`
-- `.starwork/coordination/`
-- `.starwork/incoming/`
+- `.internal/`
+- `.incoming/`
+- `projects/registry.json`
+- `projects/coordination/`
 - `identity/`
 - `lessons/`
 - `knowledge/`
 - `skills/`
 - `workspace/`
 
-`.starwork/` 是 StarWork 机制运行层。Hub 的 `identity/`、`lessons/`、`knowledge/` 和 `skills/` 是正式共享资产，不进入 `.starwork/`。
+`.starwork/` 是 StarWork 机制运行层。Hub 的 `identity/`、`lessons/`、`knowledge/`、`skills/`、`projects/` 和 `.incoming/` 都是可理解、可审核的工作区内容，不放进 `.starwork/`。
 
 ## 不包含
 
