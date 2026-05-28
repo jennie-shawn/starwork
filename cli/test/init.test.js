@@ -84,8 +84,31 @@ test("dry-run does not write files", () => {
   const output = runInit(["--type", "single-light", "--pack", "general", "--target", dir, "--dry-run"]);
 
   assert.match(output, /创建工作台预览/);
+  assert.match(output, new RegExp(`目标目录：${dir.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`));
+  assert.match(output, /是否新建目录：否，目标目录已存在/);
+  assert.match(output, /日常工作会放在：输出\/草稿\//);
   assert.equal(fs.existsSync(path.join(dir, "AGENTS.md")), false);
   assert.equal(fs.existsSync(path.join(dir, ".starwork", "workspace.json")), false);
+});
+
+test("init dry-run shows absolute target for a new folder", () => {
+  const parent = tempDir();
+  const target = path.join(parent, "review-workspace");
+  const output = runInit(["--type", "project", "--pack", "general", "--target", target, "--dry-run"]);
+
+  assert.match(output, new RegExp(`目标目录：${target.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`));
+  assert.match(output, /是否新建目录：是/);
+  assert.equal(fs.existsSync(target), false);
+});
+
+test("init dry-run uses the user-confirmed target instead of a suggested folder name", () => {
+  const parent = tempDir();
+  const target = path.join(parent, "my-reviewed-name");
+  const output = runInit(["--type", "project", "--pack", "general", "--name", "产品发布计划", "--target", target, "--dry-run"]);
+
+  assert.match(output, new RegExp(`目标目录：${target.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`));
+  assert.doesNotMatch(output, /product-launch-plan/);
+  assert.equal(fs.existsSync(target), false);
 });
 
 test("init dry-run shows selected language", () => {
@@ -210,6 +233,18 @@ test("init creates a customized workspace from a blueprint", () => {
       formal_source: "docs/",
       business_work_area: "src/"
     },
+    directories: [
+      {
+        path: "src/",
+        purpose: "存放代码和 AI 工作稿",
+        write_policy: "writable"
+      },
+      {
+        path: "docs/",
+        purpose: "存放用户确认后的产品文档",
+        write_policy: "confirm_before_write"
+      }
+    ],
     folders: ["src/", "docs/"],
     removals: ["references/", "outputs/", "参考资料/", "输出/"],
     agent_rules: [
@@ -249,7 +284,11 @@ test("init creates a customized workspace from a blueprint", () => {
   assert.equal(fs.existsSync(path.join(dir, "参考资料")), false);
   assert.equal(fs.existsSync(path.join(dir, "输出")), false);
   assert.match(fs.readFileSync(path.join(dir, ".starwork", "rules", "workspace.file_boundaries.md"), "utf8"), /代码放在 src\//);
-  assert.doesNotMatch(fs.readFileSync(path.join(dir, "AGENTS.md"), "utf8"), /Folders Not Used|Initialized as|blueprint|dry-run/);
+  const agents = fs.readFileSync(path.join(dir, "AGENTS.md"), "utf8");
+  assert.match(agents, /Workspace Directories/);
+  assert.match(agents, /`src\/` \| 存放代码和 AI 工作稿/);
+  assert.match(agents, /`docs\/` \| 存放用户确认后的产品文档/);
+  assert.doesNotMatch(agents, /references\/|outputs\/|参考资料|输出\/草稿|Folders Not Used|Initialized as|blueprint|dry-run/);
   assert.doesNotMatch(fs.readFileSync(path.join(dir, "_system", "context", "current-project.md"), "utf8"), /Initialized as|StarWork project workspace|blueprint|Folders Not Used|doctor/);
 
   const report = runDoctor(["--target", dir, "--json"]);
@@ -861,6 +900,18 @@ test("doctor fails when AGENTS.md is missing", () => {
   assert.equal(result.status, 1);
   assert.match(result.stdout, /缺少 AI 入口规则 AGENTS\.md/);
   assert.doesNotMatch(result.stdout, /core\.entry_rules\.exists/);
+});
+
+test("doctor warns when agent rules reference missing workspace paths", () => {
+  const dir = tempDir();
+  runInit(["--type", "project", "--pack", "general", "--target", dir, "--yes"]);
+  fs.appendFileSync(path.join(dir, "AGENTS.md"), "\n请把草稿写到 `missing-drafts/`。\n", "utf8");
+
+  const result = runDoctor(["--target", dir, "--json"]);
+  const report = JSON.parse(result.stdout);
+
+  assert.equal(result.status, 0);
+  assert(report.checks.some((check) => check.id === "agents.references.existing_paths" && check.level === "warn" && check.message.includes("missing-drafts")));
 });
 
 test("doctor fails when the formal source is missing", () => {

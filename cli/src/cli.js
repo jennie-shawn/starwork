@@ -1129,6 +1129,7 @@ function collectDoctorResult(targetDir, options = {}) {
   checkBlueprintCustomization(result, workspaceRoot, state);
   checkUpgradeRoleMappings(result, workspaceRoot, state);
   checkSkillInstallations(result, workspaceRoot, state);
+  checkAgentRuleReferences(result, workspaceRoot);
   result.ok = result.summary.fail === 0;
   result.strict_ok = result.ok;
   result.exitCode = result.ok ? 0 : 1;
@@ -1323,6 +1324,18 @@ function loadInitBlueprint(blueprintPath) {
   for (const relativePath of Object.values(blueprint.paths || {})) {
     normalizeSafeRelativePath(relativePath, "init blueprint paths");
   }
+  for (const directory of blueprint.directories || []) {
+    if (!directory?.path || typeof directory.path !== "string") {
+      throw new Error("init blueprint directories 每一项都必须包含 path。");
+    }
+    normalizeSafeRelativePath(directory.path, "init blueprint directories.path");
+    if (directory.purpose != null && typeof directory.purpose !== "string") {
+      throw new Error("init blueprint directories.purpose 必须是字符串。");
+    }
+    if (directory.write_policy != null && typeof directory.write_policy !== "string") {
+      throw new Error("init blueprint directories.write_policy 必须是字符串。");
+    }
+  }
   for (const folder of blueprint.folders || []) {
     normalizeSafeRelativePath(folder, "init blueprint folders");
   }
@@ -1362,6 +1375,7 @@ function validateInitBlueprintForWorkspace(blueprint, workspaceType, workspaceCo
   }
   if (workspaceType === "hub" && (
     Object.keys(blueprint.paths || {}).length
+    || (blueprint.directories || []).length
     || (blueprint.folders || []).length
     || (blueprint.removals || []).length
     || (blueprint.agent_rules || []).length
@@ -2017,6 +2031,80 @@ function checkHubRuleDocumentPaths(result, workspaceRoot) {
       addCheck(result, `hub.rules.${relativePath.toLowerCase().replace(/[^a-z0-9]+/g, "_")}.paths`, "pass", `${relativePath} uses current Hub paths`, relativePath);
     }
   }
+}
+
+function checkAgentRuleReferences(result, workspaceRoot) {
+  const rulesDir = path.join(workspaceRoot, STARWORK_RULES_DIR);
+  const files = [
+    "AGENTS.md",
+    "CLAUDE.md",
+    STARWORK_RULES_INDEX,
+    ...(fs.existsSync(rulesDir) ? walkFiles(rulesDir) : [])
+      .filter((file) => file.endsWith(".md"))
+      .map((file) => normalizeRelativePath(path.relative(workspaceRoot, file)))
+  ];
+  const missing = [];
+  const seen = new Set();
+  for (const relativePath of files) {
+    const filePath = path.join(workspaceRoot, relativePath);
+    if (!fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) continue;
+    const content = fs.readFileSync(filePath, "utf8");
+    const references = extractWorkspacePathReferences(content);
+    for (const reference of references) {
+      if (reference.planned) continue;
+      const key = `${relativePath}:${reference.path}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      if (!fs.existsSync(path.join(workspaceRoot, reference.path))) {
+        missing.push({ file: relativePath, path: reference.path });
+      }
+    }
+  }
+  if (missing.length === 0) {
+    addCheck(result, "agents.references.existing_paths", "pass", "Agent rules only reference existing workspace paths");
+    return;
+  }
+  const sample = missing.slice(0, 5).map((item) => `${item.file} -> ${item.path}`).join("；");
+  addCheck(
+    result,
+    "agents.references.existing_paths",
+    "warn",
+    `Agent 规则提到了当前工作台里不存在的路径：${sample}${missing.length > 5 ? `；另有 ${missing.length - 5} 项` : ""}。`,
+    missing[0].file
+  );
+}
+
+function extractWorkspacePathReferences(content) {
+  const references = [];
+  const lines = String(content || "").split(/\r?\n/);
+  for (const line of lines) {
+    const planned = /计划目录|planned placeholder|planned directory/i.test(line);
+    const matches = line.matchAll(/`([^`]+)`/g);
+    for (const match of matches) {
+      const raw = match[1].trim();
+      if (!looksLikeWorkspacePath(raw)) continue;
+      let normalized;
+      try {
+        normalized = normalizeSafeRelativePath(raw, "agent rule path reference");
+      } catch {
+        continue;
+      }
+      references.push({ path: normalized, planned });
+    }
+  }
+  return references;
+}
+
+function looksLikeWorkspacePath(raw) {
+  if (!raw || /\s/.test(raw)) return false;
+  if (/^[a-z]+:\/\//i.test(raw)) return false;
+  if (raw.startsWith("@")) return false;
+  if (raw.includes("{{") || raw.includes("}}")) return false;
+  if (raw === "(none)" || raw === "none") return false;
+  if (raw.startsWith("-")) return false;
+  return raw.includes("/")
+    || raw.startsWith(".")
+    || /\.(md|json|yaml|yml|txt)$/i.test(raw);
 }
 
 function getCoreRolePaths(state) {
@@ -3131,6 +3219,14 @@ function buildInitPlan({ targetDir, workspaceName, workspaceType, workspaceConfi
     if (workspaceConfig.kit === "project") {
       content = renderProjectKitContent(relativePath, content, { language: pack.language || "zh", pack });
     }
+    if (relativePath === "AGENTS.md" && blueprint) {
+      content = renderInitBlueprintAgents({
+        language: pack.language || "zh",
+        blueprint,
+        variables,
+        hasExtraRules: packRuleSlots.length > 0 || blueprintRuleSlots.length > 0
+      });
+    }
     if (relativePath === "AGENTS.md" && (packRuleSlots.length || blueprintRuleSlots.length)) {
       content = ensureRulesIndexReference(content);
     }
@@ -3207,6 +3303,12 @@ function buildInitPlan({ targetDir, workspaceName, workspaceType, workspaceConfi
         schema: blueprint.schema,
         source: path.basename(blueprint.__path),
         folders: (blueprint.folders || []).map((folder) => normalizeSafeRelativePath(folder, "init blueprint folders")),
+        directories: normalizeInitDirectoryPlan(blueprint, variables).map((directory) => ({
+          path: directory.path,
+          purpose: directory.purpose,
+          write_policy: directory.write_policy,
+          planned: directory.planned
+        })),
         removals: (blueprint.removals || []).map((item) => normalizeSafeRelativePath(item, "init blueprint removals")),
         agent_rules: (blueprint.agent_rules || []).map((rule) => ({
           slot: rule.slot,
@@ -3237,9 +3339,156 @@ function buildInitPlan({ targetDir, workspaceName, workspaceType, workspaceConfi
     pack,
     blueprint,
     formalSource,
+    businessWorkArea,
+    targetExists: fs.existsSync(targetDir),
     skills: kitSkillPlan.records,
     actions: dedupeActions(filteredActions)
   };
+}
+
+function normalizeInitDirectoryPlan(blueprint, variables) {
+  if (!blueprint) return [];
+  const byPath = new Map();
+  const addDirectory = ({ path: relativePath, purpose, write_policy, planned = false, sourceRank = 0 }) => {
+    if (!relativePath) return;
+    const normalized = normalizeSafeRelativePath(relativePath, "init blueprint directory path");
+    if (matchesAnyRemovedPath(normalized, blueprint.removals || [])) return;
+    const current = byPath.get(normalized);
+    if (current && current.sourceRank >= sourceRank) return;
+    byPath.set(normalized, {
+      path: normalized.endsWith("/") ? normalized : `${normalized}/`,
+      purpose: purpose || "自定义工作区目录。",
+      write_policy: write_policy || "writable",
+      planned: Boolean(planned),
+      sourceRank
+    });
+  };
+
+  const paths = {
+    ...(variables.paths || {}),
+    ...(variables.overrides || {})
+  };
+  if (paths.references) {
+    addDirectory({
+      path: paths.references,
+      purpose: "存放用户提供的原始资料和参考信息。",
+      write_policy: "read_only_by_default",
+      sourceRank: 1
+    });
+  }
+  if (paths.business_work_area || paths.drafts) {
+    addDirectory({
+      path: paths.business_work_area || paths.drafts,
+      purpose: "存放 AI 生成的草稿、方案和中间版本。",
+      write_policy: "writable",
+      sourceRank: 1
+    });
+  }
+  if (paths.formal_source || paths.final) {
+    addDirectory({
+      path: paths.formal_source || paths.final,
+      purpose: "存放用户确认后的最终成果。",
+      write_policy: "confirm_before_write",
+      sourceRank: 1
+    });
+  }
+
+  for (const folder of blueprint.folders || []) {
+    addDirectory({
+      path: folder,
+      purpose: "按用户需求保留的固定工作区目录。",
+      write_policy: "writable",
+      sourceRank: 2
+    });
+  }
+  for (const directory of blueprint.directories || []) {
+    addDirectory({
+      path: directory.path,
+      purpose: directory.purpose || "按用户需求保留的固定工作区目录。",
+      write_policy: directory.write_policy || "writable",
+      planned: Boolean(directory.planned),
+      sourceRank: 3
+    });
+  }
+  return [...byPath.values()].sort((a, b) => a.path.localeCompare(b.path));
+}
+
+function renderInitBlueprintAgents({ language, blueprint, variables, hasExtraRules }) {
+  const directories = normalizeInitDirectoryPlan(blueprint, variables);
+  if (language === "en") {
+    const rows = directories.map((directory) => `| \`${directory.path}\` | ${directory.purpose}${directory.planned ? " Planned placeholder." : ""} | ${friendlyWritePolicy(directory.write_policy, "en")} |`);
+    return `# Workspace Rules
+
+## Read First
+
+1. \`_system/context/current-project.md\`
+2. \`_system/tasks/current-work.md\`
+${hasExtraRules ? "3. `.starwork/rules/index.md` when it exists\n" : ""}
+## Workspace Directories
+
+| Directory | Use | Write Rule |
+|---|---|---|
+${rows.join("\n") || "| `(none)` | No custom business directories were declared. | Ask the user before adding top-level folders. |"}
+
+## Write Boundaries
+
+- Do not rewrite source materials unless the user explicitly asks.
+- Drafts and intermediate work belong in the declared writable work area.
+- User-approved outputs belong in the confirmed output directory.
+- Do not create default folders that are not listed above unless the user confirms them.
+
+## Confirmation Required
+
+- Changing identity or stable preferences.
+- Promoting drafts into the formal source of truth.
+- Changing workspace structure or top-level business folders.
+`;
+  }
+  const rows = directories.map((directory) => `| \`${directory.path}\` | ${directory.purpose}${directory.planned ? " 这是计划目录。" : ""} | ${friendlyWritePolicy(directory.write_policy, "zh")} |`);
+  return `# StarWork 工作区规则
+
+## 开始前先读
+
+1. \`_系统/上下文/当前项目.md\`
+2. \`_系统/任务/当前工作.md\`
+${hasExtraRules ? "3. `.starwork/rules/index.md`（如果存在）\n" : ""}
+## 工作区目录说明
+
+| 目录 | 用途 | 写入规则 |
+|---|---|---|
+${rows.join("\n") || "| `(无)` | 未声明自定义业务目录。 | 新增顶层目录前先确认。 |"}
+
+## 写入边界
+
+- 原始资料默认不改写，除非用户明确要求。
+- 草稿、方案和中间版本先进入声明的可写工作区。
+- 用户确认后的成果进入确认成果目录。
+- 不要创建上表之外的默认目录，除非用户确认。
+
+## 需要确认
+
+- 修改身份或稳定偏好。
+- 将草稿晋升为正式事实源。
+- 改变工作台结构或顶层业务目录。
+`;
+}
+
+function friendlyWritePolicy(policy, language = "zh") {
+  const normalized = String(policy || "").trim();
+  const zh = {
+    read_only_by_default: "默认只读；不要改写原始资料。",
+    writable: "可以写入草稿、过程材料和中间版本。",
+    confirm_before_write: "写入或覆盖前需要用户确认。",
+    planned_placeholder: "计划目录；创建或写入前先确认。"
+  };
+  const en = {
+    read_only_by_default: "Read-only by default; do not rewrite source materials.",
+    writable: "Writable for drafts, working notes, and intermediate versions.",
+    confirm_before_write: "Ask the user before writing or overwriting.",
+    planned_placeholder: "Planned placeholder; confirm before creating or writing."
+  };
+  const table = language === "en" ? en : zh;
+  return table[normalized] || normalized || table.writable;
 }
 
 function shouldSkipStandaloneProjectKitFile(relativePath, workspaceType) {
@@ -5401,10 +5650,12 @@ function printPlan(plan, dryRun) {
   console.log(`工作台类型：${plan.workspaceLabel}`);
   console.log(`语言：${friendlyLanguage(plan.language)}`);
   console.log(`会加入的场景能力：${friendlyPackName(plan.pack.id || plan.pack.name)}`);
+  console.log(`目标目录：${plan.targetDir}`);
+  console.log(`是否新建目录：${plan.targetExists ? "否，目标目录已存在" : "是"}`);
   console.log(`确认后的成果会放在：${plan.formalSource}`);
+  console.log(`日常工作会放在：${plan.businessWorkArea}`);
   if (plan.blueprint) {
     console.log(`初始化定制单：${plan.blueprint.__path}`);
-    console.log(`日常工作会放在：${plan.blueprint.paths?.business_work_area || plan.formalSource}`);
   }
   if (plan.skills?.length) {
     console.log(`会带上的 AI 使用说明：${plan.skills.map((skill) => skill.id).join("、")}`);

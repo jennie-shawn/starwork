@@ -192,28 +192,41 @@ _系统/任务/当前工作.md
 
 但业务工作实际推进位置可以由 Pack 覆盖，例如自媒体 Pack 可以把单篇内容推进到内容事项或内容生产目录。
 
-### Step 4：预览计划
+### Step 4：确认目标路径
+
+写入前必须展示最终落点，而不只是展示内部参数。
+
+预览至少包含：
+
+```text
+目标目录：/absolute/path/to/my-workspace
+是否新建目录：是/否
+工作台名称：my-workspace
+```
+
+如果用户通过 skill 引导初始化，AI 可以建议文件夹名，但必须说明可修改，并在执行 `--yes` 前让用户确认最终绝对路径。
+
+### Step 5：预览计划
 
 在写入前展示计划：
 
 ```text
 将创建 StarWork 工作台：
 
-工作区类型：单事务项目
-Kit：local-starter
+目标目录：/Users/example/my-workspace
+是否新建目录：是
+工作区类型：项目工作台
+Kit：project
 Pack：general
 工作台名称：my-workspace
 
 将创建：
 - AGENTS.md
-- _系统/上下文/项目状态.md
+- _系统/上下文/当前项目.md
 - _系统/任务/当前工作.md
-- 事项/注册表.md
-- 选题池/
-- 素材库/
-- 草稿与脚本/
-- 发布记录/
-- 数据复盘/
+- 参考资料/
+- 输出/草稿/
+- 输出/确认成果/
 
 不会覆盖：
 - README.md 已存在，将保留
@@ -224,7 +237,7 @@ Pack：general
 
 用户确认后才执行。
 
-### Step 5：执行初始化
+### Step 6：执行初始化
 
 执行顺序：
 
@@ -322,7 +335,7 @@ Pack 可以改变业务流向，但不能移除工作区仪表盘。
   "schema": "starwork.workspace.v0.1",
   "core": "0.1",
   "workspace_type": "single-light",
-  "kit": "local-starter",
+  "kit": "project",
   "packs": [
     "general"
   ],
